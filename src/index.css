@@ -1,0 +1,333 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Syne:wght@700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== TYPOGRAPHIE & PALETTE — identité propre, épurée ===== */
+:root {
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif; /* wordmark + grands titres éditoriaux */
+
+  --ink: #17181A;      /* texte principal, quasi noir */
+  --ink-2: #4B4F54;
+  --ink-3: #7A7E85;
+  --ink-4: #A6A9AE;
+  --accent: #2451C4;      /* bleu vif premium, couleur de marque */
+  --accent-soft: #EAF0FD;
+  --accent-dark: #17337D;
+  /* Accent chaud secondaire — jusqu'ici seulement dans tailwind.config.js
+     (maket.accent) et jamais réellement utilisé : sert à donner du relief aux
+     temps forts (Flash, badges premium, CTA parrainage) sans diluer le bleu de
+     marque, qui reste l'accent PRIMAIRE partout ailleurs. */
+  --accent-2: #F59E0B;
+  --accent-2-soft: #FEF3E2;
+  --accent-2-dark: #B45309;
+  --warn: #B4531F;
+  --danger: #C2402F;
+  --success: #2F7D5C;
+  --border: #E4E4E2;
+  --border-2: #EFEEEC;
+  --bg: #FFFFFF;
+  --bg-2: #FAFAF8;
+  --bg-3: #F2F1EE;
+
+  /* Échelle typographique documentée (au lieu de tailles ad hoc dispersées) */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-2xl: 36px;
+
+  /* alias pour compatibilité avec l'ancien thème bleu, si référencé ailleurs */
+  --blue: var(--accent);
+  --blue-dark: var(--accent-dark);
+  --blue-light: var(--accent-soft);
+  --blue-mid: var(--accent-soft);
+  --green: var(--success);
+  --red: var(--danger);
+  --text: var(--ink);
+  --text-2: var(--ink-2);
+  --text-3: var(--ink-3);
+  --text-4: var(--ink-4);
+
+  /* Ombres teintées (encre, pas noir pur) — plus premium/cohérent avec la
+     palette qu'un rgba(0,0,0,...) générique. Échelle à 4 paliers réutilisée
+     partout au lieu de valeurs box-shadow ad hoc dispersées par composant. */
+  --shadow-sm: 0 1px 2px rgba(23,24,26,0.05), 0 1px 1px rgba(23,24,26,0.04);
+  --shadow-md: 0 4px 12px rgba(23,24,26,0.06), 0 2px 4px rgba(23,24,26,0.04);
+  --shadow-lg: 0 12px 32px rgba(23,24,26,0.10), 0 4px 10px rgba(23,24,26,0.05);
+  --shadow-accent: 0 8px 20px rgba(36,81,196,0.22);
+
+  /* Rythme de transition unifié — évite les durées/easing incohérents d'un
+     composant à l'autre (150-300ms recommandé pour les micro-interactions). */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+/* Anneau de focus visible et sur-marque — sans ça, les éléments interactifs
+   perdaient tout indicateur de focus clavier au profit d'un simple outline
+   navigateur incohérent (ou supprimé), un vrai problème d'accessibilité. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Prix, soldes, quantités — chiffres tabulaires pour ne pas faire "sauter" la
+   largeur du texte quand les chiffres changent (liste de prix, wallet...). */
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Titres — sobres, resserrés, pas de gradient */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: inherit;
+}
+
+/* ===== SCROLLBAR ===== */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ===== TICKER ===== */
+.ticker-outer {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  height: 36px;
+}
+.ticker-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: ticker-move 35s linear infinite;
+  will-change: transform;
+}
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: var(--font);
+}
+@keyframes ticker-move {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ===== BOUTONS — pilules pleines, dans l'esprit Vinted ===== */
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 11px 22px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+  line-height: 1.4;
+  box-shadow: var(--shadow-accent);
+}
+.btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 10px 24px rgba(36,81,196,0.28); }
+.btn-primary:active { transform: translateY(0) scale(0.98); box-shadow: var(--shadow-sm); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+  border-radius: 999px;
+  padding: 9.5px 20px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.btn-outline:hover { background: var(--accent-soft); }
+.btn-outline:active { transform: scale(0.98); }
+.btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-2);
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  padding: 9.5px 18px;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.btn-ghost:hover { border-color: var(--text-3); color: var(--text); }
+
+/* ===== INPUTS ===== */
+/* @layer components place ce bloc AVANT la couche "utilities" de Tailwind dans le
+   CSS généré, quel que soit l'ordre dans ce fichier — sans ça, `padding: 10px 16px`
+   ci-dessous (même spécificité qu'une classe utilitaire) gagnait la cascade sur les
+   pl-9/pr-10 utilisés pour laisser la place aux icônes dans les champs (email, mot de
+   passe...), et le texte saisi se retrouvait affiché sous l'icône. */
+@layer components {
+  .input-field {
+    width: 100%;
+    padding: 10px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 999px;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg-2);
+    outline: none;
+    transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+    line-height: 1.4;
+  }
+  .input-field:focus {
+    border-color: var(--blue);
+    background: #fff;
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .input-field::placeholder { color: var(--text-4); }
+
+  /* champs non-pilule (textarea, selects dans formulaires denses) */
+  .input-field.input-field--square { border-radius: 10px; }
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+}
+.card:hover {
+  border-color: var(--ink-4);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* ===== PRODUCT CARD — image nue, chrome minimal ===== */
+.product-card {
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  transition: box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
+  cursor: pointer;
+}
+.product-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-3px); }
+.product-card:active { transform: translateY(-1px) scale(0.99); }
+
+/* ===== GRADIENTS ===== */
+.gradient-blue { background: linear-gradient(135deg, var(--blue) 0%, var(--blue-dark) 100%); }
+.gradient-warm { background: linear-gradient(135deg, var(--accent-2) 0%, #EF4444 100%); }
+.gradient-mesh {
+  background:
+    radial-gradient(circle at 15% 20%, rgba(36,81,196,0.10), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(245,158,11,0.08), transparent 40%),
+    var(--bg);
+}
+
+/* ===== BADGE ===== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-family: var(--font);
+}
+.badge-blue { background: var(--blue-light); color: var(--blue); }
+.badge-green { background: #ECFDF5; color: var(--green); }
+.badge-red { background: #FEF2F2; color: var(--red); }
+.badge-amber { background: #FFFBEB; color: #D97706; }
+.badge-gray { background: var(--bg-3); color: var(--text-3); }
+
+/* ===== SECTION TAG ===== */
+.section-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--blue);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-fade-up { animation: fadeUp 0.4s ease forwards; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.8s linear infinite; }
+
+/* ===== DIVIDER ===== */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ===== OFFRE MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+}

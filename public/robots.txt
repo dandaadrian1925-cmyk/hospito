@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /auth
+Disallow: /mot-de-passe-oublie
+Disallow: /wallet
+Disallow: /chat
+Disallow: /mon-compte
+Disallow: /commande/
+Disallow: /acheter/
+Disallow: /litiges
+Disallow: /favoris
+Disallow: /notifications
+
+Sitemap: https://maket.cm/sitemap.xml
