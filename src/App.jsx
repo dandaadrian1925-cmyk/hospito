@@ -33,6 +33,7 @@ const WalletPage = lazy(() => import('./pages/WalletPage'));
 const VendeurPage = lazy(() => import('./pages/VendeurPage'));
 const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissementPage'));
 const EtablissementSpacePage = lazy(() => import('./pages/EtablissementSpacePage'));
+const EtablissementsPage = lazy(() => import('./pages/EtablissementsPage'));
 function Layout({
   children,
   noFooter = false
@@ -137,6 +138,7 @@ export default function App() {
             <Route path="/cookies" element={<Layout><CookiesPage /></Layout>} />
             <Route path="/etablissements/demande" element={<Layout><DemandeEtablissementPage /></Layout>} />
             <Route path="/etablissement/:etablissementId" element={<Layout><EtablissementSpacePage /></Layout>} />
+            <Route path="/etablissements" element={<Layout><EtablissementsPage /></Layout>} />
 
             {}
             <Route path="*" element={<Layout>

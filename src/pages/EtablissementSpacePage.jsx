@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Building2,
@@ -405,10 +405,12 @@ function TabReclamations({ etablissementId, patientUid }) {
 
 export default function EtablissementSpacePage() {
   const { etablissementId } = useParams();
+  const [searchParams] = useSearchParams();
   const { user, userProfile } = useAuth();
   const [etablissement, setEtablissement] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('rdv');
+  const tabDemandee = searchParams.get('tab');
+  const [tab, setTab] = useState(TABS.some((t) => t.id === tabDemandee) ? tabDemandee : 'rdv');
 
   useEffect(() => {
     getEtablissement(etablissementId)

@@ -1,210 +1,84 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, TrendingUp, Shield } from 'lucide-react';
-import HeroCarousel from '../components/home/HeroCarousel';
-import EtablissementCarousel from '../components/home/EtablissementCarousel';
-import Ticker from '../components/home/Ticker';
-import Stories from '../components/home/Stories';
-import HowItWorks from '../components/home/HowItWorks';
-import ProductCard from '../components/annonces/ProductCard';
-import ProductCardSkeleton from '../components/annonces/ProductCardSkeleton';
-import { getAnnonces, isFlashActive, annonceSortWeight } from '../services/annoncesService';
-import { getCategories } from '../services/categoriesService';
-import { getSettings } from '../services/settingsService';
-import { getScoresParVendeur, getVendeurProParVendeur } from '../services/profilPublicService';
-import CompteARebours, { campagneOuRevelation } from '../components/common/CompteARebours';
-import { useAuth } from '../context/AuthContext';
+import { Search, Building2 } from 'lucide-react';
+import EtablissementHeroCarousel from '../components/home/EtablissementHeroCarousel';
+import { listerEtablissementsActifs } from '../services/etablissementsPublicService';
+
 export default function HomePage() {
-  const { user, userProfile } = useAuth();
-  const [annonces, setAnnonces] = useState([]);
-  const [flashAnnonces, setFlashAnnonces] = useState([]);
-  const [vendeurProMap, setVendeurProMap] = useState({});
+  const [etablissements, setEtablissements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [settings, setSettings] = useState({
-    pourcentageCommissionParrain: 100,
-    nombreVentesRecompensees: 3,
-    limiteAnnoncesParFilleulQualifie: 2
-  });
+
   useEffect(() => {
-    getSettings().then(setSettings);
+    listerEtablissementsActifs()
+      .then(setEtablissements)
+      .catch((e) => {
+        console.error('listerEtablissementsActifs a échoué :', e);
+        setEtablissements([]);
+      })
+      .finally(() => setLoading(false));
   }, []);
-  useEffect(() => {
-    getCategories().then(setCategories).catch(e => console.error('getCategories a échoué :', e));
-  }, []);
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const all = await getAnnonces();
-        // #nouveau (retour utilisateur, "le boost ne sert à rien") : les
-        // annonces boostées ne remontaient qu'au catalogue (CataloguePage,
-        // sort==='recent') — jamais ici, alors que "Articles récents" est la
-        // toute première chose vue sur le site. Tri stable (Array.sort) : à
-        // poids de boost égal, l'ordre par date déjà renvoyé par getAnnonces
-        // est préservé.
-        // #nouveau (demande utilisateur, "classer aussi par score de
-        // fiabilité") : departage désormais aussi par score du vendeur, à
-        // poids de boost égal (cf. annonceSortWeight).
-        const [scores, proMap] = await Promise.all([
-          getScoresParVendeur(all.list.map(a => a.userId)),
-          getVendeurProParVendeur(all.list.map(a => a.userId))
-        ]);
-        setVendeurProMap(proMap);
-        const triees = [...all.list].sort((a, b) => annonceSortWeight(b, scores, proMap) - annonceSortWeight(a, scores, proMap));
-        setAnnonces(triees);
-        setFlashAnnonces(triees.filter(a => isFlashActive(a)));
-      } catch (e) {
-        console.error('getAnnonces a échoué :', e);
-        setAnnonces([]);
-        setFlashAnnonces([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-  const filtered = activeCategory ? annonces.filter(a => a.categorie === activeCategory) : annonces;
-  const enCampagne = campagneOuRevelation(settings);
-  return <div className="gradient-mesh">
-      {}
-      <Ticker />
 
-      {}
-      <HeroCarousel />
-
-      {}
-      <EtablissementCarousel />
-
-      {}
-      <section className="max-w-7xl mx-auto px-6 py-10">
-        <Stories />
-      </section>
-
-      {}
-      {enCampagne ? <section className="max-w-7xl mx-auto px-6 mb-14">
-          <CompteARebours settings={settings} user={user} userProfile={userProfile} />
-        </section> : <>
-      {}
-      {flashAnnonces.length > 0 && <section className="max-w-7xl mx-auto px-6 mb-14">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <span className="section-tag">Offres limitées</span>
-              <h2 style={{
-              fontFamily: 'var(--font-display)',
-              fontWeight: 600
-            }} className="text-2xl text-gray-900">
-                Flash
-              </h2>
-              <p className="text-sm text-gray-500 mt-1">Ventes à durée limitée, à saisir vite</p>
-            </div>
-            <Link to="/catalogue?flash=true" className="text-sm text-primary-600 font-semibold hover:text-primary-700 flex items-center gap-1 transition-colors">
-              Voir tout <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {flashAnnonces.slice(0, 5).map((a, i) => <ProductCard key={a.id} annonce={a} index={i} />)}
-          </div>
-        </section>}
-
-      {}
-      <section className="max-w-7xl mx-auto px-6 mb-14">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <span className="section-tag">Fraîchement publié</span>
-            <h2 style={{
+  return (
+    <div className="gradient-mesh">
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px 8px', textAlign: 'center' }}>
+        <h1
+          style={{
             fontFamily: 'var(--font-display)',
-            fontWeight: 600
-          }} className="text-2xl text-gray-900">
-              Articles récents
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">Les dernières bonnes affaires partout au Cameroun</p>
-          </div>
-          <Link to="/catalogue" className="text-sm text-primary-600 font-semibold hover:text-primary-700 flex items-center gap-1 transition-colors">
-            Voir tout <ArrowRight className="w-4 h-4" />
-          </Link>
+            fontWeight: 600,
+            fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
+            color: 'var(--ink)',
+            marginBottom: 10,
+          }}
+        >
+          Trouvez votre établissement de santé
+        </h1>
+        <p style={{ fontSize: 15, color: 'var(--ink-3)', maxWidth: 560, margin: '0 auto' }}>
+          Prenez rendez-vous, consultez votre dossier médical et échangez avec vos soignants — partout où vous êtes suivi.
+        </p>
+        <Link
+          to="/etablissements"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            marginTop: 20,
+            padding: '11px 22px',
+            borderRadius: 999,
+            background: 'var(--bg-2)',
+            border: '1.5px solid var(--border, #E2E8F0)',
+            color: 'var(--ink-2)',
+            fontSize: 14,
+            fontWeight: 600,
+            textDecoration: 'none',
+          }}
+        >
+          <Search style={{ width: 15, height: 15 }} />
+          Rechercher un établissement, une ville…
+        </Link>
+      </div>
+
+      {loading ? (
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 24px' }}>
+          <div style={{ minHeight: 480, borderRadius: 24, background: 'var(--bg-2)' }} />
         </div>
-
-        {}
-        <div className="relative mb-7">
-          <div className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide pb-2" style={{
-          WebkitOverflowScrolling: 'touch'
-        }}>
-            <button onClick={() => setActiveCategory(null)} className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all" style={!activeCategory ? {
-            background: 'var(--blue)',
-            color: 'white',
-            boxShadow: 'var(--shadow-accent)'
-          } : {
-            background: 'var(--bg-3)',
-            color: 'var(--ink-2)'
-          }}>
-              Tout
-            </button>
-            {categories.map(cat => <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className="flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all" style={activeCategory === cat.id ? {
-            background: 'var(--blue)',
-            color: 'white',
-            boxShadow: 'var(--shadow-accent)'
-          } : {
-            background: 'var(--bg-3)',
-            color: 'var(--ink-2)'
-          }}>
-                {cat.label}
-              </button>)}
-          </div>
-          <div className="pointer-events-none absolute top-0 right-0 bottom-2 w-12" style={{
-          background: 'linear-gradient(to right, transparent, var(--bg))'
-        }} />
+      ) : etablissements.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--ink-3)' }}>
+          <Building2 style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
+          <p style={{ fontWeight: 600 }}>Aucun établissement partenaire pour le moment</p>
+          <p style={{ fontSize: 13, marginTop: 4 }}>Revenez bientôt — de nouveaux établissements rejoignent régulièrement Hospito.</p>
         </div>
+      ) : (
+        etablissements.map((etab) => <EtablissementHeroCarousel key={etab.id} etablissement={etab} />)
+      )}
 
-        {loading ? <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {Array(10).fill(0).map((_, i) => <ProductCardSkeleton key={i} />)}
-          </div> : filtered.length > 0 ? <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-            {filtered.slice(0, 20).map((a, i) => <ProductCard key={a.id} annonce={a} index={i} />)}
-          </div> : <div className="text-center py-16 rounded-3xl" style={{
-        background: 'var(--bg-2)',
-        border: '1px dashed var(--border)'
-      }}>
-            <p className="font-semibold" style={{
-          color: 'var(--ink-2)'
-        }}>Aucun article pour le moment</p>
-            <p className="text-sm mt-1" style={{
-          color: 'var(--ink-4)'
-        }}>Soyez le premier à publier !</p>
-            <Link to="/publier" className="btn-primary mt-4 inline-flex">Publier une annonce</Link>
-          </div>}
-      </section>
-      </>}
-
-      {}
-      <HowItWorks />
-
-      {}
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <motion.div initial={{
-        opacity: 0,
-        y: 20
-      }} whileInView={{
-        opacity: 1,
-        y: 0
-      }} viewport={{
-        once: true
-      }} className="gradient-blue rounded-3xl p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="text-white text-center md:text-left">
-            <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 600
-          }} className="text-2xl md:text-3xl mb-2">
-              Parrainez vos amis
-            </h2>
-            <p className="text-primary-200 text-sm md:text-base">
-              Gagnez <strong className="text-white">{settings.pourcentageCommissionParrain ?? 100}% de la commission MAKET</strong> sur les {settings.nombreVentesRecompensees ?? 3} premières ventes de votre filleul, et augmentez votre limite d'annonces en vente de <strong className="text-white">+{settings.limiteAnnoncesParFilleulQualifie ?? 2}</strong> à chaque parrainage. Lui aussi profite d'une commission réduite sur ses premières ventes.
-            </p>
-          </div>
-          <Link to="/mon-compte/parrainage" className="flex-shrink-0 bg-white text-primary-700 font-bold px-6 py-3 rounded-full hover:bg-primary-50 transition-all flex items-center gap-2">
-            Mon code de parrainage <ArrowRight className="w-4 h-4" />
+      <div style={{ maxWidth: 1280, margin: '32px auto 60px', padding: '0 24px', textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: 'var(--ink-3)' }}>
+          Vous représentez un établissement de santé ?{' '}
+          <Link to="/etablissements/demande" style={{ color: 'var(--blue)', fontWeight: 600 }}>
+            Rejoignez Hospito
           </Link>
-        </motion.div>
-      </section>
-    </div>;
+        </p>
+      </div>
+    </div>
+  );
 }

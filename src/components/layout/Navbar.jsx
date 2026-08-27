@@ -117,7 +117,7 @@ export default function Navbar() {
   }, [mobileOpen]);
   const handleSearch = e => {
     e.preventDefault();
-    if (search.trim()) navigate(`/catalogue?q=${encodeURIComponent(search)}`);
+    navigate(search.trim() ? `/etablissements?q=${encodeURIComponent(search)}` : '/etablissements');
   };
   const handleLogout = async () => {
     if (!window.confirm('Voulez-vous vraiment vous déconnecter ?')) return;
@@ -189,7 +189,7 @@ export default function Navbar() {
               height: 15,
               color: 'var(--ink-4)'
             }} />
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un article…" style={{
+              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un établissement, une ville…" style={{
               width: '100%',
               padding: '9px 14px 9px 38px',
               background: 'var(--bg-2)',
@@ -340,7 +340,7 @@ export default function Navbar() {
                         <form onSubmit={handleSearch} className="dropdown-mobile-search" style={{ padding: '12px 16px 0', display: 'none' }}>
                           <div style={{ position: 'relative' }}>
                             <Search style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: 'var(--ink-4)' }} />
-                            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." className="input-field" style={{ paddingLeft: 38, fontSize: 14 }} />
+                            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un établissement…" className="input-field" style={{ paddingLeft: 38, fontSize: 14 }} />
                           </div>
                         </form>
                         {[{
@@ -583,7 +583,7 @@ export default function Navbar() {
                   height: 15,
                   color: 'var(--ink-4)'
                 }} />
-                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher..." className="input-field" style={{
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un établissement…" className="input-field" style={{
                   paddingLeft: 38,
                   fontSize: 14
                 }} />
