@@ -86,6 +86,9 @@ export default function Footer() {
         }, {
           to: '/securite',
           label: 'Sécurité'
+        }, {
+          to: '/etablissements/demande',
+          label: 'Vous voulez être partenaire de Hospito ?'
         }]
       }, {
         title: 'Légal',

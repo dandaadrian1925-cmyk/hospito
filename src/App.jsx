@@ -31,6 +31,7 @@ const ParrainagePage = lazy(() => import('./pages/ParrainagePage'));
 const VerifCNIPage = lazy(() => import('./pages/VerifCNIPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const VendeurPage = lazy(() => import('./pages/VendeurPage'));
+const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissementPage'));
 function Layout({
   children,
   noFooter = false
@@ -133,6 +134,7 @@ export default function App() {
             <Route path="/cgu" element={<Layout><CGUPage /></Layout>} />
             <Route path="/confidentialite" element={<Layout><ConfidentialitePage /></Layout>} />
             <Route path="/cookies" element={<Layout><CookiesPage /></Layout>} />
+            <Route path="/etablissements/demande" element={<Layout><DemandeEtablissementPage /></Layout>} />
 
             {}
             <Route path="*" element={<Layout>
