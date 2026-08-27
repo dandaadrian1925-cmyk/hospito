@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { lienInterneSur } from '../lib/safeLink';
 import { motion } from 'framer-motion';
-import { Bell, ShoppingCart, Star, Shield, Check, Trash2, Gift, ArrowDownCircle, ArrowUpCircle, Tag, Flag, Headphones, BadgeCheck, UserCog } from 'lucide-react';
+import { Bell, ShoppingCart, Star, Shield, Check, Trash2, Gift, ArrowDownCircle, ArrowUpCircle, Tag, Flag, Headphones, BadgeCheck, UserCog, Calendar, Pill, FileText, Receipt, FolderHeart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -18,6 +18,11 @@ const NOTIF_ICONS = {
   support: Headphones,
   cni: BadgeCheck,
   compte: UserCog,
+  rdv: Calendar,
+  ordonnance: Pill,
+  resultat: FileText,
+  facture: Receipt,
+  dossier: FolderHeart,
   default: Bell
 };
 const NOTIF_COLORS = {
@@ -32,6 +37,11 @@ const NOTIF_COLORS = {
   support: 'bg-teal-100 text-teal-600',
   cni: 'bg-indigo-100 text-indigo-600',
   compte: 'bg-gray-200 text-gray-700',
+  rdv: 'bg-cyan-100 text-cyan-600',
+  ordonnance: 'bg-emerald-100 text-emerald-600',
+  resultat: 'bg-sky-100 text-sky-600',
+  facture: 'bg-amber-100 text-amber-600',
+  dossier: 'bg-rose-100 text-rose-600',
   default: 'bg-gray-100 text-gray-600'
 };
 function timeAgo(value) {

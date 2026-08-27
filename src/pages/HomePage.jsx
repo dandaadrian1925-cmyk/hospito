@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, TrendingUp, Shield } from 'lucide-react';
 import HeroCarousel from '../components/home/HeroCarousel';
+import EtablissementCarousel from '../components/home/EtablissementCarousel';
 import Ticker from '../components/home/Ticker';
 import Stories from '../components/home/Stories';
 import HowItWorks from '../components/home/HowItWorks';
@@ -72,6 +73,9 @@ export default function HomePage() {
 
       {}
       <HeroCarousel />
+
+      {}
+      <EtablissementCarousel />
 
       {}
       <section className="max-w-7xl mx-auto px-6 py-10">
