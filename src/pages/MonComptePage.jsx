@@ -958,7 +958,8 @@ function ModifierProfil() {
     nom: '',
     ville: 'Yaoundé',
     quartier: '',
-    boutiqueBio: ''
+    boutiqueBio: '',
+    numeroIdentiteNational: ''
   });
   const [saving, setSaving] = useState(false);
   const [autreQuartier, setAutreQuartier] = useState(false);
@@ -974,7 +975,8 @@ function ModifierProfil() {
       nom: userProfile.nom || '',
       ville: userProfile.ville || 'Yaoundé',
       quartier: userProfile.quartier || '',
-      boutiqueBio: userProfile.boutiqueBio || ''
+      boutiqueBio: userProfile.boutiqueBio || '',
+      numeroIdentiteNational: userProfile.numeroIdentiteNational || ''
     });
   }, [userProfile]);
   const save = async () => {
@@ -1277,6 +1279,25 @@ function ModifierProfil() {
               marginTop: 4
             }}>{form.boutiqueBio.length}/150</p>
               </div>
+              <div>
+                <label style={{
+              display: 'block',
+              fontSize: 11,
+              fontWeight: 700,
+              color: '#64748B',
+              marginBottom: 6,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+                  N° CNI (identifiant utilisé pour votre dossier médical, partagé entre tous vos établissements)
+                </label>
+                <input value={form.numeroIdentiteNational} onChange={e => setForm(f => ({
+              ...f,
+              numeroIdentiteNational: e.target.value
+            }))} placeholder="Ex : 123456789" className="input-field" style={{
+              fontSize: 14
+            }} />
+              </div>
             </motion.div> : <motion.div key="view" initial={{
           opacity: 0
         }} animate={{
@@ -1316,6 +1337,10 @@ function ModifierProfil() {
             label: 'Bio boutique',
             value: userProfile?.boutiqueBio || '—',
             icon: Edit2
+          }, {
+            label: 'N° CNI',
+            value: userProfile?.numeroIdentiteNational || '—',
+            icon: BadgeCheck
           }].map((item, i, arr) => <div key={item.label} style={{
             display: 'flex',
             justifyContent: 'space-between',
