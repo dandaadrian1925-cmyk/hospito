@@ -83,11 +83,11 @@ export default function AuthPage() {
             duration: 6000
           });
         } else {
-          toast.success('Compte créé ! Bienvenue sur MAKET 🎉');
+          toast.success('Compte créé ! Bienvenue sur Hospito 🎉');
         }
       } else {
         await loginWithEmail(form.email, form.password);
-        toast.success('Bon retour sur MAKET !');
+        toast.success('Bon retour sur Hospito !');
       }
       navigate('/');
     } catch (err) {
@@ -150,11 +150,11 @@ export default function AuthPage() {
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
             <span className="text-primary-700 font-black text-lg" style={{
             fontFamily: 'Syne, sans-serif'
-          }}>M</span>
+          }}>H</span>
           </div>
           <span className="text-2xl font-black text-white" style={{
           fontFamily: 'Syne, sans-serif'
-        }}>MAKET</span>
+        }}>Hospito</span>
         </Link>
 
         {}
@@ -279,7 +279,7 @@ export default function AuthPage() {
             {mode === 'register' && <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-2">
                 <label className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed cursor-pointer">
                   <input type="checkbox" checked={acceptCGU} onChange={e => setAcceptCGU(e.target.checked)} className="mt-0.5 flex-shrink-0" />
-                  J'ai lu et j'accepte les <Link to="/cgu" target="_blank" className="text-primary-600 font-semibold">Conditions Générales d'Utilisation de MAKET</Link>.
+                  J'ai lu et j'accepte les <Link to="/cgu" target="_blank" className="text-primary-600 font-semibold">Conditions Générales d'Utilisation d'Hospito</Link>.
                 </label>
                 <label className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed cursor-pointer">
                   <input type="checkbox" checked={acceptConfidentialite} onChange={e => setAcceptConfidentialite(e.target.checked)} className="mt-0.5 flex-shrink-0" />
@@ -289,9 +289,6 @@ export default function AuthPage() {
                   <input type="checkbox" checked={acceptMajorite} onChange={e => setAcceptMajorite(e.target.checked)} className="mt-0.5 flex-shrink-0" />
                   Je certifie avoir 18 ans ou plus.
                 </label>
-                <p className="text-xs text-gray-500 leading-relaxed pt-1">
-                  Tout arrangement hors MAKET est sous votre entière responsabilité.
-                </p>
               </div>}
 
             <button type="submit" disabled={loading || googleLoading || (mode === 'register' && !(acceptCGU && acceptConfidentialite && acceptMajorite))} className="btn-primary w-full justify-center py-3 text-sm">

@@ -1,30 +1,28 @@
 import { Link } from 'react-router-dom';
-import { Shield, Truck, CreditCard, Star } from 'lucide-react';
-import TelechargerApkBouton from '../common/TelechargerApkBouton';
+import { CalendarPlus, FolderHeart, MessageCircle, Flag } from 'lucide-react';
 export default function Footer() {
   return <footer className="text-white mt-12" style={{
     background: 'var(--ink)'
   }}>
       {}
-      {}
       <div className="border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-6 py-4 sm:py-8 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
           {[{
-          icon: Shield,
-          title: 'Paiement sécurisé',
-          desc: 'MAKET bloque votre argent jusqu\'à la remise (CamPay gère uniquement vos dépôts/retraits)'
+          icon: CalendarPlus,
+          title: 'Rendez-vous en ligne',
+          desc: 'Réservez une consultation sans vous déplacer'
         }, {
-          icon: Truck,
-          title: 'Livraison disponible',
-          desc: 'Main propre ou via un livreur partenaire, même entre deux villes'
+          icon: FolderHeart,
+          title: 'Dossier partagé',
+          desc: 'Un seul dossier médical, valable dans tous vos établissements'
         }, {
-          icon: CreditCard,
-          title: 'Remboursement garanti',
-          desc: '24h pour signaler un problème'
+          icon: MessageCircle,
+          title: 'Messagerie sécurisée',
+          desc: 'Échangez directement avec vos soignants'
         }, {
-          icon: Star,
-          title: 'Factures vérifiées',
-          desc: 'Authenticité contrôlée par notre équipe'
+          icon: Flag,
+          title: 'Réclamations suivies',
+          desc: 'Signalez un problème, suivez son traitement'
         }].map((item, i) => <div key={i} className="flex items-start gap-2 sm:gap-3">
               <div className="w-7 h-7 sm:w-10 sm:h-10 bg-primary-600/20 rounded-full flex items-center justify-center flex-shrink-0">
                 <item.icon className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary-400" />
@@ -44,61 +42,30 @@ export default function Footer() {
             <div className="w-8 h-8 gradient-blue rounded-lg flex items-center justify-center">
               <span className="text-white font-black text-sm" style={{
               fontFamily: 'Syne, sans-serif'
-            }}>M</span>
+            }}>H</span>
             </div>
             <span className="text-xl font-black" style={{
             fontFamily: 'Syne, sans-serif'
-          }}>MAKET</span>
+          }}>Hospito</span>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
-            Le marketplace d'occasion de confiance au Cameroun. Achetez et vendez en toute sécurité, partout au pays.
+            La plateforme qui connecte patients et établissements de santé, partout au Cameroun.
           </p>
-          {}
-          <p className="text-xs text-gray-500 mt-2 sm:mt-4">© {new Date().getFullYear()} TAL SOLUTIONS AND SERVICES SARL — 🇨🇲 Cameroun. Tous droits réservés.</p>
+          <p className="text-xs text-gray-500 mt-2 sm:mt-4">© {new Date().getFullYear()} Hospito — 🇨🇲 Cameroun. Tous droits réservés.</p>
         </div>
 
         {[{
-        title: 'MAKET',
+        title: 'Hospito',
         links: [{
-          to: '/catalogue',
-          label: 'Parcourir les articles'
-        }, {
-          to: '/publier',
-          label: 'Vendre un article'
-        }, {
-          to: '/comment-ca-marche',
-          label: 'Comment ça marche'
-        }, {
-          to: '/parrainage',
-          label: 'Parrainage'
-        }]
-      }, {
-        title: 'Support',
-        links: [{
-          to: '/faq',
-          label: 'FAQ'
-        }, {
-          to: '/litiges',
-          label: 'Litiges'
-        }, {
-          to: '/contact',
-          label: 'Nous contacter'
-        }, {
-          to: '/securite',
-          label: 'Sécurité'
+          to: '/etablissements',
+          label: 'Trouver un établissement'
         }, {
           to: '/etablissements/demande',
-          label: 'Vous voulez être partenaire de Hospito ?'
+          label: 'Devenir établissement partenaire'
         }]
       }, {
         title: 'Légal',
         links: [{
-          to: '/cgu',
-          label: 'CGU'
-        }, {
-          to: '/confidentialite',
-          label: 'Confidentialité'
-        }, {
           to: '/cookies',
           label: 'Cookies'
         }]
@@ -110,12 +77,6 @@ export default function Footer() {
                     {link.label}
                   </Link>
                 </li>)}
-              {}
-              {section.title === 'Légal' && <li>
-                  <TelechargerApkBouton className="text-sm text-gray-400 hover:text-primary-400 transition-colors text-left">
-                    Télécharger l'application MAKET
-                  </TelechargerApkBouton>
-                </li>}
             </ul>
           </div>)}
       </div>
@@ -123,11 +84,6 @@ export default function Footer() {
       <div className="border-t border-gray-800 py-2.5 sm:py-4">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <p className="text-[11px] sm:text-xs text-gray-500 leading-snug">
-            Tout arrangement hors MAKET est sous votre entière responsabilité. MAKET ne pourra être tenu responsable d'aucune escroquerie résultant d'échanges hors plateforme.
-          </p>
-          {}
-          {}
-          <p className="text-[11px] sm:text-xs text-gray-500 leading-snug mt-1.5">
             Ce site est protégé par reCAPTCHA. La <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary-400">Politique de confidentialité</a> et les <a href="https://policies.google.com/terms" target="_blank" rel="noopener noreferrer" className="underline hover:text-primary-400">Conditions d'utilisation</a> de Google s'appliquent.
           </p>
         </div>

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-const DEFAULT_TITLE = 'MAKET — Achète. Vends. En confiance.';
-const DEFAULT_DESCRIPTION = "MAKET - Le marketplace d'occasion de confiance au Cameroun. Achetez et vendez en toute sécurité, partout au Cameroun.";
+const DEFAULT_TITLE = 'Hospito — Votre santé, simplifiée.';
+const DEFAULT_DESCRIPTION = "Hospito - Prenez rendez-vous, consultez votre dossier médical et échangez avec vos soignants, partout au Cameroun.";
 export function useDocumentMeta(title, description) {
   useEffect(() => {
-    document.title = title ? `${title} | MAKET` : DEFAULT_TITLE;
+    document.title = title ? `${title} | Hospito` : DEFAULT_TITLE;
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) {
       meta = document.createElement('meta');

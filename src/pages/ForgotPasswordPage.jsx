@@ -39,11 +39,11 @@ export default function ForgotPasswordPage() {
           <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
             <span className="text-primary-700 font-black text-lg" style={{
             fontFamily: 'Syne, sans-serif'
-          }}>M</span>
+          }}>H</span>
           </div>
           <span className="text-2xl font-black text-white" style={{
           fontFamily: 'Syne, sans-serif'
-        }}>MAKET</span>
+        }}>Hospito</span>
         </Link>
 
         <motion.div initial={{

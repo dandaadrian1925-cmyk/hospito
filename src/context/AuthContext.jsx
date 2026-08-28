@@ -34,14 +34,14 @@ export const AuthProvider = ({
           return;
         }
         if (profile?.soldeSuspect) {
-          toast.error('Ce compte est actuellement soumis à une vérification suite à une anomalie détectée sur votre solde. Contactez le support MAKET pour la lever.', {
+          toast.error('Ce compte est actuellement soumis à une vérification suite à une anomalie détectée sur votre solde. Contactez le support Hospito pour la lever.', {
             duration: 8000
           });
           signOut(auth);
           return;
         }
         if (profile?.role && profile.role !== 'client') {
-          toast.error("Accès non autorisé — cet espace est réservé aux comptes clients MAKET.");
+          toast.error("Accès non autorisé — cet espace est réservé aux comptes patients Hospito.");
           signOut(auth);
           return;
         }

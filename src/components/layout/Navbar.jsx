@@ -46,7 +46,7 @@ function MaketLogo({
       fontWeight: 800,
       fontSize: s.font,
       fontFamily: 'Syne, sans-serif'
-    }}>M</span>
+    }}>H</span>
       <span style={{
       fontFamily: 'Syne, sans-serif',
       fontWeight: 800,
@@ -54,7 +54,7 @@ function MaketLogo({
       color: 'var(--ink)',
       letterSpacing: '-0.01em'
     }}>
-        MAKET
+        Hospito
       </span>
     </span>;
 }
