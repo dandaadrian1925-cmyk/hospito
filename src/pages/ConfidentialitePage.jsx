@@ -1,22 +1,22 @@
 export default function ConfidentialitePage() {
   const sections = [{
     title: '1. Données collectées',
-    content: ['Informations d\'identité : nom, prénom, adresse email, photo de profil.', 'Documents de vérification : CNI ou passeport (stockés de manière sécurisée et chiffrée).', 'Données de transaction : historique des achats, ventes, montants, dates.', 'Données de navigation : pages visitées, temps passé, interactions avec la plateforme.', 'Données de communication : messages du chat (conservés pour la sécurité et les litiges).']
+    content: ['Informations d\'identité : nom, prénom, adresse email, photo de profil, numéro de CNI (utilisé comme identifiant de votre dossier médical partagé).', 'Données administratives : établissements consultés, demandes et historique de rendez-vous.', 'Contenu clinique de votre dossier médical : antécédents, allergies, prescriptions, comptes-rendus — renseigné par le personnel soignant des établissements où vous êtes suivi.', 'Données de communication : messages échangés avec un établissement, réclamations déposées.', 'Données de paiement : solde et historique de transactions (jamais vos coordonnées bancaires complètes, gérées par la passerelle de paiement partenaire).', 'Données techniques de navigation : pages visitées, appareil utilisé.']
   }, {
     title: '2. Utilisation des données',
-    content: ['Fournir, améliorer et personnaliser nos services.', 'Sécuriser les transactions et prévenir la fraude.', 'Vérifier l\'identité des utilisateurs (CNI).', 'Arbitrer les litiges entre acheteurs et vendeurs.', 'Envoyer des notifications liées à votre activité sur MAKET.', 'Respecter nos obligations légales et réglementaires.']
+    content: ['Fournir et améliorer le service (recherche d\'établissement, rendez-vous, dossier partagé, messagerie, paiement).', 'Permettre au personnel soignant autorisé de consulter et compléter votre dossier médical dans l\'établissement où vous êtes pris en charge.', 'Sécuriser les comptes et prévenir la fraude.', 'Transmettre vos messages et réclamations à l\'établissement concerné.', 'Vous notifier de l\'activité liée à votre compte (confirmation de rendez-vous, réponse à une réclamation...).', 'Respecter nos obligations légales, notamment celles relatives aux données de santé.']
   }, {
     title: '3. Partage des données',
-    content: ['MAKET ne vend jamais vos données personnelles à des tiers.', 'Vos coordonnées (numéro de téléphone, adresse exacte) ne sont jamais affichées publiquement.', 'Certaines données peuvent être partagées avec CamPay pour le traitement des paiements.', 'La remise de l\'article se fait en main propre entre acheteur et vendeur, qui échangent eux-mêmes les informations nécessaires via le chat de la commande.', 'En cas d\'obligation légale, certaines données peuvent être communiquées aux autorités compétentes.']
+    content: ['Hospito ne vend jamais vos données personnelles à des tiers.', 'Le contenu clinique de votre dossier n\'est partagé qu\'avec le personnel soignant autorisé de l\'établissement où vous êtes actuellement suivi — jamais avec un établissement où vous ne consultez pas, ni avec un autre patient.', 'Vos coordonnées de paiement transitent directement par la passerelle de paiement partenaire, jamais stockées en clair par Hospito.', 'En cas d\'obligation légale, certaines données peuvent être communiquées aux autorités compétentes.']
   }, {
     title: '4. Conservation des données',
-    content: ['Données de compte : conservées tant que votre compte est actif.', 'Historique des transactions : conservé 5 ans pour les obligations légales.', 'Messages du chat : conservés 12 mois après la fin de la conversation.', 'Documents CNI : supprimés après vérification réussie ou refus.', 'Données de navigation : conservées 13 mois maximum.']
+    content: ['Données de compte : conservées tant que votre compte est actif.', 'Contenu du dossier médical : conservé selon les durées légales applicables à la conservation des dossiers de santé.', 'Messages et réclamations : conservés le temps nécessaire au traitement puis archivés à des fins de preuve.', 'Documents d\'identité : supprimés après vérification réussie ou refus.']
   }, {
     title: '5. Vos droits',
-    content: ['Droit d\'accès : consultez toutes vos données depuis Mon Compte.', 'Droit de rectification : modifiez vos informations à tout moment.', 'Droit à l\'effacement : demandez la suppression de votre compte et données.', 'Droit à la portabilité : exportez vos données dans un format standard.', 'Droit d\'opposition : refusez certains traitements non essentiels.', 'Pour exercer ces droits : contactez-nous via la page Contact.']
+    content: ['Droit d\'accès : consultez vos informations personnelles depuis Mon Compte.', 'Droit de rectification : modifiez vos informations à tout moment.', 'Droit à l\'effacement : demandez la suppression de votre compte, dans la limite des obligations légales de conservation des données de santé.', 'Droit à la portabilité : demandez le transfert de votre dossier vers un autre établissement ou médecin traitant.', 'Droit d\'opposition : refusez certains traitements non essentiels.', 'Pour exercer ces droits : contactez-nous via la page Contact.']
   }, {
     title: '6. Sécurité des données',
-    content: ['Toutes les communications sont chiffrées via SSL/TLS.', 'Les données sensibles (CNI) sont chiffrées au repos.', 'Accès aux données restreint au personnel autorisé de MAKET.', 'Sauvegardes automatiques quotidiennes sur des serveurs sécurisés.', 'Audits de sécurité réguliers.']
+    content: ['Toutes les communications sont chiffrées en transit (HTTPS/TLS).', 'Le contenu clinique n\'est accessible qu\'au personnel soignant autorisé de l\'établissement de prise en charge — jamais au personnel administratif ni à un autre établissement.', 'Toute consultation ou modification d\'une donnée sensible est journalisée dans un registre d\'audit immuable.', 'Chaque établissement partenaire est cloisonné des autres : aucun ne peut voir les données d\'un patient qu\'il ne prend pas en charge.']
   }];
   return <div style={{
     maxWidth: 800,
@@ -51,7 +51,7 @@ export default function ConfidentialitePage() {
           color: '#2451C4',
           fontWeight: 600
         }}>
-            🔒 MAKET respecte votre vie privée. Nous ne vendons jamais vos données personnelles.
+            🔒 Hospito protège le secret médical. Nous ne vendons jamais vos données personnelles.
           </p>
         </div>
       </div>

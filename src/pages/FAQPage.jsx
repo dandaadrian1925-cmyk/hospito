@@ -1,103 +1,75 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Search, Shield, KeyRound, CreditCard, ShoppingBag, User, AlertTriangle } from 'lucide-react';
+import { ChevronDown, Search, CalendarPlus, CreditCard, FolderHeart, User, Flag } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getSettings } from '../services/settingsService';
-const buildCategories = settings => [{
+const CATEGORIES = [{
   id: 'compte',
   label: 'Compte & Inscription',
   icon: User,
   color: '#2451C4',
   faqs: [{
-    q: 'Combien coûte l\'inscription sur MAKET ?',
+    q: 'Combien coûte l\'inscription sur Hospito ?',
     r: 'L\'inscription est entièrement gratuite.'
-  }, {
-    q: 'Comment fonctionne le code de parrainage ?',
-    r: `Chaque utilisateur inscrit possède un code unique. Partagez-le à vos amis : votre filleul bénéficie d'une commission réduite sur ses ${settings.nombreVentesReduitesFilleul} premières ventes, et vous recevez ${settings.pourcentageCommissionParrain ?? 100}% de la commission MAKET sur chacune de ses ${settings.nombreVentesRecompensees ?? 3} premières VRAIES ventes, crédité sur votre solde de parrainage. Dès sa toute première vente, votre plafond d'annonces en vente augmente aussi de +${settings.limiteAnnoncesParFilleulQualifie ?? 2}. Le solde de parrainage est transférable vers votre solde principal (à partir de ${settings.transfertParrainageMinimum?.toLocaleString('fr-FR') ?? '5 000'} XAF) — ensuite retirable comme un solde normal.`
   }, {
     q: 'Puis-je m\'inscrire avec Google ?',
     r: 'Oui ! Vous pouvez vous inscrire et vous connecter directement avec votre compte Google via le bouton "Continuer avec Google" sur la page d\'inscription.'
   }, {
-    q: 'Comment vérifier mon identité (CNI) ?',
-    r: 'La vérification CNI est obligatoire pour publier des annonces. Rendez-vous dans Mon Compte > Vérification d\'identité et uploadez une photo recto/verso de votre CNI ou passeport. Notre équipe valide sous 24h.'
+    q: 'À quoi sert mon numéro de CNI dans Mon Compte ?',
+    r: 'C\'est l\'identifiant qui permet de retrouver votre dossier médical, quel que soit l\'établissement où vous êtes suivi. Renseignez-le une fois dans Mon Compte > Informations personnelles.'
   }]
 }, {
-  id: 'annonces',
-  label: 'Annonces & Vente',
-  icon: ShoppingBag,
+  id: 'etablissements',
+  label: 'Établissements & Rendez-vous',
+  icon: CalendarPlus,
   color: '#7C3AED',
   faqs: [{
-    q: 'La publication d\'annonce est-elle gratuite ?',
-    r: 'Oui, la publication est entièrement gratuite en Version 1 de MAKET. Vous pouvez publier autant d\'annonces que vous souhaitez.'
+    q: 'Comment trouver un établissement de santé ?',
+    r: 'Depuis l\'accueil ou la barre de recherche, parcourez la liste des établissements partenaires par nom ou par ville.'
   }, {
-    q: 'La facture est-elle obligatoire ?',
-    r: 'Elle est obligatoire pour les articles high-value : téléphones, électronique, électroménager, ordinateurs, motos. Pour les vêtements, chaussures et accessoires, elle est facultative mais recommandée pour inspirer confiance.'
+    q: 'Comment prendre rendez-vous ?',
+    r: 'Ouvrez la fiche de l\'établissement souhaité, onglet "Prendre RDV", puis indiquez le motif de votre visite et la date souhaitée.'
   }, {
-    q: 'Pourquoi dois-je filmer une vidéo de l\'article ?',
-    r: 'La vidéo est obligatoire pour les articles high-value. Elle doit montrer honnêtement tous les défauts et qualités. C\'est votre protection : si un défaut non mentionné dans la vidéo est constaté à la remise, l\'acheteur peut ouvrir un litige et vous risquez de ne pas être payé.'
+    q: 'Ma demande de rendez-vous est-elle confirmée immédiatement ?',
+    r: 'Non — votre demande est transmise à l\'établissement, qui la confirme ou vous recontacte pour ajuster la date. Vous êtes notifié dès qu\'elle est traitée.'
+  }]
+}, {
+  id: 'dossier',
+  label: 'Dossier médical',
+  icon: FolderHeart,
+  color: '#059669',
+  faqs: [{
+    q: 'Mon dossier médical est-il le même dans tous les établissements ?',
+    r: 'Oui — contrairement aux données administratives (qui restent propres à chaque établissement), votre dossier médical (antécédents, prescriptions, comptes-rendus) est unique et partagé entre tous les établissements Hospito où vous êtes suivi.'
   }, {
-    q: 'Comment fonctionne le boost d\'annonce ?',
-    r: 'Le boost augmente la visibilité de votre annonce. Il existe 3 niveaux : Standard (3% du prix), Premium (6% du prix), Max (10% du prix). Le montant en XAF vous est affiché avant confirmation.'
+    q: 'Qui peut consulter mon dossier ?',
+    r: 'Uniquement le personnel soignant autorisé (médecin, infirmier) de l\'établissement où vous êtes actuellement pris en charge — jamais un autre patient, ni un établissement où vous ne consultez pas.'
   }, {
-    q: 'Qu\'est-ce qu\'une Flash Annonce ?',
-    r: 'Une Flash Annonce est visible 24h en tête de liste avec un badge ⚡. Elle crée un sentiment d\'urgence et attire plus d\'acheteurs. Après 24h, l\'article est automatiquement remis en vente normale.'
-  }, {
-    q: 'Comment l\'équipe MAKET vérifie-t-elle les factures ?',
-    r: 'Notre équipe vérifie que l\'entreprise émettrice de la facture existe réellement. Pour les entreprises sans portail de vérification en ligne, MAKET peut leur proposer un service de portail facturier (offre B2B).'
+    q: 'Puis-je le consulter moi-même ?',
+    r: 'La consultation de votre dossier depuis votre espace patient est en cours de déploiement.'
   }]
 }, {
   id: 'paiement',
-  label: 'Paiement sécurisé',
+  label: 'Paiement en ligne',
   icon: CreditCard,
-  color: '#059669',
-  faqs: [{
-    q: 'Quels modes de paiement sont acceptés ?',
-    r: 'MAKET accepte MTN Mobile Money, Orange Money et les cartes bancaires Visa/Mastercard, en ligne uniquement — aucun paiement en espèces n\'est traité par MAKET.'
-  }, {
-    q: 'Comment fonctionne le paiement sécurisé ?',
-    r: 'Dès que l\'acheteur paie (depuis son solde MAKET), l\'argent est bloqué en sécurité par MAKET — le vendeur ne peut pas y toucher tant que la remise n\'est pas confirmée. L\'argent est libéré au vendeur 24h après confirmation de la remise (ou immédiatement s\'il confirme lui-même). CamPay intervient uniquement pour déposer ou retirer de l\'argent sur votre solde MAKET, jamais pour cette protection.'
-  }, {
-    q: 'Quand le vendeur est-il payé ?',
-    r: '24h après confirmation de la remise (via le code à 4 chiffres), si aucun litige n\'a été ouvert, le paiement est automatiquement libéré et le vendeur est payé (moins la commission MAKET).'
-  }]
-}, {
-  id: 'remise',
-  label: 'Remise de l\'article',
-  icon: KeyRound,
   color: '#D97706',
   faqs: [{
-    q: 'Comment récupérer un article acheté ?',
-    r: 'Selon le choix du vendeur : soit en main propre (acheteur et vendeur conviennent ensemble d\'un lieu et d\'une heure via le chat sécurisé de la commande), soit par un livreur partenaire (y compris entre deux villes différentes) qui propose son prix, que vous devez accepter et payer avant qu\'il ne se déplace.'
+    q: 'Comment fonctionne le paiement en ligne ?',
+    r: 'Vous disposez d\'un solde Hospito rechargeable via Mobile Money (MTN Mobile Money, Orange Money), consultable dans l\'onglet Paiement de chaque établissement.'
   }, {
-    q: 'Comment le paiement est-il libéré au vendeur ?',
-    r: 'Au moment de la remise, l\'acheteur communique au vendeur son code de remise à 4 chiffres (visible dans le suivi de sa commande). Le vendeur le saisit dans l\'app pour confirmer — ça déclenche le décompte de 24h avant libération du paiement.'
-  }, {
-    q: 'Que se passe-t-il si le vendeur ne confirme jamais la commande ?',
-    r: 'Si le vendeur ne répond pas dans le délai imparti, la commande est automatiquement annulée et l\'acheteur intégralement remboursé, sans aucun frais.'
-  }, {
-    q: 'Puis-je annuler après avoir payé ?',
-    r: 'Oui, tant que la remise n\'est pas confirmée. L\'annulation est gratuite avant que le vendeur confirme la commande, puis des frais croissants s\'appliquent selon l\'avancement (affichés avant le paiement).'
+    q: 'Puis-je payer mes factures médicales en ligne ?',
+    r: 'Cette fonctionnalité arrive bientôt, une fois la facturation activée côté établissements.'
   }]
 }, {
-  id: 'litiges',
-  label: 'Litiges & Sécurité',
-  icon: AlertTriangle,
+  id: 'reclamations',
+  label: 'Messagerie & Réclamations',
+  icon: Flag,
   color: '#DC2626',
   faqs: [{
-    q: 'Comment ouvrir un litige ?',
-    r: 'Vous avez 24h après confirmation de la remise pour ouvrir un litige. Allez dans le suivi de votre commande et cliquez "Signaler un problème". Des photos preuves sont obligatoires.'
+    q: 'Comment contacter un établissement ?',
+    r: 'Depuis sa fiche, onglet Messagerie — vos messages sont transmis directement à l\'équipe de l\'établissement.'
   }, {
-    q: 'Comment MAKET tranche-t-il les litiges ?',
-    r: 'Notre équipe examine la vidéo de l\'annonce, les photos de réception, l\'historique du chat et les preuves des deux parties. La décision est rendue sous 48h et est finale et irrévocable.'
-  }, {
-    q: 'Que faire si le vendeur veut traiter hors MAKET ?',
-    r: 'Refusez systématiquement. Tout arrangement hors MAKET vous prive de toute protection. MAKET ne peut être tenu responsable des escroqueries résultant d\'échanges hors plateforme. Signalez le vendeur via le bouton "Signaler".'
-  }, {
-    q: 'Pourquoi le chat censure-t-il certains messages ?',
-    r: 'Pour votre protection, le chat bloque automatiquement les numéros de téléphone, emails et liens externes. Les tentatives répétées sont sanctionnées (avertissement → suspension → bannissement).'
-  }, {
-    q: 'Comment signaler une annonce suspecte ?',
-    r: 'Sur chaque annonce, un bouton "Signaler cette annonce" est disponible. Précisez la raison (article volé, facture fausse, prix abusif...). Notre équipe examine le signalement sous 24h.'
+    q: 'Comment signaler un problème rencontré lors d\'une visite ?',
+    r: 'Depuis la fiche de l\'établissement concerné, onglet Réclamations : décrivez le problème, ajoutez une preuve si besoin, et suivez son traitement.'
   }]
 }];
 function FAQItem({
@@ -187,17 +159,7 @@ function FAQItem({
 export default function FAQPage() {
   const [activeCategory, setActiveCategory] = useState('compte');
   const [search, setSearch] = useState('');
-  const [settings, setSettings] = useState({
-    nombreVentesReduitesFilleul: 10,
-    pourcentageCommissionParrain: 100,
-    nombreVentesRecompensees: 3,
-    transfertParrainageMinimum: 5000,
-    limiteAnnoncesParFilleulQualifie: 2
-  });
-  useEffect(() => {
-    getSettings().then(setSettings);
-  }, []);
-  const categories = buildCategories(settings);
+  const categories = CATEGORIES;
   const current = categories.find(c => c.id === activeCategory);
   const filtered = search ? categories.flatMap(c => c.faqs.filter(f => f.q.toLowerCase().includes(search.toLowerCase()) || f.r.toLowerCase().includes(search.toLowerCase()))) : current?.faqs || [];
   return <div style={{
@@ -231,7 +193,7 @@ export default function FAQPage() {
           fontSize: 16,
           marginBottom: 28
         }}>
-            Des réponses à toutes vos questions sur MAKET
+            Des réponses à toutes vos questions sur Hospito
           </p>
           {}
           <div style={{

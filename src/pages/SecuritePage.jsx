@@ -2,45 +2,45 @@ import { motion } from 'framer-motion';
 import { Shield, Lock, Eye, AlertTriangle, CheckCircle, XCircle, KeyRound, FileText, MessageCircle, CreditCard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 const pillars = [{
-  icon: CreditCard,
+  icon: Shield,
   color: '#2451C4',
-  title: 'Paiement sécurisé MAKET',
-  desc: 'Votre argent est bloqué en sécurité par MAKET dès le paiement (CamPay ne gère que vos dépôts/retraits, pas cette protection). Il n\'est libéré au vendeur qu\'après confirmation de la remise. Zéro risque de perdre votre argent.',
-  points: ['Argent bloqué jusqu\'à remise confirmée', 'Remboursement automatique si litige validé', 'Aucun accès de tiers avant confirmation']
+  title: 'Secret médical protégé',
+  desc: 'Votre dossier médical n\'est visible que par le personnel soignant autorisé de l\'établissement où vous êtes actuellement suivi — jamais par un autre patient, ni par un établissement où vous ne consultez pas.',
+  points: ['Accès réservé au personnel soignant (médecin, infirmier)', 'Aucune lecture par le personnel administratif', 'Contenu clinique jamais modifiable a posteriori']
+}, {
+  icon: Lock,
+  color: '#7C3AED',
+  title: 'Accès cloisonné par établissement',
+  desc: 'Chaque établissement ne voit que ses propres patients et son propre personnel. Si vous êtes suivi dans plusieurs établissements, aucun d\'eux ne peut savoir où vous consultez ailleurs.',
+  points: ['Données administratives propres à chaque établissement', 'Établissements mutuellement invisibles entre eux', 'Rôles et permissions vérifiés à chaque accès']
 }, {
   icon: FileText,
-  color: '#7C3AED',
-  title: 'Vérification des factures',
-  desc: 'Notre équipe vérifie l\'authenticité de chaque facture pour les articles high-value avant publication. Impossible de vendre un article volé ou non authentifié.',
-  points: ['Facture obligatoire pour électronique, motos, électroménager', 'Vérification de l\'entreprise émettrice', 'Publication refusée si facture douteuse']
+  color: '#059669',
+  title: 'Traçabilité complète',
+  desc: 'Toute consultation ou modification d\'une donnée sensible (dossier, prescription) est journalisée dans un registre d\'audit immuable — jamais modifiable, même par un administrateur.',
+  points: ['Journal d\'audit horodaté', 'Aucune suppression ni modification a posteriori', 'Traçabilité opposable en cas de litige']
 }, {
   icon: Eye,
-  color: '#059669',
-  title: 'Vidéo obligatoire',
-  desc: 'La vidéo de l\'article montre honnêtement tous les défauts et qualités. Elle fait foi en cas de litige. Si un défaut non mentionné est constaté, le vendeur n\'est pas payé.',
-  points: ['Vidéo détaillée obligatoire pour high-value', 'Watermark MAKET sur toutes les photos', 'Preuve irréfutable en cas de désaccord']
-}, {
-  icon: Shield,
   color: '#D97706',
-  title: 'Identité vérifiée',
-  desc: 'Tous les vendeurs doivent vérifier leur identité avec leur CNI avant de publier. Chaque utilisateur est identifiable et responsable de ses actions.',
-  points: ['CNI obligatoire pour vendre', 'Badge Vendeur Vérifié visible', 'Traçabilité complète des transactions']
+  title: 'Authentification sécurisée',
+  desc: 'Connexion par email/mot de passe ou compte Google. Une seule session active par compte à la fois — toute nouvelle connexion ferme automatiquement les précédentes.',
+  points: ['Une session active à la fois', 'Réinitialisation de mot de passe sécurisée', 'Déconnexion à distance en cas de doute']
 }, {
   icon: MessageCircle,
   color: '#DC2626',
-  title: 'Chat sécurisé',
-  desc: 'Le chat MAKET bloque automatiquement les numéros de téléphone, emails et liens externes. Les tentatives de contournement sont sanctionnées progressivement.',
-  points: ['Coordonnées censurées automatiquement', 'Sanctions progressives jusqu\'au bannissement', 'Historique conservé pour les litiges']
+  title: 'Messagerie et réclamations suivies',
+  desc: 'Vos échanges avec un établissement et vos réclamations restent privés, adressés uniquement à cet établissement, et conservent un historique consultable.',
+  points: ['Conversations privées par établissement', 'Réclamations horodatées et suivies', 'Aucun accès par un autre patient']
 }, {
-  icon: KeyRound,
+  icon: CreditCard,
   color: '#0891B2',
-  title: 'Remise sécurisée par code',
-  desc: 'Aucune remise sans le code à 4 chiffres de l\'acheteur — c\'est ce qui déclenche la libération du paiement. En cas de problème constaté, ouvrez un litige : notre équipe examine les preuves et statue sous 48h.',
-  points: ['Code de remise à 4 chiffres, jamais visible du vendeur avant l\'échange', 'Libération du paiement seulement après confirmation', 'Litige examiné sous 48h en cas de problème']
+  title: 'Paiement via passerelle certifiée',
+  desc: 'Vos coordonnées Mobile Money ne transitent jamais en clair par Hospito — elles sont gérées directement par la passerelle de paiement partenaire (CamPay).',
+  points: ['Aucune donnée bancaire stockée par Hospito', 'Historique de transactions consultable à tout moment', 'Paiement en ligne uniquement, aucune espèce traitée']
 }];
 const dosDonts = {
-  dos: ['Utilisez toujours le chat MAKET pour communiquer', 'Vérifiez la vidéo avant d\'acheter', 'Donnez votre code de remise seulement après avoir vérifié l\'article', 'Signalez immédiatement tout problème dans les 24h', 'Conservez toutes vos preuves (photos, screenshots)'],
-  donts: ['Ne payez jamais en dehors de CamPay', 'Ne partagez jamais vos coordonnées dans le chat', 'Ne donnez pas votre code de remise avant d\'avoir vérifié l\'article', 'Ne faites pas confiance aux vendeurs qui proposent de traiter hors MAKET', 'Ne cliquez jamais sur des liens envoyés dans le chat']
+  dos: ['Vérifiez que vous êtes bien connecté à votre propre compte avant de consulter des informations médicales', 'Renseignez un numéro de CNI exact — il permet de retrouver votre dossier dans tout établissement partenaire', 'Signalez tout accès ou comportement suspect via une réclamation', 'Déconnectez-vous après usage sur un appareil partagé', 'Gardez vos identifiants de connexion strictement confidentiels'],
+  donts: ['Ne partagez jamais votre mot de passe, même avec un proche', 'Ne communiquez pas d\'informations médicales sensibles en dehors de la messagerie de l\'établissement', 'N\'utilisez pas le compte d\'un proche pour consulter son dossier à sa place', 'Ne laissez pas votre session ouverte sur un ordinateur public', 'Ne cliquez jamais sur un lien suspect reçu par message']
 };
 export default function SecuritePage() {
   return <div style={{
@@ -87,7 +87,7 @@ export default function SecuritePage() {
           color: 'white',
           marginBottom: 12
         }}>
-            Sécurité sur MAKET
+            Sécurité sur Hospito
           </h1>
           <p style={{
           color: 'rgba(255,255,255,0.75)',
@@ -95,7 +95,7 @@ export default function SecuritePage() {
           maxWidth: 500,
           margin: '0 auto'
         }}>
-            MAKET a été conçu dès le départ pour protéger acheteurs et vendeurs à chaque étape de la transaction.
+            Hospito a été conçu dès le départ pour protéger le secret médical et les données personnelles de chaque patient.
           </p>
         </motion.div>
       </div>
@@ -368,7 +368,7 @@ export default function SecuritePage() {
               color: '#78350F',
               lineHeight: 1.65
             }}>
-                Tout arrangement conclu en dehors de MAKET est sous votre entière responsabilité. MAKET ne pourra être tenu responsable d'aucune escroquerie ou litige résultant d'un échange hors plateforme. En cas de doute, contactez immédiatement notre support.
+                Hospito met en relation patients et établissements de santé partenaires ; chaque établissement reste seul responsable des soins prodigués. En cas d'urgence vitale, contactez directement les services d'urgence de votre établissement ou le numéro d'urgence national — ne passez pas par l'application.
               </p>
             </div>
           </div>

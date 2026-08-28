@@ -51,7 +51,7 @@ export default function Footer() {
           <p className="text-sm text-gray-400 leading-relaxed">
             La plateforme qui connecte patients et établissements de santé, partout au Cameroun.
           </p>
-          <p className="text-xs text-gray-500 mt-2 sm:mt-4">© {new Date().getFullYear()} Hospito — 🇨🇲 Cameroun. Tous droits réservés.</p>
+          <p className="text-xs text-gray-500 mt-2 sm:mt-4">© {new Date().getFullYear()} Groupe 10 PFE — 🇨🇲 Cameroun. Tous droits réservés.</p>
         </div>
 
         {[{
@@ -64,8 +64,26 @@ export default function Footer() {
           label: 'Devenir établissement partenaire'
         }]
       }, {
+        title: 'Support',
+        links: [{
+          to: '/faq',
+          label: 'FAQ'
+        }, {
+          to: '/contact',
+          label: 'Nous contacter'
+        }, {
+          to: '/securite',
+          label: 'Sécurité'
+        }]
+      }, {
         title: 'Légal',
         links: [{
+          to: '/cgu',
+          label: 'CGU'
+        }, {
+          to: '/confidentialite',
+          label: 'Confidentialité'
+        }, {
           to: '/cookies',
           label: 'Cookies'
         }]

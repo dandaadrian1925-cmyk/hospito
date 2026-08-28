@@ -1,67 +1,51 @@
-import { useState, useEffect } from 'react';
-import { getSettings } from '../services/settingsService';
-const buildSections = settings => [{
+const SECTIONS = [{
   title: '1. Objet',
-  content: 'MAKET est une plateforme de mise en relation entre particuliers pour la vente et l\'achat d\'articles d\'occasion au Cameroun. MAKET n\'est ni vendeur ni acheteur et n\'intervient pas dans les transactions autrement qu\'en qualité de tiers de confiance pour la sécurisation des paiements.'
+  content: 'Hospito est une plateforme numérique, éditée par Groupe 10 PFE, mettant en relation des patients et des établissements de santé partenaires au Cameroun. Elle permet notamment de rechercher un établissement, de demander un rendez-vous, de consulter un dossier médical partagé, d\'échanger avec un établissement et de régler des prestations en ligne. Hospito n\'est pas un établissement de santé, ne dispense aucun soin et n\'intervient pas dans la relation médicale entre un patient et un établissement — chaque établissement partenaire reste seul responsable des soins qu\'il prodigue.'
 }, {
   title: '2. Inscription',
-  content: 'L\'inscription est entièrement gratuite. Elle nécessite une adresse email valide et l\'acceptation des présentes CGU. L\'utilisateur s\'engage à fournir des informations exactes et à les maintenir à jour. Un utilisateur peut supprimer son compte à tout moment depuis son espace personnel, à condition de ne conserver aucun solde (principal ou de parrainage) et aucun achat ou vente en cours. La suppression anonymise le profil et retire les annonces actives ; elle est définitive et ne peut être annulée.'
+  content: 'L\'inscription est entièrement gratuite. Elle nécessite une adresse email valide et l\'acceptation des présentes CGU. L\'utilisateur s\'engage à fournir des informations exactes (notamment son numéro de CNI, utilisé comme identifiant de son dossier médical) et à les maintenir à jour. Un utilisateur peut supprimer son compte à tout moment depuis son espace personnel, sous réserve de l\'absence de solde restant. La suppression anonymise le profil ; elle est définitive et ne peut être annulée.'
 }, {
-  title: '3. Publication d\'annonces',
-  content: 'La publication d\'annonces est gratuite (V1), y compris pour les annonces regroupant plusieurs articles vendus ensemble pour un prix unique ("lot"). Les vendeurs s\'engagent à présenter leurs articles honnêtement, notamment via une vidéo montrant tous les défauts et qualités. Les factures doivent être authentiques. Toute fraude entraîne la suspension définitive du compte.'
+  title: '3. Établissements partenaires',
+  content: 'Un établissement de santé rejoint Hospito après une demande d\'adhésion examinée et approuvée par l\'équipe Hospito. Hospito vérifie les informations administratives déclarées par l\'établissement mais ne certifie ni la qualité, ni la conformité réglementaire des soins qui y sont prodigués — cette responsabilité relève exclusivement de l\'établissement concerné et des autorités sanitaires compétentes.'
 }, {
-  title: '4. Paiements',
-  content: `Les dépôts et retraits sur le solde MAKET se font en ligne uniquement via CamPay (MTN Mobile Money, Orange Money, carte bancaire — aucun paiement en espèces). Un achat est toujours payé depuis ce solde MAKET, jamais directement par CamPay au moment de l'achat : l'argent est bloqué en sécurité par MAKET jusqu'à confirmation de la remise (code de remise, cf. article 7). En cas de livraison, les frais de livraison sont payés séparément, uniquement une fois acceptés par l'acheteur (cf. article 7). MAKET prélève une commission sur chaque vente réalisée via la plateforme (par défaut ${Math.round(settings.commissionVenteDefaut * 1000) / 10}% du prix, pouvant varier selon la catégorie de l'article) ainsi que sur les frais de livraison le cas échéant, déduite au moment où le paiement est libéré au vendeur/livreur.`
+  title: '4. Prise de rendez-vous',
+  content: 'Une demande de rendez-vous soumise depuis la fiche d\'un établissement est transmise à cet établissement, qui la confirme, la reporte ou la refuse selon ses disponibilités. Hospito ne garantit ni la disponibilité d\'un établissement, ni un délai de réponse, et n\'intervient pas dans la décision médicale de prise en charge.'
 }, {
-  title: '5. Annulation d\'une commande',
-  content: 'Tant que le livreur n\'est pas parti chercher l\'article (ou, en main propre, tant que la remise n\'est pas confirmée), l\'acheteur ou le vendeur peut annuler la commande à tout moment, gratuitement — remboursement intégral systématique sur le solde principal, jamais de frais retenus. Une fois cette étape passée, l\'annulation n\'est plus possible : seul un litige peut trancher. Annuler une commande, même gratuitement, est comptabilisé sur le profil de la partie qui annule et pèse sur son score de fiabilité, visible des autres utilisateurs — un compte qui annule fréquemment peut en outre voir ses futurs achats temporairement restreints. Si le vendeur ne confirme jamais la commande dans le délai imparti, l\'acheteur est remboursé intégralement et automatiquement.'
+  title: '5. Dossier médical partagé',
+  content: 'Contrairement aux données administratives (propres à chaque établissement), le contenu clinique du dossier d\'un patient (antécédents, prescriptions, comptes-rendus) est unique et partagé entre les établissements partenaires où ce patient est suivi, dans le but d\'assurer la continuité des soins. Il n\'est accessible qu\'au personnel soignant autorisé de l\'établissement où le patient est effectivement pris en charge — voir la Politique de Confidentialité pour le détail des mesures de protection appliquées.'
 }, {
-  title: '6. Parrainage',
-  content: `Chaque utilisateur dispose d'un code de parrainage unique. Un filleul utilisant ce code bénéficie d'une commission de vente réduite sur ses ${settings.nombreVentesReduitesFilleul} premières ventes. Le parrain reçoit ${settings.pourcentageCommissionParrain ?? 100}% de la commission MAKET sur chacune des ${settings.nombreVentesRecompensees ?? 3} premières VRAIES ventes (payées et créditées) de son filleul, crédité sur son solde de parrainage ; à la toute première vente réelle d'un filleul, le plafond d'annonces en vente du parrain augmente en plus, une seule fois, de ${settings.limiteAnnoncesParFilleulQualifie ?? 2}. Le solde de parrainage est transférable vers le solde principal (à partir de ${settings.transfertParrainageMinimum?.toLocaleString('fr-FR') ?? '5 000'} XAF) et devient alors retirable comme un solde normal.`
+  title: '6. Paiement en ligne',
+  content: 'Les dépôts sur le solde Hospito se font en ligne uniquement via une passerelle de paiement partenaire (Mobile Money, carte bancaire — aucun paiement en espèces traité par Hospito). Ce solde peut être utilisé pour régler des prestations facturées par un établissement partenaire, une fois cette fonctionnalité activée par l\'établissement concerné. Hospito ne fixe pas le prix des actes médicaux, qui relève de chaque établissement.'
 }, {
-  title: '7. Remise de l\'article',
-  content: 'Selon le choix du vendeur à la publication, la remise de l\'article se fait soit en main propre (directement entre l\'acheteur et le vendeur, qui conviennent ensemble d\'un lieu et d\'une heure via le chat de la commande), soit par un livreur partenaire (y compris entre deux villes différentes, via un partenariat avec une agence de transport). En cas de livraison, le livreur fixe librement ses frais, que l\'acheteur doit explicitement accepter et payer avant tout déplacement du livreur — aucune somme n\'est jamais engagée sans cet accord préalable. Le livreur est rémunéré exclusivement sur son solde MAKET, jamais en espèces. Au moment de la remise finale, l\'acheteur communique un code de remise à 4 chiffres à la personne qui lui remet l\'article (le vendeur en main propre, ou le livreur en cas de livraison), qui le saisit dans l\'application pour confirmer la remise et déclencher la libération du paiement (après un délai de 24h sans litige). En cas de problème constaté lors de la remise, l\'acheteur peut ouvrir un litige dans les 24h suivant la confirmation ; l\'équipe MAKET examine les preuves fournies par les parties et statue sous 48h, la décision pouvant donner lieu à un remboursement total ou partiel selon les éléments du dossier.'
+  title: '7. Messagerie et réclamations',
+  content: 'La messagerie permet d\'échanger directement avec un établissement partenaire. Une réclamation ouverte depuis la fiche d\'un établissement lui est transmise ; celui-ci s\'engage à y répondre dans un délai raisonnable. Hospito n\'arbitre pas les réclamations portant sur la qualité ou la pertinence d\'un soin, qui relèvent de l\'établissement et, le cas échéant, des autorités compétentes — mais peut intervenir en cas de dysfonctionnement imputable à la plateforme elle-même.'
 }, {
-  title: '8. Litiges',
-  content: 'En cas de litige entre acheteur et vendeur, l\'équipe MAKET arbitre dans les 48h sur la base des preuves fournies (photos, vidéo, historique de la commande). La décision est finale et irrévocable. Tout arrangement conclu en dehors de MAKET est sous l\'entière responsabilité des parties. MAKET ne peut être tenu responsable des escroqueries résultant d\'échanges hors plateforme. Lorsqu\'un litige est tranché en faveur de l\'acheteur pour une commande remise par un livreur, l\'acheteur est intégralement remboursé (article et frais de livraison) sans délai ni condition. L\'article doit alors être retourné au vendeur : celui-ci peut, à tout moment depuis sa page de commande, payer le double des frais de livraison déjà appliqués sur la commande pour organiser ce retour — cette somme sert intégralement à rémunérer le livreur pour ses deux trajets réels (collecte de l\'article chez l\'acheteur, puis remise au vendeur), chacun soumis à la même commission de livraison qu\'une livraison normale. Une fois ce paiement effectué, le même livreur ayant effectué la livraison initiale est automatiquement chargé de récupérer l\'article chez l\'acheteur et de le remettre au vendeur (MAKET peut, si besoin, désigner un autre livreur). Tant que le vendeur ne déclenche pas ce paiement, aucun retour n\'est organisé ; MAKET n\'avance jamais ces frais et ne peut être tenu responsable de l\'absence de retour d\'un article dont le retour n\'a pas été payé.'
+  title: '8. Comportement',
+  content: 'Toute tentative de partage de coordonnées personnelles hors du canal de messagerie prévu peut être filtrée et sanctionnée progressivement (avertissement, suspension temporaire), jusqu\'à revue par un administrateur en cas de récidive. Les utilisateurs s\'engagent à utiliser la plateforme de bonne foi et à ne fournir que des informations exactes.'
 }, {
-  title: '9. Comportement',
-  content: 'Toute tentative de partage de coordonnées personnelles dans le chat est filtrée et sanctionnée progressivement (avertissements, suspension temporaire de la conversation concernée), jusqu\'à revue par un administrateur en cas de récidive répétée. Les utilisateurs s\'engagent à utiliser la plateforme de bonne foi.'
+  title: '9. Responsabilité',
+  content: 'Hospito agit en qualité d\'intermédiaire technique de mise en relation entre patients et établissements de santé. Hospito n\'est à aucun moment prestataire de soins, et n\'est pas partie à la relation médicale entre un patient et un établissement. Hospito ne peut être tenu responsable des actes médicaux, diagnostics, prescriptions ou décisions de prise en charge, qui relèvent exclusivement de l\'établissement et du personnel soignant concernés. En cas d\'urgence vitale, l\'utilisateur doit contacter directement les services d\'urgence compétents et non l\'application.'
 }, {
-  title: '10. Responsabilité',
-  content: 'MAKET n\'est pas responsable du contenu des annonces, de la qualité des articles ou du comportement des utilisateurs hors plateforme. MAKET fait ses meilleurs efforts pour vérifier les factures mais ne peut garantir l\'authenticité de tous les documents. MAKET agit uniquement en qualité d\'intermédiaire technique de mise en relation et de séquestre des paiements (escrow) ; MAKET n\'est à aucun moment propriétaire, vendeur, acheteur ou transporteur des articles échangés, et n\'est pas partie au contrat de vente conclu directement entre l\'acheteur et le vendeur. Les livreurs partenaires sont des prestataires indépendants ; aucune relation de subordination, de mandat ou de préposition n\'existe entre MAKET et un livreur, un vendeur ou un acheteur.'
+  title: '10. Limitation de responsabilité',
+  content: 'Dans la mesure permise par la loi camerounaise, Hospito ne pourra être tenu responsable des dommages indirects, immatériels ou consécutifs résultant de l\'utilisation ou de l\'impossibilité d\'utiliser la plateforme. La plateforme est fournie « en l\'état » et selon sa disponibilité ; Hospito ne garantit pas un fonctionnement ininterrompu ou exempt d\'erreurs, notamment en cas de maintenance, de panne d\'un prestataire tiers (passerelle de paiement, hébergeur, opérateur de télécommunications) ou de cas de force majeure.'
 }, {
-  title: '11. Limitation de responsabilité',
-  content: 'Dans la mesure permise par la loi camerounaise, la responsabilité de MAKET envers un utilisateur, tous préjudices confondus et quelle qu\'en soit la cause, ne pourra excéder le montant des commissions effectivement perçues par MAKET sur la ou les commandes concernées au cours des douze (12) mois précédant le fait générateur. MAKET ne pourra en aucun cas être tenu responsable des dommages indirects, immatériels ou consécutifs (perte de profit, perte de chance, atteinte à la réputation, préjudice moral) résultant de l\'utilisation ou de l\'impossibilité d\'utiliser la plateforme. La plateforme est fournie "en l\'état" et selon sa disponibilité ; MAKET ne garantit pas un fonctionnement ininterrompu, exempt d\'erreurs, ou une disponibilité continue, notamment en cas de maintenance, de panne d\'un prestataire tiers (CamPay, hébergeur, opérateur de télécommunications) ou de cas de force majeure.'
+  title: '11. Indemnisation',
+  content: 'Tout utilisateur s\'engage à garantir et indemniser Hospito et Groupe 10 PFE contre toute réclamation, perte ou dommage résultant de sa violation des présentes CGU, de son utilisation frauduleuse de la plateforme, ou du contenu qu\'il publie (messages, réclamations, preuves).'
 }, {
-  title: '12. Indemnisation',
-  content: 'Tout utilisateur s\'engage à garantir et indemniser MAKET, ses dirigeants et son personnel contre toute réclamation, perte, dommage ou frais (y compris les honoraires raisonnables d\'avocat) résultant : de sa violation des présentes CGU, de son utilisation frauduleuse ou abusive de la plateforme, du contenu qu\'il publie (annonces, messages, preuves), ou de tout litige avec un autre utilisateur ou un tiers portant sur une transaction conclue via MAKET.'
+  title: '12. Règlement préalable des litiges',
+  content: 'Avant toute action judiciaire, tout utilisateur s\'engage à soumettre son différend avec Hospito à une tentative de règlement amiable via la messagerie de support, et à en épuiser les voies avant de saisir toute juridiction.'
 }, {
-  title: '13. Règlement préalable des litiges',
-  content: 'Avant toute action judiciaire, tout utilisateur s\'engage à soumettre son différend avec MAKET, un autre utilisateur ou un livreur partenaire à la procédure interne de résolution des litiges prévue à l\'article 8, et à en épuiser les voies avant de saisir toute juridiction — ceci ne prive l\'utilisateur d\'aucun droit d\'action, mais constitue un préalable obligatoire destiné à permettre un règlement amiable rapide.'
+  title: '13. Droit applicable et juridiction compétente',
+  content: 'Les présentes CGU sont soumises au droit camerounais. Tout litige qui n\'aurait pu être résolu à l\'amiable relève de la compétence exclusive des juridictions de Yaoundé, Cameroun, sous réserve des règles d\'ordre public applicables aux consommateurs.'
 }, {
-  title: '14. Droit applicable et juridiction compétente',
-  content: 'Les présentes CGU sont soumises au droit camerounais (y compris, le cas échéant, les Actes uniformes OHADA applicables). Tout litige qui n\'aurait pu être résolu à l\'amiable conformément à l\'article 13 relève de la compétence exclusive des juridictions de Yaoundé, Cameroun, sous réserve des règles d\'ordre public applicables aux consommateurs.'
+  title: '14. Suspension et résiliation',
+  content: 'Hospito se réserve le droit de suspendre ou de résilier, à tout moment et sans préavis, l\'accès d\'un utilisateur en cas de violation des présentes CGU, de comportement frauduleux, ou de risque avéré pour la sécurité d\'autres utilisateurs ou de la plateforme.'
 }, {
-  title: '15. Suspension et résiliation',
-  content: 'MAKET se réserve le droit de suspendre ou de résilier, à tout moment et sans préavis, l\'accès d\'un utilisateur en cas de violation des présentes CGU, de comportement frauduleux, de fourniture d\'informations fausses, ou de risque avéré pour la sécurité d\'autres utilisateurs ou de la plateforme, sans que cela ouvre droit à une quelconque indemnisation, sous réserve du versement des sommes légitimement dues à l\'utilisateur au titre de son solde.'
-}, {
-  title: '16. Dispositions générales',
-  content: 'Si une clause des présentes CGU est jugée nulle ou inapplicable par une juridiction compétente, les autres clauses demeurent pleinement applicables. Le fait pour MAKET de ne pas se prévaloir d\'un manquement à une clause des CGU ne saurait être interprété comme une renonciation à s\'en prévaloir ultérieurement. MAKET peut modifier les présentes CGU à tout moment ; toute modification substantielle est portée à la connaissance des utilisateurs par notification sur la plateforme, la poursuite de l\'utilisation de MAKET après notification valant acceptation des CGU modifiées.'
+  title: '15. Dispositions générales',
+  content: 'Si une clause des présentes CGU est jugée nulle ou inapplicable, les autres clauses demeurent pleinement applicables. Hospito peut modifier les présentes CGU à tout moment ; toute modification substantielle est portée à la connaissance des utilisateurs par notification sur la plateforme, la poursuite de l\'utilisation d\'Hospito après notification valant acceptation des CGU modifiées.'
 }];
 export default function CGUPage() {
-  const [settings, setSettings] = useState({
-    commissionVenteDefaut: 0.05,
-    nombreVentesReduitesFilleul: 10,
-    pourcentageCommissionParrain: 100,
-    nombreVentesRecompensees: 3,
-    transfertParrainageMinimum: 5000,
-    limiteAnnoncesParFilleulQualifie: 2
-  });
-  useEffect(() => {
-    getSettings().then(setSettings);
-  }, []);
-  const sections = buildSections(settings);
+  const sections = SECTIONS;
   return <div style={{
     maxWidth: 800,
     margin: '0 auto',

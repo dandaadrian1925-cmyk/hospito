@@ -2,11 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Phone, Headphones, AlertTriangle, CheckCircle, X, Loader, Paperclip, FileText, Download } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getCommandesAcheteur, getCommandesVendeur } from '../services/commandesService';
-import { getAnnoncesByUser } from '../services/annoncesService';
-import { getLitigesByUser } from '../services/litigesService';
-import { getAvisByUser } from '../services/avisService';
-import { getSettings } from '../services/settingsService';
+import { getMesDemandesRdv } from '../services/demandesRendezVousService';
+import { getReclamationsPatient } from '../services/reclamationsService';
 import { collection, addDoc, doc, updateDoc, arrayUnion, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { uploadFile, getChatSignedUrls } from '../supabase/config';
@@ -18,70 +15,49 @@ const SYS = {
   fontFamily: 'var(--font)'
 };
 const SUPPORT_EXPIRATION_MS = 2 * 60 * 60 * 1000;
-const buildSystemPrompt = (userProfile, commandes, litiges, annonces, avis, settings) => `
-Tu es l'assistant virtuel de MAKET, le marketplace d'occasion de confiance au Cameroun (disponible dans les 10 régions).
-Tu t'appelles "Assistant MAKET". Tu réponds uniquement en français, de manière claire, concise et professionnelle.
-Tu ne réponds qu'aux questions concernant MAKET et ses services. Si la question n'est pas liée à MAKET, redirige poliment vers les sujets MAKET.
+const buildSystemPrompt = (userProfile, demandesRdv, reclamations) => `
+Tu es l'assistant virtuel de Hospito, la plateforme qui connecte patients et établissements de santé partenaires au Cameroun.
+Tu t'appelles "Assistant Hospito". Tu réponds uniquement en français, de manière claire, concise et professionnelle.
+Tu ne réponds qu'aux questions concernant Hospito et ses services. Si la question n'est pas liée à Hospito, redirige poliment vers les sujets Hospito.
+Tu n'es pas un professionnel de santé : tu n'établis aucun diagnostic et ne donnes aucun conseil médical — pour toute question médicale, oriente vers l'établissement ou, en cas d'urgence vitale, vers les services d'urgence.
 
-=== RÈGLES ET FONCTIONNEMENT DE MAKET ===
+=== RÈGLES ET FONCTIONNEMENT DE HOSPITO ===
 
 INSCRIPTION :
 - Entièrement gratuite
 - Authentification : email/mot de passe ou Google Sign-In
-- CNI obligatoire pour publier des annonces
+- Le numéro de CNI (Mon Compte > Informations personnelles) sert d'identifiant pour le dossier médical partagé
 
-ANNONCES :
-- Publication gratuite (V1)
-- Facture obligatoire pour les articles high-value (téléphones, électronique, électroménager, ordinateurs, motos)
-- Facture facultative pour vêtements, accessoires, petits articles
-- Vidéo obligatoire pour les high-value — doit montrer TOUS les défauts et qualités
-- Watermark MAKET automatique sur les photos
-- Vérification facture par l'équipe MAKET avant publication
-- Statuts : en_attente, en_vente, reserve, vendu, expire, refuse
+ÉTABLISSEMENTS PARTENAIRES :
+- Annuaire recherchable par nom ou par ville, depuis l'accueil ou la page "Établissements"
+- Chaque établissement dispose de son propre espace patient avec 5 onglets : Prendre RDV, Mon dossier, Messagerie, Paiement, Réclamations
+- Un établissement de santé peut demander à rejoindre Hospito via le formulaire "Devenir établissement partenaire" (footer du site)
 
-PAIEMENTS :
-- Un achat est TOUJOURS payé depuis le solde MAKET de l'acheteur (jamais directement par carte/mobile money au moment de l'achat) — l'argent est bloqué (paiement sécurisé) jusqu'à confirmation de la remise, puis libéré au vendeur
-- CamPay intervient uniquement pour ALIMENTER (dépôt) ou RETIRER (retrait) ce solde, pas pour payer un article directement — c'est pour ça qu'un achat ne redemande jamais de code CamPay si le solde est déjà suffisant
-- Méthodes de dépôt/retrait acceptées : MTN Mobile Money, Orange Money, Visa/Mastercard (aucun paiement cash)
-- Commission MAKET : ${Math.round(settings.commissionVenteDefaut * 100)}% sur chaque vente (par défaut, peut varier selon la catégorie), prélevée au moment où le paiement est libéré au vendeur (pas à la publication)
-- Boost annonce : 3% / 6% / 10% du prix de vente
-- Si un écart est détecté entre le solde affiché et l'historique réel des transactions d'un compte, ce compte est automatiquement suspendu (achat/dépôt/retrait bloqués, déconnexion immédiate) le temps qu'un admin vérifie et corrige — c'est une protection, pas une sanction ; le compte est réactivé dès la vérification faite
+RENDEZ-VOUS :
+- Une demande de RDV se fait depuis la fiche de l'établissement, onglet "Prendre RDV" (motif + date souhaitée)
+- Elle reste "en attente" jusqu'à confirmation par l'établissement — pas de garantie de disponibilité immédiate
 
-REMISE (main propre ou livraison, au choix du vendeur à la publication) :
-- Main propre : organisée directement entre acheteur et vendeur via le chat de la commande — le vendeur confirme la commande, puis marque l'article prêt
-- Livraison (y compris entre deux villes, via une agence de transport partenaire) : une fois l'article prêt, un livreur candidate et propose librement son prix ; l'acheteur doit explicitement l'accepter et le payer avant tout déplacement du livreur (jamais d'argent engagé sans cet accord) — le livreur est payé sur son solde MAKET, jamais en espèces
-- Au moment de l'échange final, l'acheteur donne son code de remise à 4 chiffres à la personne qui lui remet l'article (vendeur ou livreur), qui le saisit pour libérer le paiement
-- Barème d'annulation par palier : gratuit avant confirmation du vendeur, puis frais croissants (paramétrables) après confirmation et après que l'article soit marqué prêt ; en mode livraison, les frais de livraison déjà payés sont intégralement remboursés si l'annulation intervient avant que le livreur ne soit parti chercher l'article
-- Si le vendeur ne confirme jamais la commande : remboursement automatique intégral après le délai configuré
+DOSSIER MÉDICAL :
+- Contrairement aux données administratives (propres à chaque établissement), le dossier médical (antécédents, prescriptions, comptes-rendus) est UNIQUE et partagé entre tous les établissements où le patient est suivi
+- Il n'est consultable que par le personnel soignant autorisé de l'établissement où le patient est pris en charge — jamais par un autre établissement ni un autre patient
+- La consultation du dossier directement depuis l'espace patient arrive prochainement
 
-LITIGES :
-- 24h après confirmation de la remise pour ouvrir un litige
-- Photos preuves obligatoires
-- Équipe MAKET tranche sous 48h — décision finale et irrévocable
-- Si litige acheteur gagné : remboursement total
-- Si litige vendeur gagné : paiement libéré au vendeur
+PAIEMENT EN LIGNE :
+- Solde Hospito rechargeable via Mobile Money (MTN Mobile Money, Orange Money) — aucun paiement en espèces
+- Sert à régler les prestations facturées par un établissement, une fois cette fonctionnalité activée côté établissement
 
-PARRAINAGE :
-- Code unique par utilisateur
-- Filleul bénéficie d'une commission de vente réduite sur ses ${settings.nombreVentesReduitesFilleul} premières ventes
-- Le parrain reçoit ${settings.pourcentageCommissionParrain ?? 100}% de la commission MAKET sur chacune des ${settings.nombreVentesRecompensees ?? 3} premières VRAIES ventes (payées et créditées) de son filleul, crédité sur son solde de parrainage
-- À la toute première vraie vente d'un filleul, le plafond d'annonces en vente du parrain augmente en plus de +${settings.limiteAnnoncesParFilleulQualifie ?? 2} (une fois par filleul, permanent)
-- Le solde de parrainage est transférable vers le solde principal (montant minimum ${settings.transfertParrainageMinimum?.toLocaleString('fr-FR') ?? '5 000'} XAF) — ensuite retirable comme un solde normal
+MESSAGERIE & RÉCLAMATIONS :
+- L'onglet Messagerie de chaque établissement permet un échange direct et privé avec lui
+- L'onglet Réclamations permet de signaler un problème rencontré (avec preuve si besoin) et d'en suivre le traitement
 
-CONFIDENTIALITÉ ENTRE MEMBRES :
-- Le vrai nom d'un membre n'est JAMAIS visible par un autre client — chacun choisit un pseudo (modifiable à tout moment dans "Mon compte"), affiché partout à la place du vrai nom
-- Exception : en mode livraison, le livreur voit le vrai nom de l'acheteur ET du vendeur (nécessaire pour identifier les personnes sur le terrain lors de la remise) — mais jamais les autres clients entre eux, même en main propre
-- Ça ne change rien à la sécurité des transactions : le paiement sécurisé et la résolution de litiges fonctionnent normalement avec un pseudo
-
-SÉCURITÉ :
-- Chat filtré : numéros de téléphone, emails, liens externes censurés automatiquement
-- Sanctions : avertissement → suspension chat 24h → suspension compte 7j → bannissement définitif
-- CNI vérifiée avant toute publication
-- Aucun arrangement hors MAKET n'est couvert par nos protections
+SÉCURITÉ ET CONFIDENTIALITÉ :
+- Chaque établissement est cloisonné des autres : aucun ne voit les données d'un patient qu'il ne prend pas en charge
+- Toute consultation ou modification d'une donnée sensible est journalisée de façon immuable
+- Chat filtré : numéros de téléphone, emails et liens externes sont censurés automatiquement pour la sécurité
 
 OPÉRATEUR HUMAIN :
 - Si l'utilisateur demande à parler à un opérateur humain, un agent, ou un humain, réponds :
-  "Je vais vous mettre en relation avec un opérateur MAKET. Veuillez patienter, un agent va vous rejoindre sous peu. ⏳"
+  "Je vais vous mettre en relation avec un opérateur Hospito. Veuillez patienter, un agent va vous rejoindre sous peu. ⏳"
   Et termine ton message par exactement ce tag : [ESCALADE_OPERATEUR]
 
 === DONNÉES DE L'UTILISATEUR CONNECTÉ ===
@@ -89,33 +65,23 @@ ${userProfile ? `
 Nom : ${userProfile.displayName || userProfile.prenom + ' ' + userProfile.nom || 'Non renseigné'}
 Email : ${userProfile.email || 'Non renseigné'}
 Ville : ${userProfile.ville || 'Non renseignée'}
-CNI vérifiée : ${userProfile.cniVerifie ? 'Oui ✅' : 'Non ❌'}
-Avis reçus : ${avis?.moyenne ? `${avis.moyenne}/5 (${avis.total} avis)` : 'Aucun avis pour le moment'}
-Code parrainage : ${userProfile.referralCode || 'Non disponible'}
-Solde de parrainage : ${userProfile.soldeParrainage || 0} XAF
-Total ventes : ${userProfile.totalVentes || 0}
-Total achats : ${userProfile.totalAchats || 0}
+N° CNI renseigné : ${userProfile.numeroIdentiteNational ? 'Oui' : 'Non'}
 ` : 'Utilisateur non connecté'}
 
-${commandes?.length > 0 ? `
-COMMANDES EN COURS (${commandes.length}) :
-${commandes.slice(0, 5).map(c => `- Commande #${c.id?.slice(0, 8)} | Statut: ${c.statut} | Montant: ${c.montant?.toLocaleString()} XAF`).join('\n')}
-` : 'Aucune commande en cours.'}
+${demandesRdv?.length > 0 ? `
+DEMANDES DE RENDEZ-VOUS (${demandesRdv.length}) :
+${demandesRdv.slice(0, 5).map(d => `- ${d.motif} | Statut: ${d.statut}`).join('\n')}
+` : 'Aucune demande de rendez-vous en cours.'}
 
-${litiges?.length > 0 ? `
-LITIGES OUVERTS (${litiges.length}) :
-${litiges.slice(0, 3).map(l => `- Litige #${l.id?.slice(0, 8)} | Statut: ${l.statut} | Raison: ${l.raison}`).join('\n')}
-` : 'Aucun litige ouvert.'}
-
-${annonces?.length > 0 ? `
-ANNONCES ACTIVES (${annonces.length}) :
-${annonces.slice(0, 5).map(a => `- ${a.titre} | ${a.prix?.toLocaleString()} XAF | Statut: ${a.statut}`).join('\n')}
-` : 'Aucune annonce publiée.'}
+${reclamations?.length > 0 ? `
+RÉCLAMATIONS OUVERTES (${reclamations.length}) :
+${reclamations.slice(0, 3).map(r => `- ${r.sujet} | Statut: ${r.statut}`).join('\n')}
+` : 'Aucune réclamation ouverte.'}
 
 === INSTRUCTIONS ===
 - Sois concis (3-4 phrases max par réponse sauf si l'utilisateur demande plus de détails)
 - Utilise les données de l'utilisateur pour personnaliser tes réponses
-- Si tu mentionnes une page MAKET, indique le chemin (ex: "Rendez-vous dans Mon Compte > Mes litiges")
+- Si tu mentionnes une page Hospito, indique le chemin (ex: "onglet Réclamations de la fiche de votre établissement")
 - Ne divulgue jamais les données personnelles de l'utilisateur dans une réponse publique
 - Réponds toujours en français
 `;
@@ -269,7 +235,7 @@ function MessageBubble({
           fontWeight: 700,
           marginBottom: 3,
           opacity: 0.75
-        }}>Opérateur MAKET</div>}
+        }}>Opérateur Hospito</div>}
           {displayContent}
           <AttachmentPreview attachmentPath={msg.attachmentPath} attachmentName={msg.attachmentName} convId={convId} />
         </div>
@@ -303,7 +269,7 @@ function MessageBubble({
             color: '#B45309',
             marginTop: 2,
             ...SYS
-          }}>Un agent MAKET va vous rejoindre sous peu. Temps d'attente estimé : 5-15 minutes.</p>
+          }}>Un agent Hospito va vous rejoindre sous peu. Temps d'attente estimé : 5-15 minutes.</p>
             </div>
           </div>}
 
@@ -350,23 +316,9 @@ export default function ContactPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({
-    commandes: [],
-    litiges: [],
-    annonces: [],
-    avis: null
+    demandesRdv: [],
+    reclamations: []
   });
-  const [settings, setSettings] = useState({
-    commissionVenteDefaut: 0.05,
-    nombreVentesReduitesFilleul: 10,
-    pourcentageCommissionParrain: 100,
-    nombreVentesRecompensees: 3,
-    transfertParrainageMinimum: 5000,
-    limiteAnnoncesVenteBase: 10,
-    limiteAnnoncesParFilleulQualifie: 2
-  });
-  useEffect(() => {
-    getSettings().then(setSettings);
-  }, []);
   const [supportConvId, setSupportConvId] = useState(null);
   const [supportStatut, setSupportStatut] = useState(null);
   const [showConfirmOperateur, setShowConfirmOperateur] = useState(false);
@@ -411,12 +363,10 @@ export default function ContactPage() {
     const loadUserData = async () => {
       if (!user) return;
       try {
-        const [commandes, litiges, annonces, avis] = await Promise.all([getCommandesAcheteur(user.uid), getLitigesByUser(user.uid), getAnnoncesByUser(user.uid), getAvisByUser(user.uid)]);
+        const [demandesRdv, reclamations] = await Promise.all([getMesDemandesRdv(user.uid), getReclamationsPatient(user.uid)]);
         setUserData({
-          commandes,
-          litiges,
-          annonces,
-          avis
+          demandesRdv,
+          reclamations
         });
       } catch (e) {
         console.error('Erreur chargement données utilisateur:', e);
@@ -425,7 +375,7 @@ export default function ContactPage() {
     loadUserData();
   }, [user]);
   useEffect(() => {
-    const welcome = userProfile ? `Bonjour ${userProfile.prenom || userProfile.displayName?.split(' ')[0] || ''} ! 👋 Je suis l'assistant MAKET. Comment puis-je vous aider aujourd'hui ?` : `Bonjour ! 👋 Je suis l'assistant MAKET. Comment puis-je vous aider aujourd'hui ? (Connectez-vous pour que je puisse accéder à vos données et vous aider plus précisément.)`;
+    const welcome = userProfile ? `Bonjour ${userProfile.prenom || userProfile.displayName?.split(' ')[0] || ''} ! 👋 Je suis l'assistant Hospito. Comment puis-je vous aider aujourd'hui ?` : `Bonjour ! 👋 Je suis l'assistant Hospito. Comment puis-je vous aider aujourd'hui ? (Connectez-vous pour que je puisse accéder à vos données et vous aider plus précisément.)`;
     setMessages([{
       role: 'assistant',
       content: welcome,
@@ -457,7 +407,7 @@ export default function ContactPage() {
       behavior: 'smooth'
     });
   }, [messages, loading]);
-  const systemPrompt = buildSystemPrompt(userProfile, userData.commandes, userData.litiges, userData.annonces, userData.avis, settings);
+  const systemPrompt = buildSystemPrompt(userProfile, userData.demandesRdv, userData.reclamations);
   const recommencerConversation = () => {
     setSupportConvId(null);
     setSupportStatut(null);
@@ -561,7 +511,7 @@ export default function ContactPage() {
       setUploadingAttachment(false);
     }
   };
-  const suggestions = ['Comment ouvrir un litige ?', 'Comment publier une annonce ?', 'Comment fonctionne le paiement sécurisé ?', 'Parler à un opérateur'];
+  const suggestions = ['Comment prendre rendez-vous ?', 'Comment consulter mon dossier médical ?', 'Comment fonctionne le paiement en ligne ?', 'Parler à un opérateur'];
   const inputDisabled = loading || supportStatut === 'en_attente_operateur' || supportStatut === 'resolu' || supportStatut === 'expiree';
   const inputPlaceholder = supportStatut === 'en_attente_operateur' ? 'En attente d\'un opérateur...' : supportStatut === 'resolu' || supportStatut === 'expiree' ? 'Conversation terminée' : 'Posez votre question...';
   return <div style={{
@@ -607,7 +557,7 @@ export default function ContactPage() {
               <h1 style={{
               fontSize: 22,
               fontWeight: 700
-            }}>Assistant MAKET</h1>
+            }}>Assistant Hospito</h1>
               <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -655,12 +605,12 @@ export default function ContactPage() {
         color: 'var(--text-3)',
         marginTop: 8
       }}>
-          Posez vos questions sur MAKET, vos commandes, vos annonces ou vos litiges.
+          Posez vos questions sur Hospito, vos rendez-vous ou vos réclamations.
           {user ? ` Je connais votre compte ${userProfile?.prenom || ''}.` : ' Connectez-vous pour une aide personnalisée.'}
         </p>
       </div>
 
-      {showConfirmOperateur && <ConfirmDialog title="Parler à un opérateur MAKET ?" description="Un agent humain va prendre connaissance de votre demande et vous répondre directement ici, généralement sous quelques minutes." confirmLabel="Oui, me mettre en relation" onConfirm={demanderOperateur} onCancel={() => setShowConfirmOperateur(false)} />}
+      {showConfirmOperateur && <ConfirmDialog title="Parler à un opérateur Hospito ?" description="Un agent humain va prendre connaissance de votre demande et vous répondre directement ici, généralement sous quelques minutes." confirmLabel="Oui, me mettre en relation" onConfirm={demanderOperateur} onCancel={() => setShowConfirmOperateur(false)} />}
 
       {}
       <div style={{
@@ -981,7 +931,7 @@ export default function ContactPage() {
         lineHeight: 1.5,
         ...SYS
       }}>
-          L'assistant IA répond aux questions générales sur MAKET. Pour les urgences ou problèmes complexes, tapez <strong>"parler à un opérateur"</strong> pour être mis en relation avec un agent humain.
+          L'assistant IA répond aux questions générales sur Hospito. Pour toute urgence médicale ou question complexe, tapez <strong>"parler à un opérateur"</strong> pour être mis en relation avec un agent humain.
         </p>
       </div>
 
