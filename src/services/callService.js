@@ -7,7 +7,7 @@ import { db, auth } from '../firebase/config';
 // le jeton d'accès (agora-token, Edge Function) et le signal de présence
 // d'appel sur la commande elle-même (appelEnCours), déjà inclus dans
 // listenCommande — jamais un listener séparé nécessaire ici.
-const AGORA_TOKEN_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/agora-token';
+const AGORA_TOKEN_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/hospito-agora-token';
 
 export const getAgoraToken = async (commandeId, contexte) => {
   const idToken = await auth.currentUser.getIdToken();

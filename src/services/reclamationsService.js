@@ -6,10 +6,10 @@ export async function ouvrirReclamation({ patientUid, etablissementId, sujet, de
   const reclamationRef = doc(collection(db, 'reclamations'));
   const preuveUrls = [];
   for (let i = 0; i < preuvePhotos.length; i++) {
-    // Réutilise le bucket Supabase "litiges" (déjà autorisé pour
-    // photo/vidéo) plutôt que de créer un nouveau bucket dédié — pas
-    // d'infra Supabase supplémentaire nécessaire pour cette fonctionnalité.
-    const upload = await uploadFile('litiges', `reclamations/${reclamationRef.id}/${Date.now()}_${i}`, preuvePhotos[i]);
+    // Bucket "reclamations" dédié (fonction hospito-secure-upload-url) — le
+    // chemin doit commencer par "{uid}/" (vérifié côté serveur), d'où l'ordre
+    // patientUid d'abord, reclamationId ensuite pour ne garder qu'un identifiant lisible.
+    const upload = await uploadFile('reclamations', `${patientUid}/${reclamationRef.id}_${Date.now()}_${i}`, preuvePhotos[i]);
     preuveUrls.push(upload.publicUrl);
   }
   await setDoc(reclamationRef, {

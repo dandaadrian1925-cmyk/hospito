@@ -13,7 +13,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getEtablissement } from '../services/etablissementsPublicService';
+import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVousService';
 import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamationsService';
 import { getOrCreateConversation, envoyerMessage, listenMessages } from '../services/chatService';
@@ -403,6 +403,60 @@ function TabReclamations({ etablissementId, patientUid }) {
   );
 }
 
+function ServicesSection({ etablissementId }) {
+  const [services, setServices] = useState(null);
+
+  useEffect(() => {
+    listerServicesActifs(etablissementId)
+      .then(setServices)
+      .catch((e) => {
+        console.error('listerServicesActifs a échoué :', e);
+        setServices([]);
+      });
+  }, [etablissementId]);
+
+  if (services === null || services.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Services disponibles</p>
+      <div
+        className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide"
+        style={{ paddingBottom: 4 }}
+      >
+        {services.map((s) => (
+          <div
+            key={s.id}
+            style={{
+              flexShrink: 0,
+              width: 160,
+              borderRadius: 12,
+              overflow: 'hidden',
+              border: '1px solid var(--border, #E2E8F0)',
+              background: 'white',
+            }}
+          >
+            <div
+              style={{
+                height: 90,
+                background: s.photoURL ? `url(${s.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {!s.photoURL && (
+                <span style={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{(s.nom || '?').charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+            <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', padding: '8px 10px' }}>{s.nom}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function EtablissementSpacePage() {
   const { etablissementId } = useParams();
   const [searchParams] = useSearchParams();
@@ -481,6 +535,8 @@ export default function EtablissementSpacePage() {
           </div>
         </div>
       </div>
+
+      <ServicesSection etablissementId={etablissementId} />
 
       <div
         className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide"

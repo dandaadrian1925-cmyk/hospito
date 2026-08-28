@@ -14,7 +14,10 @@ const EXTENSIONS_AUTORISEES = {
   litiges: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov', 'webm'],
   // #nouveau (demande utilisateur, "upload de preuves dans le chat support") :
   // bucket privé, chemin "{conversationId}/{fichier}" — cf. secure-upload-url.
-  support: ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'mp4', 'mov', 'webm']
+  support: ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'mp4', 'mov', 'webm'],
+  // #nouveau (Hospito) : preuves jointes à une réclamation patient, chemin
+  // "{uid}/{fichier}" — cf. hospito-secure-upload-url.
+  reclamations: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov', 'webm']
 };
 const EXTENSIONS_VIDEO = new Set(['mp4', 'mov', 'webm']);
 // #limite (vérifié directement contre l'API Storage) : 350 Mo demandé, mais
@@ -35,7 +38,7 @@ export const uploadFile = async (bucket, path, file) => {
   if (file.size > tailleMax) throw new Error('FICHIER_TROP_VOLUMINEUX');
   const fullPath = `${path}.${ext}`;
   const idToken = await auth.currentUser.getIdToken();
-  const res = await fetch(`${supabaseUrl}/functions/v1/secure-upload-url`, {
+  const res = await fetch(`${supabaseUrl}/functions/v1/hospito-secure-upload-url`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -85,7 +88,7 @@ export const getLitigeSignedUrls = async (litigeId, preuveUrls) => {
   const paths = (preuveUrls || []).map(pathFromLitigePublicUrl).filter(Boolean);
   if (paths.length === 0) return {};
   const idToken = await auth.currentUser.getIdToken();
-  const res = await fetch(`${supabaseUrl}/functions/v1/get-litige-signed-urls`, {
+  const res = await fetch(`${supabaseUrl}/functions/v1/hospito-get-litige-signed-urls`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -113,7 +116,7 @@ export const resoudreUrlsLitige = (litigeId, preuveUrls) => getLitigeSignedUrls(
 export const getChatSignedUrls = async (bucket, convId, paths) => {
   if (!paths || paths.length === 0) return {};
   const idToken = await auth.currentUser.getIdToken();
-  const res = await fetch(`${supabaseUrl}/functions/v1/get-chat-signed-urls`, {
+  const res = await fetch(`${supabaseUrl}/functions/v1/hospito-get-chat-signed-urls`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -135,7 +138,7 @@ export const pousserNotification = async notificationId => {
   try {
     if (!auth.currentUser) return;
     const idToken = await auth.currentUser.getIdToken();
-    await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+    await fetch(`${supabaseUrl}/functions/v1/hospito-send-push-notification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

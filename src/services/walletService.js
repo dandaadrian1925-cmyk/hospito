@@ -5,7 +5,7 @@ import { getSettings } from './settingsService';
 import { getSessionIdLocal } from './authService';
 export const COMMISSION_VENTE = 0.05;
 export const RETRAIT_MINIMUM = 1000;
-const SUPABASE_FUNCTION_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/dynamic-processor';
+const SUPABASE_FUNCTION_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/hospito-dynamic-processor';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const WALLET_TYPES = {
   DEPOT: 'depot',

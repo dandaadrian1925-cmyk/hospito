@@ -9,7 +9,7 @@ import { db } from '../firebase/config';
 import { uploadFile, getChatSignedUrls } from '../supabase/config';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import toast from 'react-hot-toast';
-const GEMINI_PROXY_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/gemini-proxy';
+const GEMINI_PROXY_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/hospito-gemini-proxy';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 const SYS = {
   fontFamily: 'var(--font)'

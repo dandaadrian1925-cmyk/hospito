@@ -11,3 +11,9 @@ export async function getEtablissement(etablissementId) {
   const snap = await getDoc(doc(db, 'etablissements', etablissementId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
+
+export async function listerServicesActifs(etablissementId) {
+  const q = query(collection(db, 'services'), where('etablissementId', '==', etablissementId), where('actif', '==', true));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
