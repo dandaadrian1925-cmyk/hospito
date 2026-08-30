@@ -53,9 +53,14 @@ export const uploadFile = async (bucket, path, file) => {
   });
   const authData = await res.json();
   if (!res.ok) throw new Error(authData.error || "Upload non autorisé");
+  // Le serveur renvoie le VRAI bucket + chemin (cf. hospito-secure-upload-url) :
+  // pour les buckets natifs Hospito (réclamations…), c'est un sous-dossier du
+  // bucket unique "hospito", jamais un bucket portant littéralement leur nom.
+  const storageBucket = authData.bucket || bucket;
+  const storagePath = authData.path || fullPath;
   const {
     error
-  } = await supabase.storage.from(bucket).uploadToSignedUrl(fullPath, authData.token, file, {
+  } = await supabase.storage.from(storageBucket).uploadToSignedUrl(storagePath, authData.token, file, {
     contentType: authData.contentType || file.type || undefined,
     // #perf (audit PageSpeed mobile, corrigé) : absent, Supabase retombait sur
     // son défaut (cache court) — le chemin (`${path}.${ext}`) n'est jamais
@@ -67,9 +72,9 @@ export const uploadFile = async (bucket, path, file) => {
     data: {
       publicUrl
     }
-  } = supabase.storage.from(bucket).getPublicUrl(fullPath);
+  } = supabase.storage.from(storageBucket).getPublicUrl(storagePath);
   return {
-    path: fullPath,
+    path: storagePath,
     publicUrl
   };
 };
