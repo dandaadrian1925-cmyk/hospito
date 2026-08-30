@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, ChevronDown, Bell, Heart, Headphones, CalendarPlus } from 'lucide-react';
+import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../services/authService';
 import { listenUnreadNotificationsCount } from '../../services/notificationsService';
@@ -204,37 +204,20 @@ export default function Navbar() {
             {user ? <>
                 <Link to="/mes-favoris" style={{
               ...linkBase,
-              display: 'none',
-              alignItems: 'center',
-              gap: 6
-            }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  <Heart style={{
-                width: 15,
-                height: 15
-              }} /> Favoris
-                </Link>
+              display: 'none'
+            }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>Favoris</Link>
                 <Link to="/contact" style={{
               ...linkBase,
-              display: 'none',
-              alignItems: 'center',
-              gap: 6
+              display: 'none'
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  <Headphones style={{
-                width: 15,
-                height: 15
-              }} /> Messages
+                  Messages
                 </Link>
                 <Link to="/notifications" style={{
               ...linkBase,
               display: 'none',
-              alignItems: 'center',
-              gap: 6,
               position: 'relative'
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  <Bell style={{
-                width: 15,
-                height: 15
-              }} /> Notifications
+                  Notifications
                   {unreadCount > 0 && <span style={{
                 position: 'absolute',
                 top: 2,
@@ -256,14 +239,9 @@ export default function Navbar() {
                 <Link to="/etablissements" className="btn-primary" style={{
               fontSize: 13,
               padding: '9px 18px',
-              display: 'none',
-              alignItems: 'center',
-              gap: 6
+              display: 'none'
             }} id="desktop-rdv">
-                  <CalendarPlus style={{
-                width: 14,
-                height: 14
-              }} /> Prendre RDV
+                  Prendre RDV
                 </Link>
 
                 {}
