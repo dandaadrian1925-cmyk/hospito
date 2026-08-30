@@ -28,10 +28,16 @@ const TABS = [
 ];
 
 function TabRdv({ etablissementId, patientUid, patientNom }) {
+  const [services, setServices] = useState([]);
+  const [serviceId, setServiceId] = useState('');
   const [motif, setMotif] = useState('');
   const [dateSouhaitee, setDateSouhaitee] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [demandes, setDemandes] = useState([]);
+
+  useEffect(() => {
+    listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
+  }, [etablissementId]);
 
   const recharger = useCallback(() => {
     getMesDemandesRdv(patientUid)
@@ -51,8 +57,10 @@ function TabRdv({ etablissementId, patientUid, patientNom }) {
     }
     setEnvoi(true);
     try {
-      await creerDemandeRdv({ etablissementId, patientUid, patientNom, motif, dateSouhaitee });
+      const service = services.find((s) => s.id === serviceId);
+      await creerDemandeRdv({ etablissementId, patientUid, patientNom, serviceId: serviceId || null, serviceNom: service?.nom || null, motif, dateSouhaitee });
       toast.success('Demande envoyée — vous serez notifié dès sa confirmation');
+      setServiceId('');
       setMotif('');
       setDateSouhaitee('');
       recharger();
@@ -67,6 +75,15 @@ function TabRdv({ etablissementId, patientUid, patientNom }) {
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {services.length > 0 && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Service concerné</label>
+            <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className="input-field">
+              <option value="">Non précisé</option>
+              {services.map((s) => <option key={s.id} value={s.id}>{s.nom}</option>)}
+            </select>
+          </div>
+        )}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite *</label>
           <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex: consultation générale" className="input-field" />
@@ -87,6 +104,7 @@ function TabRdv({ etablissementId, patientUid, patientNom }) {
             {demandes.map((d) => (
               <div key={d.id} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
                 <strong>{d.motif}</strong>
+                {d.serviceNom && <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>({d.serviceNom})</span>}
                 <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>
                   {d.statut === 'en_attente' ? 'En attente de confirmation' : d.statut}
                 </span>

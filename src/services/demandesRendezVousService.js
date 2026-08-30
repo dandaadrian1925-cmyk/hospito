@@ -1,11 +1,13 @@
 import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-export async function creerDemandeRdv({ etablissementId, patientUid, patientNom, motif, dateSouhaitee }) {
+export async function creerDemandeRdv({ etablissementId, patientUid, patientNom, serviceId, serviceNom, motif, dateSouhaitee }) {
   await addDoc(collection(db, 'demandes_rendez_vous'), {
     etablissementId,
     patientUid,
     patientNom,
+    serviceId: serviceId || null,
+    serviceNom: serviceNom || null,
     motif: motif.trim(),
     dateSouhaitee: dateSouhaitee || null,
     statut: 'en_attente',
