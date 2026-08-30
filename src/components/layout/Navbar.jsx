@@ -1,13 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, ChevronDown } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, Bell, Building2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../services/authService';
-import { getCategories } from '../../services/categoriesService';
 import { listenUnreadNotificationsCount } from '../../services/notificationsService';
-import WalletBalance from './WalletBalance';
-function MaketLogo({
+function HospitoLogo({
   size = 'md'
 }) {
   const sizes = {
@@ -58,7 +56,7 @@ function MaketLogo({
       </span>
     </span>;
 }
-export { MaketLogo };
+export { HospitoLogo };
 export default function Navbar() {
   const {
     user,
@@ -70,15 +68,9 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [openCat, setOpenCat] = useState(null);
-  const [categories, setCategories] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const closeTimer = useRef(null);
   const headerRef = useRef(null);
   const profileRef = useRef(null);
-  useEffect(() => {
-    getCategories().then(setCategories).catch(e => console.error('getCategories a échoué :', e));
-  }, []);
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
@@ -95,7 +87,6 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setProfileOpen(false);
-    setOpenCat(null);
   }, [location.pathname]);
   // Ferme le menu profil au clic en dehors
   useEffect(() => {
@@ -124,13 +115,6 @@ export default function Navbar() {
     await logout();
     navigate('/');
     setProfileOpen(false);
-  };
-  const openMenu = id => {
-    if (closeTimer.current) clearTimeout(closeTimer.current);
-    setOpenCat(id);
-  };
-  const scheduleClose = () => {
-    closeTimer.current = setTimeout(() => setOpenCat(null), 120);
   };
   const linkBase = {
     fontSize: 13,
@@ -168,7 +152,7 @@ export default function Navbar() {
           textDecoration: 'none',
           flexShrink: 0
         }}>
-            <MaketLogo size="md" />
+            <HospitoLogo size="md" />
           </Link>
 
           {}
@@ -218,24 +202,28 @@ export default function Navbar() {
           marginLeft: 'auto'
         }}>
             {user ? <>
-                <WalletBalance user={user} />
-                <Link to="/favoris" style={{
+                <Link to="/etablissements" style={{
               ...linkBase,
-              display: 'none'
-            }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>Favoris</Link>
-                {}
-                <Link to="/chat" style={{
-              ...linkBase,
-              display: 'none'
+              display: 'none',
+              alignItems: 'center',
+              gap: 6
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  Messages
+                  <Building2 style={{
+                width: 15,
+                height: 15
+              }} /> Établissements
                 </Link>
                 <Link to="/notifications" style={{
               ...linkBase,
               display: 'none',
+              alignItems: 'center',
+              gap: 6,
               position: 'relative'
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  Notifications
+                  <Bell style={{
+                width: 15,
+                height: 15
+              }} /> Notifications
                   {unreadCount > 0 && <span style={{
                 position: 'absolute',
                 top: 2,
@@ -252,14 +240,6 @@ export default function Navbar() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
-                </Link>
-
-                <Link to="/publier" className="btn-primary" style={{
-              fontSize: 13,
-              padding: '9px 18px',
-              display: 'none'
-            }} id="desktop-vendre">
-                  Vendre
                 </Link>
 
                 {}
@@ -347,24 +327,12 @@ export default function Navbar() {
                     to: '/mon-compte',
                     label: 'Mon compte'
                   }, {
-                    to: '/mon-compte/annonces',
-                    label: 'Mes annonces'
-                  }, {
-                    to: '/mon-compte/achats',
-                    label: 'Mes achats'
-                  }, {
-                    to: '/favoris',
-                    label: 'Mes favoris'
-                  }, {
-                    to: '/chat',
-                    label: 'Messages'
+                    to: '/etablissements',
+                    label: 'Trouver un établissement'
                   }, {
                     to: '/notifications',
                     label: 'Notifications',
                     badge: unreadCount
-                  }, {
-                    to: '/mon-compte/vendeur-pro',
-                    label: 'Vendeur Pro'
                   }].map(({
                     to,
                     label,
@@ -400,11 +368,6 @@ export default function Navbar() {
                       justifyContent: 'center'
                     }}>{badge > 9 ? '9+' : badge}</span>}
                           </Link>)}
-                        <div className="dropdown-mobile-sell" style={{ padding: '8px 16px', display: 'none' }}>
-                          <Link to="/publier" className="btn-primary" style={{ justifyContent: 'center' }} onClick={() => setProfileOpen(false)}>
-                            Vendre un article
-                          </Link>
-                        </div>
                         <div style={{
                     borderTop: '1px solid var(--border-2)'
                   }}>
@@ -436,12 +399,12 @@ export default function Navbar() {
             }} className="desktop-auth">
                   Se connecter
                 </Link>
-                <Link to="/publier" className="btn-primary" style={{
+                <Link to="/auth" className="btn-primary" style={{
               fontSize: 13,
               padding: '9px 18px',
               display: 'none'
-            }} id="desktop-vendre2">
-                  Vendre
+            }} id="desktop-cta">
+                  Créer un compte
                 </Link>
                 {}
                 <button onClick={() => setMobileOpen(!mobileOpen)} style={{
@@ -465,86 +428,6 @@ export default function Navbar() {
               }} />}
                 </button>
               </>}
-          </div>
-        </div>
-
-        {}
-        <div style={{
-        borderTop: '1px solid var(--border-2)',
-        display: 'none'
-      }} className="cat-bar">
-          <div style={{
-          maxWidth: 1280,
-          margin: '0 auto',
-          padding: '0 24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          height: 46
-        }}>
-            {categories.map(cat => <div key={cat.id} onMouseEnter={() => openMenu(cat.id)} onMouseLeave={scheduleClose} style={{
-            position: 'relative'
-          }}>
-                <Link to={`/catalogue?categorie=${cat.id}`} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '6px 12px',
-              borderRadius: 6,
-              fontSize: 13,
-              fontWeight: 500,
-              color: openCat === cat.id ? 'var(--ink)' : 'var(--ink-2)',
-              textDecoration: 'none',
-              whiteSpace: 'nowrap',
-              transition: 'color 0.15s'
-            }}>
-                  {cat.label}
-                </Link>
-
-                <AnimatePresence>
-                  {openCat === cat.id && cat.subcategories?.length > 0 && <motion.div initial={{
-                opacity: 0,
-                y: 4
-              }} animate={{
-                opacity: 1,
-                y: 0
-              }} exit={{
-                opacity: 0,
-                y: 4
-              }} transition={{
-                duration: 0.12
-              }} style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                background: 'white',
-                border: '1px solid var(--border-2)',
-                borderRadius: 14,
-                boxShadow: 'var(--shadow-lg)',
-                padding: 10,
-                minWidth: 200,
-                zIndex: 90
-              }}>
-                      {cat.subcategories.map(sub => <Link key={sub} to={`/catalogue?categorie=${cat.id}&sous=${encodeURIComponent(sub)}`} style={{
-                  display: 'block',
-                  padding: '8px 10px',
-                  borderRadius: 6,
-                  fontSize: 13,
-                  color: 'var(--ink-2)',
-                  textDecoration: 'none',
-                  transition: 'background 0.12s, color 0.12s'
-                }} onMouseEnter={e => {
-                  e.currentTarget.style.background = 'var(--bg-2)';
-                  e.currentTarget.style.color = 'var(--ink)';
-                }} onMouseLeave={e => {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = 'var(--ink-2)';
-                }}>
-                          {sub}
-                        </Link>)}
-                    </motion.div>}
-                </AnimatePresence>
-              </div>)}
           </div>
         </div>
 
@@ -600,10 +483,10 @@ export default function Navbar() {
                 <Link to="/auth" className="btn-outline" style={{
                 justifyContent: 'center'
               }}>Se connecter</Link>
-                <Link to="/publier" className="btn-primary" style={{
+                <Link to="/auth" className="btn-primary" style={{
                 justifyContent: 'center'
               }}>
-                      Vendre un article
+                      Créer un compte
                     </Link>
               </div>
             </motion.div>}
@@ -621,14 +504,11 @@ export default function Navbar() {
           .md-search { display: block !important; }
           .desktop-icon { display: flex !important; }
           .desktop-auth { display: flex !important; }
-          .cat-bar { display: block !important; }
-          #desktop-vendre, #desktop-vendre2 { display: inline-flex !important; }
+          #desktop-cta { display: inline-flex !important; }
           .mobile-guest-menu { display: none !important; }
           .mobile-nav-panel { display: none !important; }
-          .nav-spacer { height: 118px !important; }
         }
         @media (max-width: 767px) {
-          .wallet-balance-pill { min-width: 0 !important; padding: 6px 8px !important; font-size: 12px !important; }
           .nav-main-bar { gap: 10px !important; padding: 0 14px !important; }
           .nav-actions { gap: 10px !important; }
           /* #nouveau (vraie fusion avatar+hamburger, corrigé — la fusion
@@ -638,7 +518,6 @@ export default function Navbar() {
              mobile — jamais deux implémentations distinctes à maintenir. */
           .profile-dropdown { position: fixed !important; top: 62px !important; left: 12px !important; right: 12px !important; width: auto !important; max-height: calc(100vh - 80px) !important; overflow-y: auto !important; }
           .dropdown-mobile-search { display: block !important; }
-          .dropdown-mobile-sell { display: block !important; }
         }
       `}</style>
     </>;
