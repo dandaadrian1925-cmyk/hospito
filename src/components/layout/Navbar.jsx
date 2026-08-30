@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X, ChevronDown, Bell, Building2 } from 'lucide-react';
+import { Search, Menu, X, ChevronDown, Bell, Heart, Headphones, CalendarPlus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../services/authService';
 import { listenUnreadNotificationsCount } from '../../services/notificationsService';
@@ -202,16 +202,27 @@ export default function Navbar() {
           marginLeft: 'auto'
         }}>
             {user ? <>
-                <Link to="/etablissements" style={{
+                <Link to="/mes-favoris" style={{
               ...linkBase,
               display: 'none',
               alignItems: 'center',
               gap: 6
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  <Building2 style={{
+                  <Heart style={{
                 width: 15,
                 height: 15
-              }} /> Établissements
+              }} /> Favoris
+                </Link>
+                <Link to="/contact" style={{
+              ...linkBase,
+              display: 'none',
+              alignItems: 'center',
+              gap: 6
+            }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
+                  <Headphones style={{
+                width: 15,
+                height: 15
+              }} /> Messages
                 </Link>
                 <Link to="/notifications" style={{
               ...linkBase,
@@ -240,6 +251,19 @@ export default function Navbar() {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                </Link>
+
+                <Link to="/etablissements" className="btn-primary" style={{
+              fontSize: 13,
+              padding: '9px 18px',
+              display: 'none',
+              alignItems: 'center',
+              gap: 6
+            }} id="desktop-rdv">
+                  <CalendarPlus style={{
+                width: 14,
+                height: 14
+              }} /> Prendre RDV
                 </Link>
 
                 {}
@@ -327,12 +351,18 @@ export default function Navbar() {
                     to: '/mon-compte',
                     label: 'Mon compte'
                   }, {
-                    to: '/etablissements',
-                    label: 'Trouver un établissement'
+                    to: '/mes-favoris',
+                    label: 'Mes favoris'
+                  }, {
+                    to: '/contact',
+                    label: 'Messages'
                   }, {
                     to: '/notifications',
                     label: 'Notifications',
                     badge: unreadCount
+                  }, {
+                    to: '/etablissements',
+                    label: 'Trouver un établissement'
                   }].map(({
                     to,
                     label,
@@ -504,7 +534,7 @@ export default function Navbar() {
           .md-search { display: block !important; }
           .desktop-icon { display: flex !important; }
           .desktop-auth { display: flex !important; }
-          #desktop-cta { display: inline-flex !important; }
+          #desktop-cta, #desktop-rdv { display: inline-flex !important; }
           .mobile-guest-menu { display: none !important; }
           .mobile-nav-panel { display: none !important; }
         }

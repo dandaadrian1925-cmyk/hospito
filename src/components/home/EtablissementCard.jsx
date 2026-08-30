@@ -1,9 +1,47 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Building2, MapPin } from 'lucide-react';
+import { Building2, MapPin, Heart } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
+import { isFavori, toggleFavori } from '../../services/favorisEtablissementsService';
 
-export default function EtablissementCard({ etablissement, index = 0 }) {
+export default function EtablissementCard({ etablissement, index = 0, initialFavori = null }) {
+  const { user } = useAuth();
   const initiale = (etablissement.nom || '?').trim().charAt(0).toUpperCase();
+  const [favori, setFavori] = useState(!!initialFavori);
+  const [favoriLoading, setFavoriLoading] = useState(false);
+
+  useEffect(() => {
+    if (initialFavori !== null || !user) return;
+    let cancelled = false;
+    isFavori(user.uid, etablissement.id).then((v) => {
+      if (!cancelled) setFavori(v);
+    }).catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid, etablissement.id]);
+
+  const handleFavori = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error('Connectez-vous pour ajouter aux favoris');
+      return;
+    }
+    if (favoriLoading) return;
+    setFavoriLoading(true);
+    try {
+      const nowFavori = await toggleFavori(user.uid, etablissement.id, etablissement.nom);
+      setFavori(nowFavori);
+      toast.success(nowFavori ? 'Ajouté aux favoris' : 'Retiré des favoris');
+    } catch {
+      toast.error('Échec de la mise à jour des favoris');
+    } finally {
+      setFavoriLoading(false);
+    }
+  };
 
   return (
     <motion.div
@@ -24,6 +62,7 @@ export default function EtablissementCard({ etablissement, index = 0 }) {
         >
           <div
             style={{
+              position: 'relative',
               height: 110,
               background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
               display: 'flex',
@@ -40,6 +79,30 @@ export default function EtablissementCard({ etablissement, index = 0 }) {
             ) : (
               <span style={{ color: 'white', fontSize: 36, fontWeight: 700 }}>{initiale}</span>
             )}
+            <button
+              onClick={handleFavori}
+              aria-label={favori ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                border: 'none',
+                background: 'rgba(255,255,255,0.9)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <Heart
+                style={{ width: 14, height: 14 }}
+                fill={favori ? '#C2402F' : 'none'}
+                stroke={favori ? '#C2402F' : '#334155'}
+              />
+            </button>
           </div>
           <div style={{ padding: '12px 14px' }}>
             <p
