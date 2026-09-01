@@ -27,9 +27,9 @@ const TABS = [
   { id: 'reclamations', label: 'Réclamations', icon: Flag },
 ];
 
-function TabRdv({ etablissementId, patientUid, patientNom }) {
+function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
   const [services, setServices] = useState([]);
-  const [serviceId, setServiceId] = useState('');
+  const [serviceId, setServiceId] = useState(initialServiceId || '');
   const [motif, setMotif] = useState('');
   const [dateSouhaitee, setDateSouhaitee] = useState('');
   const [envoi, setEnvoi] = useState(false);
@@ -38,6 +38,10 @@ function TabRdv({ etablissementId, patientUid, patientNom }) {
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
   }, [etablissementId]);
+
+  useEffect(() => {
+    if (initialServiceId) setServiceId(initialServiceId);
+  }, [initialServiceId]);
 
   const recharger = useCallback(() => {
     getMesDemandesRdv(patientUid)
@@ -421,7 +425,7 @@ function TabReclamations({ etablissementId, patientUid }) {
   );
 }
 
-function ServicesSection({ etablissementId }) {
+function ServicesSection({ etablissementId, onSelectService }) {
   const [services, setServices] = useState(null);
 
   useEffect(() => {
@@ -437,14 +441,16 @@ function ServicesSection({ etablissementId }) {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Services disponibles</p>
+      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 4 }}>Services disponibles</p>
+      <p style={{ fontSize: 12, color: 'var(--ink-4)', marginBottom: 10 }}>Parcourez l'établissement service par service.</p>
       <div
         className="flex flex-nowrap gap-3 overflow-x-auto scrollbar-hide"
         style={{ paddingBottom: 4 }}
       >
         {services.map((s) => (
-          <div
+          <button
             key={s.id}
+            onClick={() => onSelectService(s)}
             style={{
               flexShrink: 0,
               width: 160,
@@ -452,6 +458,9 @@ function ServicesSection({ etablissementId }) {
               overflow: 'hidden',
               border: '1px solid var(--border, #E2E8F0)',
               background: 'white',
+              cursor: 'pointer',
+              textAlign: 'left',
+              padding: 0,
             }}
           >
             <div
@@ -468,8 +477,49 @@ function ServicesSection({ etablissementId }) {
               )}
             </div>
             <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', padding: '8px 10px' }}>{s.nom}</p>
-          </div>
+          </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
+  if (!service) return null;
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: 'white', borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 520,
+          maxHeight: '80vh', overflowY: 'auto', padding: 24,
+        }}
+      >
+        <div
+          style={{
+            height: 140, borderRadius: 12, marginBottom: 16,
+            background: service.photoURL ? `url(${service.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          {!service.photoURL && (
+            <span style={{ color: 'white', fontSize: 32, fontWeight: 700 }}>{(service.nom || '?').charAt(0).toUpperCase()}</span>
+          )}
+        </div>
+        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{service.nom}</h2>
+        <p style={{ fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 20 }}>
+          {service.description || "Aucune description fournie par l'établissement pour ce service."}
+        </p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>Fermer</button>
+          <button onClick={() => onPrendreRdv(service)} className="btn-primary" style={{ flex: 1 }}>Prendre RDV</button>
+        </div>
       </div>
     </div>
   );
@@ -483,6 +533,8 @@ export default function EtablissementSpacePage() {
   const [loading, setLoading] = useState(true);
   const tabDemandee = searchParams.get('tab');
   const [tab, setTab] = useState(TABS.some((t) => t.id === tabDemandee) ? tabDemandee : 'rdv');
+  const [serviceDetail, setServiceDetail] = useState(null);
+  const [serviceRdvPreselectionne, setServiceRdvPreselectionne] = useState(null);
 
   useEffect(() => {
     getEtablissement(etablissementId)
@@ -554,7 +606,7 @@ export default function EtablissementSpacePage() {
         </div>
       </div>
 
-      <ServicesSection etablissementId={etablissementId} />
+      <ServicesSection etablissementId={etablissementId} onSelectService={setServiceDetail} />
 
       <div
         className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide"
@@ -589,13 +641,30 @@ export default function EtablissementSpacePage() {
         })}
       </div>
 
-      {tab === 'rdv' && <TabRdv etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />}
+      {tab === 'rdv' && (
+        <TabRdv
+          etablissementId={etablissementId}
+          patientUid={user.uid}
+          patientNom={patientNom}
+          initialServiceId={serviceRdvPreselectionne}
+        />
+      )}
       {tab === 'dossier' && <TabDossier />}
       {tab === 'messagerie' && (
         <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
       )}
       {tab === 'paiement' && <TabPaiement patientUid={user.uid} />}
       {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
+
+      <ServiceDetailOverlay
+        service={serviceDetail}
+        onClose={() => setServiceDetail(null)}
+        onPrendreRdv={(s) => {
+          setServiceRdvPreselectionne(s.id);
+          setTab('rdv');
+          setServiceDetail(null);
+        }}
+      />
     </div>
   );
 }
