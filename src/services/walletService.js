@@ -25,11 +25,7 @@ export const WALLET_TYPES = {
   RETOUR_LIVRAISON: 'retour_livraison',
   // #nouveau (demande utilisateur, "Vendeur Pro") : pass à durée fixe,
   // paiement ponctuel — même famille que BOOST/FLASH, pas un abonnement.
-  VENDEUR_PRO: 'vendeur_pro',
-  // #nouveau (espace patient) : paiement d'une facture d'établissement de
-  // santé depuis le solde — même mécanique que ACHAT_LIVRAISON, sans lien
-  // vers une "commande" marketplace.
-  PAIEMENT_FACTURE: 'facture'
+  VENDEUR_PRO: 'vendeur_pro'
 };
 const campayProxy = async (action, payload) => {
   if (!auth.currentUser) throw new Error('Vous devez être connecté');
@@ -612,28 +608,3 @@ export const acheterVendeurPro = async (uid, sourceWallet = 'principal') => {
   return nouvelleExpiry;
 };
 
-// #nouveau (espace patient) : débite le solde pour régler une facture d'un
-// établissement de santé. Aucune collection "factures" n'existe encore côté
-// personnel (facturation = Phase 4 de la feuille de route SGIH) — cette
-// fonction est prête à être appelée dès qu'un factureId réel existera.
-export const payerFacture = async (patientId, etablissementId, factureId, montant) => {
-  const patientRef = doc(db, 'users', patientId);
-  await runTransaction(db, async tx => {
-    const patientSnap = await tx.get(patientRef);
-    const solde = patientSnap.data()?.solde || 0;
-    if (montant > solde) throw new Error('SOLDE_INSUFFISANT');
-    tx.update(patientRef, {
-      solde: increment(-montant)
-    });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId: patientId,
-      type: WALLET_TYPES.PAIEMENT_FACTURE,
-      montant: -montant,
-      sourceWallet: 'principal',
-      etablissementId,
-      factureId,
-      description: 'Paiement de facture',
-      createdAt: serverTimestamp()
-    });
-  });
-};

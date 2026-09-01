@@ -18,6 +18,7 @@ import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVo
 import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamationsService';
 import { getOrCreateConversation, envoyerMessage, listenMessages } from '../services/chatService';
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
+import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFacture } from '../services/facturesService';
 
 const TABS = [
   { id: 'rdv', label: 'Prendre RDV', icon: CalendarPlus },
@@ -227,18 +228,77 @@ function TabMessagerie({ etablissementId, patientUid, etablissementNom }) {
   );
 }
 
-function TabPaiement({ patientUid }) {
+function FactureAPayer({ facture, onPayee }) {
+  const [phone, setPhone] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+
+  const handlePayer = async (e) => {
+    e.preventDefault();
+    if (!phone.trim()) {
+      toast.error('Numéro Mobile Money requis');
+      return;
+    }
+    setEnvoi(true);
+    try {
+      await initierPaiementFacture(facture.id, phone.trim());
+      toast('Vérifiez votre téléphone pour confirmer le paiement…', { icon: '📲', duration: 6000 });
+      const { statut, message } = await attendreConfirmationFacture(facture.id);
+      if (statut === 'payee') {
+        toast.success('Facture payée !');
+        onPayee(facture.id);
+      } else if (statut === 'ecart_montant') {
+        toast.error(message || 'Écart de montant détecté');
+      } else {
+        toast.error('Le paiement a échoué ou est resté en attente.');
+      }
+    } catch (err) {
+      console.error('initierPaiementFacture a échoué :', err);
+      toast.error(err.message || "Échec de l'opération");
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  return (
+    <div style={{ padding: '14px 16px', background: 'var(--bg-2)', borderRadius: 10, marginBottom: 10 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+        <span style={{ fontWeight: 600, fontSize: 13 }}>{facture.libelle}</span>
+        <span style={{ fontWeight: 700, fontSize: 13 }}>{Number(facture.montant).toLocaleString('fr-FR')} XAF</span>
+      </div>
+      <form onSubmit={handlePayer} style={{ display: 'flex', gap: 8 }}>
+        <input
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Numéro Mobile Money"
+          className="input-field"
+          style={{ flex: 1 }}
+        />
+        <button type="submit" disabled={envoi} className="btn-primary">
+          {envoi ? 'Traitement…' : 'Payer'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function TabPaiement({ patientUid, etablissementId }) {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [factures, setFactures] = useState(null);
   const [montant, setMontant] = useState('');
   const [phone, setPhone] = useState('');
   const [envoi, setEnvoi] = useState(false);
 
+  const rechargerFactures = useCallback(() => {
+    listerFacturesEnAttente(patientUid, etablissementId).then(setFactures).catch(() => setFactures([]));
+  }, [patientUid, etablissementId]);
+
   useEffect(() => {
     getWallet(patientUid).then(setWallet);
     getTransactions(patientUid).then(setTransactions).catch(() => setTransactions([]));
+    rechargerFactures();
     return listenWallet(patientUid, setWallet);
-  }, [patientUid]);
+  }, [patientUid, rechargerFactures]);
 
   const handleDepot = async (e) => {
     e.preventDefault();
@@ -284,17 +344,16 @@ function TabPaiement({ patientUid }) {
       </div>
 
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Factures à payer</p>
-      <div
-        style={{
-          padding: '16px',
-          background: 'var(--bg-2)',
-          borderRadius: 10,
-          fontSize: 13,
-          color: 'var(--ink-3)',
-          marginBottom: 24,
-        }}
-      >
-        Aucune facture en attente pour le moment.
+      <div style={{ marginBottom: 24 }}>
+        {!factures?.length ? (
+          <div style={{ padding: '16px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13, color: 'var(--ink-3)' }}>
+            Aucune facture en attente pour le moment.
+          </div>
+        ) : (
+          factures.map((f) => (
+            <FactureAPayer key={f.id} facture={f} onPayee={() => rechargerFactures()} />
+          ))
+        )}
       </div>
 
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Recharger mon solde</p>
@@ -653,7 +712,7 @@ export default function EtablissementSpacePage() {
       {tab === 'messagerie' && (
         <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
       )}
-      {tab === 'paiement' && <TabPaiement patientUid={user.uid} />}
+      {tab === 'paiement' && <TabPaiement patientUid={user.uid} etablissementId={etablissementId} />}
       {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
 
       <ServiceDetailOverlay
