@@ -22,7 +22,7 @@ function buildSlides(etablissement) {
       ctaLink: base,
       secondary: 'Prendre rendez-vous',
       secondaryLink: `${base}?tab=rdv`,
-      image: etablissement.photoURL || IMAGES_GENERIQUES[0],
+      image: etablissement.photoCarrousel1 || etablissement.photoURL || IMAGES_GENERIQUES[0],
     },
     {
       id: 2,
@@ -34,7 +34,7 @@ function buildSlides(etablissement) {
       ctaLink: `${base}?tab=rdv`,
       secondary: "Voir l'établissement",
       secondaryLink: base,
-      image: IMAGES_GENERIQUES[1],
+      image: etablissement.photoCarrousel2 || IMAGES_GENERIQUES[1],
     },
     {
       id: 3,
@@ -46,7 +46,7 @@ function buildSlides(etablissement) {
       ctaLink: `${base}?tab=dossier`,
       secondary: 'Nous contacter',
       secondaryLink: `${base}?tab=messagerie`,
-      image: IMAGES_GENERIQUES[2],
+      image: etablissement.photoCarrousel3 || IMAGES_GENERIQUES[2],
     },
   ];
 }
