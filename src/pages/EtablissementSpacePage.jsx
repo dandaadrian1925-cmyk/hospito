@@ -19,6 +19,7 @@ import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamati
 import { getOrCreateConversation, envoyerMessage, listenMessages } from '../services/chatService';
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
 import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFacture } from '../services/facturesService';
+import TeleconsultationCallWidget from '../components/teleconsultation/TeleconsultationCallWidget';
 
 const TABS = [
   { id: 'rdv', label: 'Prendre RDV', icon: CalendarPlus },
@@ -33,6 +34,7 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
   const [serviceId, setServiceId] = useState(initialServiceId || '');
   const [motif, setMotif] = useState('');
   const [dateSouhaitee, setDateSouhaitee] = useState('');
+  const [teleconsultation, setTeleconsultation] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [demandes, setDemandes] = useState([]);
 
@@ -63,11 +65,15 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
     setEnvoi(true);
     try {
       const service = services.find((s) => s.id === serviceId);
-      await creerDemandeRdv({ etablissementId, patientUid, patientNom, serviceId: serviceId || null, serviceNom: service?.nom || null, motif, dateSouhaitee });
+      await creerDemandeRdv({
+        etablissementId, patientUid, patientNom, serviceId: serviceId || null, serviceNom: service?.nom || null,
+        motif, dateSouhaitee, type: teleconsultation ? 'teleconsultation' : 'presentiel',
+      });
       toast.success('Demande envoyée — vous serez notifié dès sa confirmation');
       setServiceId('');
       setMotif('');
       setDateSouhaitee('');
+      setTeleconsultation(false);
       recharger();
     } catch (err) {
       console.error('creerDemandeRdv a échoué :', err);
@@ -97,6 +103,10 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
           <label className="block text-sm font-bold text-gray-700 mb-2">Date souhaitée</label>
           <input type="date" value={dateSouhaitee} onChange={(e) => setDateSouhaitee(e.target.value)} className="input-field" />
         </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)', cursor: 'pointer' }}>
+          <input type="checkbox" checked={teleconsultation} onChange={(e) => setTeleconsultation(e.target.checked)} />
+          Téléconsultation (visio) plutôt qu'un rendez-vous sur place
+        </label>
         <button type="submit" disabled={envoi} className="btn-primary">
           {envoi ? 'Envoi…' : 'Envoyer la demande'}
         </button>
@@ -110,9 +120,15 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
               <div key={d.id} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
                 <strong>{d.motif}</strong>
                 {d.serviceNom && <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>({d.serviceNom})</span>}
+                {d.type === 'teleconsultation' && <span style={{ color: 'var(--blue)', marginLeft: 8, fontWeight: 700 }}>Téléconsultation</span>}
                 <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>
-                  {d.statut === 'en_attente' ? 'En attente de confirmation' : d.statut}
+                  {d.statut === 'en_attente' ? 'En attente de confirmation' : d.statut === 'confirme' ? 'Confirmé' : d.statut}
                 </span>
+                {d.type === 'teleconsultation' && d.statut === 'confirme' && (
+                  <div style={{ marginTop: 10 }}>
+                    <TeleconsultationCallWidget demandeId={d.id} />
+                  </div>
+                )}
               </div>
             ))}
           </div>
