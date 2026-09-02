@@ -7,3 +7,10 @@ export async function getTransparenceAttente(etablissementId) {
   const snap = await getDoc(doc(db, 'transparence_attente', etablissementId));
   return snap.exists() ? snap.data() : null;
 }
+
+// Confort & vie pratique (Phase 5) — infos publiques configurées par le
+// sysadmin (voir hospito-super-admin/etablissementsService.js).
+export async function getInfosPratiques(etablissementId) {
+  const snap = await getDoc(doc(db, 'infos_pratiques', etablissementId));
+  return snap.exists() ? snap.data() : null;
+}

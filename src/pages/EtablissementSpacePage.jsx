@@ -21,7 +21,7 @@ import { getOrCreateConversation, envoyerMessage, listenMessages } from '../serv
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
 import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFacture } from '../services/facturesService';
 import TeleconsultationCallWidget from '../components/teleconsultation/TeleconsultationCallWidget';
-import { getTransparenceAttente } from '../services/transparenceService';
+import { getTransparenceAttente, getInfosPratiques } from '../services/transparenceService';
 
 const TABS = [
   { id: 'rdv', label: 'Prendre RDV', icon: CalendarPlus },
@@ -578,6 +578,33 @@ function TempsAttenteBadge({ etablissementId }) {
   );
 }
 
+const LABEL_INFO_PRATIQUE = { wifi: 'Wifi', horairesVisites: 'Horaires de visite', restauration: 'Restauration', parking: 'Parking', autres: 'À savoir' };
+
+function InfosPratiquesSection({ etablissementId }) {
+  const [infos, setInfos] = useState(null);
+
+  useEffect(() => {
+    getInfosPratiques(etablissementId).then(setInfos).catch(() => setInfos(null));
+  }, [etablissementId]);
+
+  const entrees = infos ? Object.entries(LABEL_INFO_PRATIQUE).filter(([key]) => infos[key]?.trim()) : [];
+  if (!entrees.length) return null;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Confort & vie pratique</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {entrees.map(([key, label]) => (
+          <div key={key} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+            <strong>{label}</strong>
+            <p style={{ color: 'var(--ink-3)', marginTop: 2 }}>{infos[key]}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
   if (!service) return null;
   return (
@@ -701,6 +728,8 @@ export default function EtablissementSpacePage() {
       </div>
 
       <TempsAttenteBadge etablissementId={etablissementId} />
+
+      <InfosPratiquesSection etablissementId={etablissementId} />
 
       <ServicesSection etablissementId={etablissementId} onSelectService={setServiceDetail} />
 
