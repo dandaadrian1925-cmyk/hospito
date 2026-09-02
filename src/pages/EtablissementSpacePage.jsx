@@ -11,6 +11,7 @@ import {
   Flag,
   Send,
   ChevronLeft,
+  Clock,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
@@ -20,6 +21,7 @@ import { getOrCreateConversation, envoyerMessage, listenMessages } from '../serv
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
 import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFacture } from '../services/facturesService';
 import TeleconsultationCallWidget from '../components/teleconsultation/TeleconsultationCallWidget';
+import { getTransparenceAttente } from '../services/transparenceService';
 
 const TABS = [
   { id: 'rdv', label: 'Prendre RDV', icon: CalendarPlus },
@@ -559,6 +561,23 @@ function ServicesSection({ etablissementId, onSelectService }) {
   );
 }
 
+function TempsAttenteBadge({ etablissementId }) {
+  const [temps, setTemps] = useState(null);
+
+  useEffect(() => {
+    getTransparenceAttente(etablissementId).then(setTemps).catch(() => setTemps(null));
+  }, [etablissementId]);
+
+  if (!temps?.tempsAttenteMoyenMinutes) return null;
+
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-2)', padding: '6px 12px', borderRadius: 20, fontSize: 12.5, color: 'var(--ink-2)', marginBottom: 20 }}>
+      <Clock style={{ width: 13, height: 13, color: 'var(--ink-4)' }} />
+      Temps d'attente moyen aux urgences : ~{temps.tempsAttenteMoyenMinutes} min
+    </div>
+  );
+}
+
 function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
   if (!service) return null;
   return (
@@ -680,6 +699,8 @@ export default function EtablissementSpacePage() {
           </div>
         </div>
       </div>
+
+      <TempsAttenteBadge etablissementId={etablissementId} />
 
       <ServicesSection etablissementId={etablissementId} onSelectService={setServiceDetail} />
 
