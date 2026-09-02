@@ -70,7 +70,7 @@ export default function Footer() {
           label: 'FAQ'
         }, {
           to: '/contact',
-          label: 'Nous contacter'
+          label: 'Support'
         }, {
           to: '/securite',
           label: 'Sécurité'
