@@ -34,6 +34,7 @@ const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissement
 const EtablissementSpacePage = lazy(() => import('./pages/EtablissementSpacePage'));
 const EtablissementsPage = lazy(() => import('./pages/EtablissementsPage'));
 const FavorisEtablissementsPage = lazy(() => import('./pages/FavorisEtablissementsPage'));
+const MesDroitsPage = lazy(() => import('./pages/MesDroitsPage'));
 function Layout({
   children,
   noFooter = false
@@ -139,6 +140,7 @@ export default function App() {
             <Route path="/etablissement/:etablissementId" element={<Layout><EtablissementSpacePage /></Layout>} />
             <Route path="/etablissements" element={<Layout><EtablissementsPage /></Layout>} />
             <Route path="/mes-favoris" element={<Layout><FavorisEtablissementsPage /></Layout>} />
+            <Route path="/mes-droits" element={<Layout><MesDroitsPage /></Layout>} />
 
             {}
             <Route path="*" element={<Layout>

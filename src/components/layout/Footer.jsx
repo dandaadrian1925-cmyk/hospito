@@ -86,6 +86,9 @@ export default function Footer() {
         }, {
           to: '/cookies',
           label: 'Cookies'
+        }, {
+          to: '/mes-droits',
+          label: 'Mes droits'
         }]
       }].map((section, i) => <div key={i}>
             <h4 className="font-bold text-sm mb-2 sm:mb-4 text-gray-200 tracking-wider uppercase">{section.title}</h4>
