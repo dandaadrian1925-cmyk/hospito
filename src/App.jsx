@@ -6,6 +6,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
 import CookieConsentBanner from './components/common/CookieConsentBanner';
+import AccessibiliteButton from './components/common/AccessibiliteButton';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -50,6 +51,7 @@ function Layout({
       flex: 1
     }}>{children}</main>
       {!noFooter && <Footer />}
+      <AccessibiliteButton />
     </div>;
 }
 function PageLoader() {
