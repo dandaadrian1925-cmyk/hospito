@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
           </div>
           <span className="text-2xl font-black text-white" style={{
           fontFamily: 'Syne, sans-serif'
-        }}>Hospito</span>
+        }}>HostoConnect</span>
         </Link>
 
         <motion.div initial={{

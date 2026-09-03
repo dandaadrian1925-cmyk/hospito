@@ -16,9 +16,9 @@ const SYS = {
 };
 const SUPPORT_EXPIRATION_MS = 2 * 60 * 60 * 1000;
 const buildSystemPrompt = (userProfile, demandesRdv, reclamations) => `
-Tu es l'assistant virtuel de Hospito, la plateforme qui connecte patients et établissements de santé partenaires au Cameroun.
-Tu t'appelles "Assistant Hospito". Tu réponds uniquement en français, de manière claire, concise et professionnelle.
-Tu ne réponds qu'aux questions concernant Hospito et ses services. Si la question n'est pas liée à Hospito, redirige poliment vers les sujets Hospito.
+Tu es l'assistant virtuel de HostoConnect, la plateforme qui connecte patients et établissements de santé partenaires au Cameroun.
+Tu t'appelles "Assistant HostoConnect". Tu réponds uniquement en français, de manière claire, concise et professionnelle.
+Tu ne réponds qu'aux questions concernant HostoConnect et ses services. Si la question n'est pas liée à HostoConnect, redirige poliment vers les sujets HostoConnect.
 Tu n'es pas un professionnel de santé : tu n'établis aucun diagnostic et ne donnes aucun conseil médical — pour toute question médicale, oriente vers l'établissement ou, en cas d'urgence vitale, vers les services d'urgence.
 
 === RÈGLES ET FONCTIONNEMENT DE HOSPITO ===
@@ -31,7 +31,7 @@ INSCRIPTION :
 ÉTABLISSEMENTS PARTENAIRES :
 - Annuaire recherchable par nom ou par ville, depuis l'accueil ou la page "Établissements"
 - Chaque établissement dispose de son propre espace patient avec 5 onglets : Prendre RDV, Mon dossier, Messagerie, Paiement, Réclamations
-- Un établissement de santé peut demander à rejoindre Hospito via le formulaire "Devenir établissement partenaire" (footer du site)
+- Un établissement de santé peut demander à rejoindre HostoConnect via le formulaire "Devenir établissement partenaire" (footer du site)
 
 RENDEZ-VOUS :
 - Une demande de RDV se fait depuis la fiche de l'établissement, onglet "Prendre RDV" (motif + date souhaitée)
@@ -43,7 +43,7 @@ DOSSIER MÉDICAL :
 - La consultation du dossier directement depuis l'espace patient arrive prochainement
 
 PAIEMENT EN LIGNE :
-- Solde Hospito rechargeable via Mobile Money (MTN Mobile Money, Orange Money) — aucun paiement en espèces
+- Solde HostoConnect rechargeable via Mobile Money (MTN Mobile Money, Orange Money) — aucun paiement en espèces
 - Sert à régler les prestations facturées par un établissement, une fois cette fonctionnalité activée côté établissement
 
 MESSAGERIE & RÉCLAMATIONS :
@@ -57,7 +57,7 @@ SÉCURITÉ ET CONFIDENTIALITÉ :
 
 OPÉRATEUR HUMAIN :
 - Si l'utilisateur demande à parler à un opérateur humain, un agent, ou un humain, réponds :
-  "Je vais vous mettre en relation avec un opérateur Hospito. Veuillez patienter, un agent va vous rejoindre sous peu. ⏳"
+  "Je vais vous mettre en relation avec un opérateur HostoConnect. Veuillez patienter, un agent va vous rejoindre sous peu. ⏳"
   Et termine ton message par exactement ce tag : [ESCALADE_OPERATEUR]
 
 === DONNÉES DE L'UTILISATEUR CONNECTÉ ===
@@ -81,7 +81,7 @@ ${reclamations.slice(0, 3).map(r => `- ${r.sujet} | Statut: ${r.statut}`).join('
 === INSTRUCTIONS ===
 - Sois concis (3-4 phrases max par réponse sauf si l'utilisateur demande plus de détails)
 - Utilise les données de l'utilisateur pour personnaliser tes réponses
-- Si tu mentionnes une page Hospito, indique le chemin (ex: "onglet Réclamations de la fiche de votre établissement")
+- Si tu mentionnes une page HostoConnect, indique le chemin (ex: "onglet Réclamations de la fiche de votre établissement")
 - Ne divulgue jamais les données personnelles de l'utilisateur dans une réponse publique
 - Réponds toujours en français
 `;
@@ -235,7 +235,7 @@ function MessageBubble({
           fontWeight: 700,
           marginBottom: 3,
           opacity: 0.75
-        }}>Opérateur Hospito</div>}
+        }}>Opérateur HostoConnect</div>}
           {displayContent}
           <AttachmentPreview attachmentPath={msg.attachmentPath} attachmentName={msg.attachmentName} convId={convId} />
         </div>
@@ -269,7 +269,7 @@ function MessageBubble({
             color: '#B45309',
             marginTop: 2,
             ...SYS
-          }}>Un agent Hospito va vous rejoindre sous peu. Temps d'attente estimé : 5-15 minutes.</p>
+          }}>Un agent HostoConnect va vous rejoindre sous peu. Temps d'attente estimé : 5-15 minutes.</p>
             </div>
           </div>}
 
@@ -375,7 +375,7 @@ export default function ContactPage() {
     loadUserData();
   }, [user]);
   useEffect(() => {
-    const welcome = userProfile ? `Bonjour ${userProfile.prenom || userProfile.displayName?.split(' ')[0] || ''} ! 👋 Je suis l'assistant Hospito. Comment puis-je vous aider aujourd'hui ?` : `Bonjour ! 👋 Je suis l'assistant Hospito. Comment puis-je vous aider aujourd'hui ? (Connectez-vous pour que je puisse accéder à vos données et vous aider plus précisément.)`;
+    const welcome = userProfile ? `Bonjour ${userProfile.prenom || userProfile.displayName?.split(' ')[0] || ''} ! 👋 Je suis l'assistant HostoConnect. Comment puis-je vous aider aujourd'hui ?` : `Bonjour ! 👋 Je suis l'assistant HostoConnect. Comment puis-je vous aider aujourd'hui ? (Connectez-vous pour que je puisse accéder à vos données et vous aider plus précisément.)`;
     setMessages([{
       role: 'assistant',
       content: welcome,
@@ -557,7 +557,7 @@ export default function ContactPage() {
               <h1 style={{
               fontSize: 22,
               fontWeight: 700
-            }}>Assistant Hospito</h1>
+            }}>Assistant HostoConnect</h1>
               <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -605,12 +605,12 @@ export default function ContactPage() {
         color: 'var(--text-3)',
         marginTop: 8
       }}>
-          Posez vos questions sur Hospito, vos rendez-vous ou vos réclamations.
+          Posez vos questions sur HostoConnect, vos rendez-vous ou vos réclamations.
           {user ? ` Je connais votre compte ${userProfile?.prenom || ''}.` : ' Connectez-vous pour une aide personnalisée.'}
         </p>
       </div>
 
-      {showConfirmOperateur && <ConfirmDialog title="Parler à un opérateur Hospito ?" description="Un agent humain va prendre connaissance de votre demande et vous répondre directement ici, généralement sous quelques minutes." confirmLabel="Oui, me mettre en relation" onConfirm={demanderOperateur} onCancel={() => setShowConfirmOperateur(false)} />}
+      {showConfirmOperateur && <ConfirmDialog title="Parler à un opérateur HostoConnect ?" description="Un agent humain va prendre connaissance de votre demande et vous répondre directement ici, généralement sous quelques minutes." confirmLabel="Oui, me mettre en relation" onConfirm={demanderOperateur} onCancel={() => setShowConfirmOperateur(false)} />}
 
       {}
       <div style={{
@@ -931,7 +931,7 @@ export default function ContactPage() {
         lineHeight: 1.5,
         ...SYS
       }}>
-          L'assistant IA répond aux questions générales sur Hospito. Pour toute urgence médicale ou question complexe, tapez <strong>"parler à un opérateur"</strong> pour être mis en relation avec un agent humain.
+          L'assistant IA répond aux questions générales sur HostoConnect. Pour toute urgence médicale ou question complexe, tapez <strong>"parler à un opérateur"</strong> pour être mis en relation avec un agent humain.
         </p>
       </div>
 

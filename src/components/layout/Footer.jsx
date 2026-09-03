@@ -39,14 +39,10 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-6 sm:py-12 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2 mb-2 sm:mb-4">
-            <div className="w-8 h-8 gradient-blue rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm" style={{
-              fontFamily: 'Syne, sans-serif'
-            }}>H</span>
-            </div>
+            <img src="/icon-192.png" alt="HostoConnect" className="w-8 h-8" />
             <span className="text-xl font-black" style={{
             fontFamily: 'Syne, sans-serif'
-          }}>Hospito</span>
+          }}>HostoConnect</span>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
             La plateforme qui connecte patients et établissements de santé, partout au Cameroun.
@@ -55,7 +51,7 @@ export default function Footer() {
         </div>
 
         {[{
-        title: 'Hospito',
+        title: 'HostoConnect',
         links: [{
           to: '/etablissements',
           label: 'Trouver un établissement'

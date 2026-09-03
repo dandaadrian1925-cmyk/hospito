@@ -65,7 +65,7 @@ export default function HomePage() {
         <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--ink-3)' }}>
           <Building2 style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
           <p style={{ fontWeight: 600 }}>Aucun établissement partenaire pour le moment</p>
-          <p style={{ fontSize: 13, marginTop: 4 }}>Revenez bientôt — de nouveaux établissements rejoignent régulièrement Hospito.</p>
+          <p style={{ fontSize: 13, marginTop: 4 }}>Revenez bientôt — de nouveaux établissements rejoignent régulièrement HostoConnect.</p>
         </div>
       ) : (
         etablissements.map((etab) => <EtablissementHeroCarousel key={etab.id} etablissement={etab} />)
@@ -75,7 +75,7 @@ export default function HomePage() {
         <p style={{ fontSize: 13, color: 'var(--ink-3)' }}>
           Vous représentez un établissement de santé ?{' '}
           <Link to="/etablissements/demande" style={{ color: 'var(--blue)', fontWeight: 600 }}>
-            Rejoignez Hospito
+            Rejoignez HostoConnect
           </Link>
         </p>
       </div>

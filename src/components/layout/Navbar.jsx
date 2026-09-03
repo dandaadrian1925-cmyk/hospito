@@ -5,23 +5,20 @@ import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../services/authService';
 import { listenUnreadNotificationsCount } from '../../services/notificationsService';
-function HospitoLogo({
+function HostoConnectLogo({
   size = 'md'
 }) {
   const sizes = {
     sm: {
       box: 26,
-      font: 13,
       text: 15
     },
     md: {
       box: 32,
-      font: 15,
       text: 18
     },
     lg: {
       box: 40,
-      font: 19,
       text: 22
     }
   };
@@ -31,20 +28,11 @@ function HospitoLogo({
     alignItems: 'center',
     gap: 8
   }}>
-      <span style={{
+      <img src="/icon-192.png" alt="HostoConnect" style={{
       width: s.box,
       height: s.box,
-      borderRadius: s.box * 0.28,
-      flexShrink: 0,
-      background: 'linear-gradient(135deg, var(--blue), var(--blue-dark))',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      color: 'white',
-      fontWeight: 800,
-      fontSize: s.font,
-      fontFamily: 'Syne, sans-serif'
-    }}>H</span>
+      flexShrink: 0
+    }} />
       <span style={{
       fontFamily: 'Syne, sans-serif',
       fontWeight: 800,
@@ -52,11 +40,11 @@ function HospitoLogo({
       color: 'var(--ink)',
       letterSpacing: '-0.01em'
     }}>
-        Hospito
+        HostoConnect
       </span>
     </span>;
 }
-export { HospitoLogo };
+export { HostoConnectLogo };
 export default function Navbar() {
   const {
     user,
@@ -152,7 +140,7 @@ export default function Navbar() {
           textDecoration: 'none',
           flexShrink: 0
         }}>
-            <HospitoLogo size="md" />
+            <HostoConnectLogo size="md" />
           </Link>
 
           {}

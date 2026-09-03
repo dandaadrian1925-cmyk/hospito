@@ -7,7 +7,7 @@ export default function ConfidentialitePage() {
     content: ['Fournir et améliorer le service (recherche d\'établissement, rendez-vous, dossier partagé, messagerie, paiement).', 'Permettre au personnel soignant autorisé de consulter et compléter votre dossier médical dans l\'établissement où vous êtes pris en charge.', 'Sécuriser les comptes et prévenir la fraude.', 'Transmettre vos messages et réclamations à l\'établissement concerné.', 'Vous notifier de l\'activité liée à votre compte (confirmation de rendez-vous, réponse à une réclamation...).', 'Respecter nos obligations légales, notamment celles relatives aux données de santé.']
   }, {
     title: '3. Partage des données',
-    content: ['Hospito ne vend jamais vos données personnelles à des tiers.', 'Le contenu clinique de votre dossier n\'est partagé qu\'avec le personnel soignant autorisé de l\'établissement où vous êtes actuellement suivi — jamais avec un établissement où vous ne consultez pas, ni avec un autre patient.', 'Vos coordonnées de paiement transitent directement par la passerelle de paiement partenaire, jamais stockées en clair par Hospito.', 'En cas d\'obligation légale, certaines données peuvent être communiquées aux autorités compétentes.']
+    content: ['HostoConnect ne vend jamais vos données personnelles à des tiers.', 'Le contenu clinique de votre dossier n\'est partagé qu\'avec le personnel soignant autorisé de l\'établissement où vous êtes actuellement suivi — jamais avec un établissement où vous ne consultez pas, ni avec un autre patient.', 'Vos coordonnées de paiement transitent directement par la passerelle de paiement partenaire, jamais stockées en clair par HostoConnect.', 'En cas d\'obligation légale, certaines données peuvent être communiquées aux autorités compétentes.']
   }, {
     title: '4. Conservation des données',
     content: ['Données de compte : conservées tant que votre compte est actif.', 'Contenu du dossier médical : conservé selon les durées légales applicables à la conservation des dossiers de santé.', 'Messages et réclamations : conservés le temps nécessaire au traitement puis archivés à des fins de preuve.', 'Documents d\'identité : supprimés après vérification réussie ou refus.']
@@ -51,7 +51,7 @@ export default function ConfidentialitePage() {
           color: '#2451C4',
           fontWeight: 600
         }}>
-            🔒 Hospito protège le secret médical. Nous ne vendons jamais vos données personnelles.
+            🔒 HostoConnect protège le secret médical. Nous ne vendons jamais vos données personnelles.
           </p>
         </div>
       </div>

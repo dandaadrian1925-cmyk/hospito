@@ -18,22 +18,22 @@ export default function CookiesPage() {
     }}>Dernière mise à jour : Juin 2025</p>
       {[{
       title: '1. Qu\'est-ce qu\'un cookie ?',
-      content: 'Un cookie est un petit fichier texte déposé sur votre navigateur lorsque vous visitez Hospito. Il nous permet de mémoriser vos préférences et d\'améliorer votre expérience.'
+      content: 'Un cookie est un petit fichier texte déposé sur votre navigateur lorsque vous visitez HostoConnect. Il nous permet de mémoriser vos préférences et d\'améliorer votre expérience.'
     }, {
       title: '2. Cookies essentiels',
-      content: 'Ces cookies sont indispensables au fonctionnement d\'Hospito. Ils gèrent votre session de connexion et assurent la sécurité de votre compte. Ils ne peuvent pas être désactivés.'
+      content: 'Ces cookies sont indispensables au fonctionnement d\'HostoConnect. Ils gèrent votre session de connexion et assurent la sécurité de votre compte. Ils ne peuvent pas être désactivés.'
     }, {
       title: '3. Cookies de performance',
-      content: 'Ces cookies nous aident à comprendre comment vous utilisez Hospito (pages visitées, durée de navigation). Les données sont anonymisées et nous permettent d\'améliorer nos services.'
+      content: 'Ces cookies nous aident à comprendre comment vous utilisez HostoConnect (pages visitées, durée de navigation). Les données sont anonymisées et nous permettent d\'améliorer nos services.'
     }, {
       title: '4. Cookies Firebase',
-      content: 'Hospito utilise Firebase (Google) pour l\'authentification et la base de données. Firebase dépose ses propres cookies pour gérer les sessions utilisateurs de manière sécurisée.'
+      content: 'HostoConnect utilise Firebase (Google) pour l\'authentification et la base de données. Firebase dépose ses propres cookies pour gérer les sessions utilisateurs de manière sécurisée.'
     }, {
       title: '5. Gérer vos cookies',
-      content: 'Vous pouvez configurer votre navigateur pour refuser les cookies. Attention : certaines fonctionnalités d\'Hospito pourraient ne plus fonctionner correctement. Pour les instructions, consultez l\'aide de votre navigateur (Chrome, Firefox, Safari...).'
+      content: 'Vous pouvez configurer votre navigateur pour refuser les cookies. Attention : certaines fonctionnalités d\'HostoConnect pourraient ne plus fonctionner correctement. Pour les instructions, consultez l\'aide de votre navigateur (Chrome, Firefox, Safari...).'
     }, {
       title: '6. Contact',
-      content: 'Pour toute question sur notre politique de cookies, contactez-nous via la page Contact d\'Hospito.'
+      content: 'Pour toute question sur notre politique de cookies, contactez-nous via la page Contact d\'HostoConnect.'
     }].map((s, i) => <div key={i} style={{
       marginBottom: 28,
       paddingBottom: 28,

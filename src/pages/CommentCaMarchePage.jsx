@@ -49,7 +49,7 @@ const faqs = [
   },
   {
     q: 'Mon dossier médical est-il le même dans tous les établissements ?',
-    r: "Hospito vise un dossier médical unique et partagé entre tous vos établissements de santé partenaires — cette fonctionnalité arrive prochainement.",
+    r: "HostoConnect vise un dossier médical unique et partagé entre tous vos établissements de santé partenaires — cette fonctionnalité arrive prochainement.",
   },
   {
     q: "Comment signaler un problème avec un établissement ?",
@@ -75,7 +75,7 @@ export default function CommentCaMarchePage() {
             Comment ça marche ?
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 16, maxWidth: 480, margin: '0 auto' }}>
-            Hospito connecte patients et établissements de santé, de la prise de rendez-vous au paiement de vos factures.
+            HostoConnect connecte patients et établissements de santé, de la prise de rendez-vous au paiement de vos factures.
           </p>
         </motion.div>
       </div>

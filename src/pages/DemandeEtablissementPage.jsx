@@ -87,7 +87,7 @@ export default function DemandeEtablissementPage() {
           <Building2 style={{ width: 26, height: 26, color: 'white' }} />
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>
-          Devenir établissement partenaire Hospito
+          Devenir établissement partenaire HostoConnect
         </h1>
         <p style={{ fontSize: 15, color: 'var(--ink-3)', lineHeight: 1.6 }}>
           Vous représentez une clinique, un cabinet ou un hôpital ? Faites-nous parvenir vos

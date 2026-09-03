@@ -35,8 +35,8 @@ const pillars = [{
   icon: CreditCard,
   color: '#0891B2',
   title: 'Paiement via passerelle certifiée',
-  desc: 'Vos coordonnées Mobile Money ne transitent jamais en clair par Hospito — elles sont gérées directement par la passerelle de paiement partenaire (CamPay).',
-  points: ['Aucune donnée bancaire stockée par Hospito', 'Historique de transactions consultable à tout moment', 'Paiement en ligne uniquement, aucune espèce traitée']
+  desc: 'Vos coordonnées Mobile Money ne transitent jamais en clair par HostoConnect — elles sont gérées directement par la passerelle de paiement partenaire (CamPay).',
+  points: ['Aucune donnée bancaire stockée par HostoConnect', 'Historique de transactions consultable à tout moment', 'Paiement en ligne uniquement, aucune espèce traitée']
 }];
 const dosDonts = {
   dos: ['Vérifiez que vous êtes bien connecté à votre propre compte avant de consulter des informations médicales', 'Renseignez un numéro de CNI exact — il permet de retrouver votre dossier dans tout établissement partenaire', 'Signalez tout accès ou comportement suspect via une réclamation', 'Déconnectez-vous après usage sur un appareil partagé', 'Gardez vos identifiants de connexion strictement confidentiels'],
@@ -87,7 +87,7 @@ export default function SecuritePage() {
           color: 'white',
           marginBottom: 12
         }}>
-            Sécurité sur Hospito
+            Sécurité sur HostoConnect
           </h1>
           <p style={{
           color: 'rgba(255,255,255,0.75)',
@@ -95,7 +95,7 @@ export default function SecuritePage() {
           maxWidth: 500,
           margin: '0 auto'
         }}>
-            Hospito a été conçu dès le départ pour protéger le secret médical et les données personnelles de chaque patient.
+            HostoConnect a été conçu dès le départ pour protéger le secret médical et les données personnelles de chaque patient.
           </p>
         </motion.div>
       </div>
@@ -368,7 +368,7 @@ export default function SecuritePage() {
               color: '#78350F',
               lineHeight: 1.65
             }}>
-                Hospito met en relation patients et établissements de santé partenaires ; chaque établissement reste seul responsable des soins prodigués. En cas d'urgence vitale, contactez directement les services d'urgence de votre établissement ou le numéro d'urgence national — ne passez pas par l'application.
+                HostoConnect met en relation patients et établissements de santé partenaires ; chaque établissement reste seul responsable des soins prodigués. En cas d'urgence vitale, contactez directement les services d'urgence de votre établissement ou le numéro d'urgence national — ne passez pas par l'application.
               </p>
             </div>
           </div>

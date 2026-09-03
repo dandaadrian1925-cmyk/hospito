@@ -46,7 +46,7 @@ export default function CookieConsentBanner() {
         lineHeight: 1.5,
         margin: 0
       }}>
-            Hospito utilise uniquement des cookies essentiels (connexion, sécurité du compte) — aucun cookie publicitaire ou de suivi.{' '}
+            HostoConnect utilise uniquement des cookies essentiels (connexion, sécurité du compte) — aucun cookie publicitaire ou de suivi.{' '}
             <Link to="/cookies" style={{
           color: 'var(--blue, #2451C4)',
           fontWeight: 600,

@@ -103,11 +103,11 @@ export default function AuthPage() {
             duration: 6000
           });
         } else {
-          toast.success('Compte créé ! Bienvenue sur Hospito 🎉');
+          toast.success('Compte créé ! Bienvenue sur HostoConnect 🎉');
         }
       } else {
         await loginWithEmail(form.email, form.password);
-        toast.success('Bon retour sur Hospito !');
+        toast.success('Bon retour sur HostoConnect !');
       }
       navigate('/');
     } catch (err) {
@@ -159,7 +159,7 @@ export default function AuthPage() {
           </div>
           <span className="text-2xl font-black text-white" style={{
           fontFamily: 'Syne, sans-serif'
-        }}>Hospito</span>
+        }}>HostoConnect</span>
         </Link>
 
         {}
@@ -284,7 +284,7 @@ export default function AuthPage() {
             {mode === 'register' && <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 space-y-2">
                 <label className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed cursor-pointer">
                   <input type="checkbox" checked={acceptCGU} onChange={e => setAcceptCGU(e.target.checked)} className="mt-0.5 flex-shrink-0" />
-                  J'ai lu et j'accepte les <Link to="/cgu" target="_blank" className="text-primary-600 font-semibold">Conditions Générales d'Utilisation d'Hospito</Link>.
+                  J'ai lu et j'accepte les <Link to="/cgu" target="_blank" className="text-primary-600 font-semibold">Conditions Générales d'Utilisation d'HostoConnect</Link>.
                 </label>
                 <label className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed cursor-pointer">
                   <input type="checkbox" checked={acceptConfidentialite} onChange={e => setAcceptConfidentialite(e.target.checked)} className="mt-0.5 flex-shrink-0" />

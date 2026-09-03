@@ -8,7 +8,7 @@ const CATEGORIES = [{
   icon: User,
   color: '#2451C4',
   faqs: [{
-    q: 'Combien coûte l\'inscription sur Hospito ?',
+    q: 'Combien coûte l\'inscription sur HostoConnect ?',
     r: 'L\'inscription est entièrement gratuite.'
   }, {
     q: 'Puis-je m\'inscrire avec Google ?',
@@ -39,7 +39,7 @@ const CATEGORIES = [{
   color: '#059669',
   faqs: [{
     q: 'Mon dossier médical est-il le même dans tous les établissements ?',
-    r: 'Oui — contrairement aux données administratives (qui restent propres à chaque établissement), votre dossier médical (antécédents, prescriptions, comptes-rendus) est unique et partagé entre tous les établissements Hospito où vous êtes suivi.'
+    r: 'Oui — contrairement aux données administratives (qui restent propres à chaque établissement), votre dossier médical (antécédents, prescriptions, comptes-rendus) est unique et partagé entre tous les établissements HostoConnect où vous êtes suivi.'
   }, {
     q: 'Qui peut consulter mon dossier ?',
     r: 'Uniquement le personnel soignant autorisé (médecin, infirmier) de l\'établissement où vous êtes actuellement pris en charge — jamais un autre patient, ni un établissement où vous ne consultez pas.'
@@ -54,7 +54,7 @@ const CATEGORIES = [{
   color: '#D97706',
   faqs: [{
     q: 'Comment fonctionne le paiement en ligne ?',
-    r: 'Vous disposez d\'un solde Hospito rechargeable via Mobile Money (MTN Mobile Money, Orange Money), consultable dans l\'onglet Paiement de chaque établissement.'
+    r: 'Vous disposez d\'un solde HostoConnect rechargeable via Mobile Money (MTN Mobile Money, Orange Money), consultable dans l\'onglet Paiement de chaque établissement.'
   }, {
     q: 'Puis-je payer mes factures médicales en ligne ?',
     r: 'Cette fonctionnalité arrive bientôt, une fois la facturation activée côté établissements.'
@@ -193,7 +193,7 @@ export default function FAQPage() {
           fontSize: 16,
           marginBottom: 28
         }}>
-            Des réponses à toutes vos questions sur Hospito
+            Des réponses à toutes vos questions sur HostoConnect
           </p>
           {}
           <div style={{
