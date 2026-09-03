@@ -37,7 +37,7 @@ export default function AccessibiliteButton() {
   }, [reglages]);
 
   return (
-    <div style={{ position: 'fixed', bottom: 20, right: 20, zIndex: 200 }}>
+    <div style={{ position: 'fixed', bottom: 88, right: 20, zIndex: 200 }}>
       {ouvert && (
         <div
           style={{

@@ -7,6 +7,7 @@ import Footer from './components/layout/Footer';
 import ScrollToTop from './components/common/ScrollToTop';
 import CookieConsentBanner from './components/common/CookieConsentBanner';
 import AccessibiliteButton from './components/common/AccessibiliteButton';
+import SupportChatWidget from './components/support/SupportChatWidget';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
@@ -72,6 +73,7 @@ export default function App() {
       <AuthProvider>
         <ScrollToTop />
         <CookieConsentBanner />
+        <SupportChatWidget />
         <Toaster position="top-center" toastOptions={{
         duration: 3000,
         style: {
