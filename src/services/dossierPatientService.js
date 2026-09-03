@@ -35,8 +35,15 @@ const mapPrescription = (row) => ({
   createdAt: toFirestoreLikeTimestamp(row.created_at),
 });
 
+export const MESSAGE_BACKEND_INDISPONIBLE = 'Backend local indisponible — vérifiez que XAMPP (Apache/MySQL) est actif sur cette machine.';
+
 const localFetch = async (path) => {
-  const res = await fetch(`${LOCAL_API_URL}/${path}`);
+  let res;
+  try {
+    res = await fetch(`${LOCAL_API_URL}/${path}`);
+  } catch {
+    throw new Error(MESSAGE_BACKEND_INDISPONIBLE);
+  }
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'Erreur du serveur local');
   return data;

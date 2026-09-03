@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FolderHeart, Loader2 } from 'lucide-react';
+import { FolderHeart, Loader2, AlertTriangle } from 'lucide-react';
 import { getMonDossier, getMesPrescriptions, dossierLocalDisponible } from '../../services/dossierPatientService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
@@ -37,6 +37,7 @@ export default function DossierMedicalView({ cni }) {
   const [entrees, setEntrees] = useState(null);
   const [prescriptions, setPrescriptions] = useState(null);
   const [etablissements, setEtablissements] = useState({});
+  const [erreur, setErreur] = useState(null);
 
   useEffect(() => {
     if (!dossierLocalDisponible || !cni) {
@@ -44,6 +45,7 @@ export default function DossierMedicalView({ cni }) {
       setPrescriptions([]);
       return;
     }
+    setErreur(null);
     Promise.all([getMonDossier(cni), getMesPrescriptions(cni)])
       .then(async ([e, p]) => {
         setEntrees(e);
@@ -52,7 +54,8 @@ export default function DossierMedicalView({ cni }) {
         const entries = await Promise.all(ids.map(async (id) => [id, await getEtablissement(id)]));
         setEtablissements(Object.fromEntries(entries));
       })
-      .catch(() => {
+      .catch((err) => {
+        setErreur(err.message || 'Erreur');
         setEntrees([]);
         setPrescriptions([]);
       });
@@ -80,6 +83,16 @@ export default function DossierMedicalView({ cni }) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
         <Loader2 style={{ width: 24, height: 24, color: '#94A3B8' }} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (erreur) {
+    return (
+      <div style={{ ...placeholderStyle, color: '#B91C1C' }}>
+        <AlertTriangle style={{ width: 32, height: 32, margin: '0 auto 12px', color: '#DC2626' }} />
+        <p style={{ fontWeight: 600 }}>Dossier indisponible</p>
+        <p style={{ fontSize: 13, marginTop: 4 }}>{erreur}</p>
       </div>
     );
   }
