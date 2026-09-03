@@ -28,6 +28,7 @@ const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissement
 const EtablissementSpacePage = lazy(() => import('./pages/EtablissementSpacePage'));
 const EtablissementsPage = lazy(() => import('./pages/EtablissementsPage'));
 const FavorisEtablissementsPage = lazy(() => import('./pages/FavorisEtablissementsPage'));
+const CommentCaMarchePage = lazy(() => import('./pages/CommentCaMarchePage'));
 const MesDroitsPage = lazy(() => import('./pages/MesDroitsPage'));
 function Layout({
   children,
@@ -117,6 +118,7 @@ export default function App() {
             <Route path="/mon-compte/cni" element={<Layout><VerifCNIPage /></Layout>} />
 
             {}
+            <Route path="/comment-ca-marche" element={<Layout><CommentCaMarchePage /></Layout>} />
             <Route path="/faq" element={<Layout><FAQPage /></Layout>} />
             <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
             <Route path="/securite" element={<Layout><SecuritePage /></Layout>} />

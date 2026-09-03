@@ -60,6 +60,9 @@ export default function Footer() {
           to: '/etablissements',
           label: 'Trouver un établissement'
         }, {
+          to: '/comment-ca-marche',
+          label: 'Comment ça marche'
+        }, {
           to: '/etablissements/demande',
           label: 'Devenir établissement partenaire'
         }]

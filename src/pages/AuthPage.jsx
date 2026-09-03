@@ -130,10 +130,17 @@ export default function AuthPage() {
       return;
     }
     setGoogleLoading(true);
-    // signInWithRedirect fait quitter la page immédiatement — pas de bloc
-    // try/catch pertinent ici, le résultat (succès ou erreur) est traité au
-    // retour par l'effet traiterResultatConnexionGoogle ci-dessus.
-    loginWithGoogle(referralCode || null);
+    // signInWithRedirect fait normalement quitter la page immédiatement — le
+    // résultat (succès ou erreur) est alors traité au retour par l'effet
+    // traiterResultatConnexionGoogle ci-dessus. Ce .catch() couvre le cas où
+    // la navigation elle-même échoue AVANT de quitter la page (ex. config
+    // invalide) — sans lui, une telle erreur restait totalement silencieuse
+    // (aucun message, aucune redirection, juste le bouton qui semble bloqué).
+    loginWithGoogle(referralCode || null).catch((err) => {
+      console.error('Démarrage de la connexion Google échoué :', err);
+      toast.error(`Impossible de démarrer la connexion Google (${err.code || err.message})`);
+      setGoogleLoading(false);
+    });
   };
   return <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex items-center justify-center p-4">
       {}
