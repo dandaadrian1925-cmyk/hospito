@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { creerNotification } from './notificationsService';
@@ -199,37 +199,23 @@ export const loginWithEmail = async (email, password) => {
   }
 };
 // #bug (corrigé, retour utilisateur — "Google échoue à un moment") :
-// signInWithPopup dépend de window.close()/postMessage entre la popup Google
-// et la fenêtre d'origine, cassé par Cross-Origin-Opener-Policy sur les
-// navigateurs Chrome récents (auth/popup-closed-by-user alors que
-// l'utilisateur n'a rien fermé) — reproductible même avec notre propre COOP
-// correctement réglé (same-origin-allow-popups), car c'est le comportement de
-// la popup Google elle-même qui est en cause, hors de notre contrôle.
-// signInWithRedirect évite complètement ce mécanisme (navigation de page
-// entière, jamais de fenêtre à refermer) — recommandation officielle Google
-// pour ce problème précis.
-export const loginWithGoogle = (referralCode = null) => {
-  if (referralCode) {
-    try { sessionStorage.setItem('hospito_google_referral', referralCode); } catch (e) {}
-  }
+// signInWithRedirect avait été essayé à la place de signInWithPopup pour
+// contourner un supposé bug COOP — en réalité, la vraie cause était que le
+// projet Firebase "scuizz" n'avait JAMAIS eu Firebase Hosting déployé
+// (scuizz.firebaseapp.com/__/firebase/init.json renvoyait 404), cassant le
+// fonctionnement interne de la page /__/auth/handler quel que soit le
+// mécanisme (popup OU redirect). Une fois Hosting déployé, signInWithRedirect
+// atteint bien Google mais getRedirectResult() ne retrouve jamais le résultat
+// au retour (stockage tiers bloqué par le navigateur, y compris en navigation
+// privée) — signInWithPopup n'a pas ce problème (communication directe entre
+// fenêtres via postMessage, pas de récupération d'un état stocké après un
+// aller-retour de page complète) : c'est d'ailleurs exactement l'implémentation
+// qui fonctionne sur MAKET (maket-client, même architecture, authDomain
+// tout aussi cross-origin), confirmant que ce n'était pas un problème de COOP.
+export const loginWithGoogle = async (referralCode = null) => {
   setConnexionEnCours(true);
-  return signInWithRedirect(auth, googleProvider);
-};
-
-// À appeler une fois, au chargement de la page qui a démarré loginWithGoogle
-// (ex. AuthPage.jsx) — récupère le résultat de la redirection Google si une
-// connexion était en cours, sinon renvoie null immédiatement (cas normal,
-// simple chargement de page sans redirection en attente).
-export const traiterResultatConnexionGoogle = async () => {
-  let referralCode = null;
   try {
-    referralCode = sessionStorage.getItem('hospito_google_referral');
-    sessionStorage.removeItem('hospito_google_referral');
-  } catch (e) {}
-
-  try {
-    const cred = await getRedirectResult(auth);
-    if (!cred) return null;
+    const cred = await signInWithPopup(auth, googleProvider);
     const userRef = doc(db, 'users', cred.user.uid);
     const snap = await getDoc(userRef);
     let codeInvalide = false;
