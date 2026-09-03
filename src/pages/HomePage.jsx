@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, Building2 } from 'lucide-react';
 import EtablissementHeroCarousel from '../components/home/EtablissementHeroCarousel';
+import Ticker from '../components/home/Ticker';
 import { listerEtablissementsActifs } from '../services/etablissementsPublicService';
 
 const fadeUp = {
@@ -26,6 +27,7 @@ export default function HomePage() {
 
   return (
     <div className="gradient-mesh">
+      <Ticker />
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px 24px 8px', textAlign: 'center' }}>
         <motion.h1
           initial={fadeUp.initial}
