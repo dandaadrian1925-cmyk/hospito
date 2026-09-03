@@ -54,3 +54,6 @@ coverage/
 .claude/
 .firebase/
 supabase/.temp/
+
+.vercel
+.env*
