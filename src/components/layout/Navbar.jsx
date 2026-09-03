@@ -159,7 +159,7 @@ export default function Navbar() {
               ...linkBase,
               display: 'none'
             }} className="desktop-icon" onMouseEnter={e => e.currentTarget.style.color = 'var(--ink)'} onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-2)'}>
-                  Messages
+                  Assistance
                 </Link>
                 <Link to="/notifications" style={{
               ...linkBase,
@@ -282,7 +282,7 @@ export default function Navbar() {
                     label: 'Mes favoris'
                   }, {
                     to: '/contact',
-                    label: 'Messages'
+                    label: 'Assistance'
                   }, {
                     to: '/notifications',
                     label: 'Notifications',
