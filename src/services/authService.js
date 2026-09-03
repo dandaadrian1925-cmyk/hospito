@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithRedirect, getRedirectResult, signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { creerNotification } from './notificationsService';
@@ -198,10 +198,38 @@ export const loginWithEmail = async (email, password) => {
     terminerConnexion();
   }
 };
-export const loginWithGoogle = async (referralCode = null) => {
+// #bug (corrigé, retour utilisateur — "Google échoue à un moment") :
+// signInWithPopup dépend de window.close()/postMessage entre la popup Google
+// et la fenêtre d'origine, cassé par Cross-Origin-Opener-Policy sur les
+// navigateurs Chrome récents (auth/popup-closed-by-user alors que
+// l'utilisateur n'a rien fermé) — reproductible même avec notre propre COOP
+// correctement réglé (same-origin-allow-popups), car c'est le comportement de
+// la popup Google elle-même qui est en cause, hors de notre contrôle.
+// signInWithRedirect évite complètement ce mécanisme (navigation de page
+// entière, jamais de fenêtre à refermer) — recommandation officielle Google
+// pour ce problème précis.
+export const loginWithGoogle = (referralCode = null) => {
+  if (referralCode) {
+    try { sessionStorage.setItem('hospito_google_referral', referralCode); } catch (e) {}
+  }
   setConnexionEnCours(true);
+  return signInWithRedirect(auth, googleProvider);
+};
+
+// À appeler une fois, au chargement de la page qui a démarré loginWithGoogle
+// (ex. AuthPage.jsx) — récupère le résultat de la redirection Google si une
+// connexion était en cours, sinon renvoie null immédiatement (cas normal,
+// simple chargement de page sans redirection en attente).
+export const traiterResultatConnexionGoogle = async () => {
+  let referralCode = null;
   try {
-    const cred = await signInWithPopup(auth, googleProvider);
+    referralCode = sessionStorage.getItem('hospito_google_referral');
+    sessionStorage.removeItem('hospito_google_referral');
+  } catch (e) {}
+
+  try {
+    const cred = await getRedirectResult(auth);
+    if (!cred) return null;
     const userRef = doc(db, 'users', cred.user.uid);
     const snap = await getDoc(userRef);
     let codeInvalide = false;

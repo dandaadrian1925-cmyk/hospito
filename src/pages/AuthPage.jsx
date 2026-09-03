@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Gift, Globe, ArrowRight } from 'lucide-react';
-import { registerWithEmail, loginWithEmail, loginWithGoogle } from '../services/authService';
+import { registerWithEmail, loginWithEmail, loginWithGoogle, traiterResultatConnexionGoogle } from '../services/authService';
 import { getSettings, getVillesFormulaire } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -19,6 +19,26 @@ export default function AuthPage() {
   const [settings, setSettings] = useState({});
   useEffect(() => {
     getSettings().then(setSettings);
+  }, []);
+  // Récupère le résultat d'une connexion Google démarrée par signInWithRedirect
+  // (retour de page complet) — no-op si aucune redirection n'était en cours.
+  useEffect(() => {
+    traiterResultatConnexionGoogle().then((res) => {
+      if (!res) return;
+      if (res.codeInvalide) {
+        toast.error('Code de parrainage introuvable — compte créé sans parrain.', { duration: 6000 });
+      } else {
+        toast.success('Connecté avec Google !');
+      }
+    }).catch((err) => {
+      console.error('Connexion Google échouée :', err);
+      const googleMsgs = {
+        'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cet email via une autre méthode de connexion.',
+        'auth/unauthorized-domain': "Ce domaine n'est pas autorisé pour la connexion Google (à corriger côté configuration Firebase).",
+        'auth/operation-not-allowed': 'La connexion Google est désactivée côté Firebase (Authentication → Sign-in method → activer Google).'
+      };
+      toast.error(googleMsgs[err.code] || `Erreur de connexion Google (${err.code || err.message})`);
+    });
   }, []);
   // #retour utilisateur : un lien d'invitation (?ref=CODE, cf.
   // buildInvitationWhatsApp) doit amener directement sur le formulaire
@@ -110,32 +130,10 @@ export default function AuthPage() {
       return;
     }
     setGoogleLoading(true);
-    try {
-      const {
-        codeInvalide
-      } = await loginWithGoogle(referralCode || null);
-      if (codeInvalide) {
-        toast.error('Code de parrainage introuvable — compte créé sans parrain.', {
-          duration: 6000
-        });
-      } else {
-        toast.success('Connecté avec Google !');
-      }
-      navigate('/');
-    } catch (err) {
-      console.error('Connexion Google échouée :', err);
-      const googleMsgs = {
-        'auth/popup-blocked': 'Le popup Google a été bloqué par votre navigateur — autorisez les popups pour ce site et réessayez.',
-        'auth/popup-closed-by-user': 'Fenêtre Google fermée avant la fin de la connexion.',
-        'auth/cancelled-popup-request': 'Une autre tentative de connexion était déjà en cours.',
-        'auth/unauthorized-domain': 'Ce domaine n\'est pas autorisé pour la connexion Google (à corriger côté configuration Firebase).',
-        'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cet email via une autre méthode de connexion.',
-        'auth/operation-not-allowed': 'La connexion Google est désactivée côté Firebase (Authentication → Sign-in method → activer Google).'
-      };
-      toast.error(googleMsgs[err.code] || `Erreur de connexion Google (${err.code || err.message})`);
-    } finally {
-      setGoogleLoading(false);
-    }
+    // signInWithRedirect fait quitter la page immédiatement — pas de bloc
+    // try/catch pertinent ici, le résultat (succès ou erreur) est traité au
+    // retour par l'effet traiterResultatConnexionGoogle ci-dessus.
+    loginWithGoogle(referralCode || null);
   };
   return <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex items-center justify-center p-4">
       {}
