@@ -333,6 +333,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ===== ACCESSIBILITÉ & INCLUSION (Phase 5) ===== */
+html.a11y-tres-petite { font-size: 75%; }
 html.a11y-petite { font-size: 87.5%; }
 html.a11y-grand { font-size: 112.5%; }
 html.a11y-tres-grand { font-size: 125%; }

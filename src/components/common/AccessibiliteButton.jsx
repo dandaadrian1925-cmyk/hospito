@@ -6,6 +6,7 @@ import { Accessibility, X } from 'lucide-react';
 // (aucun compte requis, s'applique dès la prochaine visite sur cet appareil).
 const STORAGE_KEY = 'hospito-accessibilite';
 const TAILLES = [
+  { value: 'tres-petite', label: 'Très petite' },
   { value: 'petite', label: 'Petite' },
   { value: 'normal', label: 'Normal' },
   { value: 'grand', label: 'Grand' },
@@ -22,7 +23,8 @@ function lireReglages() {
 
 function appliquer(reglages) {
   const root = document.documentElement;
-  root.classList.remove('a11y-petite', 'a11y-grand', 'a11y-tres-grand', 'a11y-contraste');
+  root.classList.remove('a11y-tres-petite', 'a11y-petite', 'a11y-grand', 'a11y-tres-grand', 'a11y-contraste');
+  if (reglages.taille === 'tres-petite') root.classList.add('a11y-tres-petite');
   if (reglages.taille === 'petite') root.classList.add('a11y-petite');
   if (reglages.taille === 'grand') root.classList.add('a11y-grand');
   if (reglages.taille === 'tres-grand') root.classList.add('a11y-tres-grand');
@@ -43,20 +45,20 @@ export default function AccessibiliteButton() {
       {ouvert && (
         <div
           style={{
-            position: 'absolute', bottom: 56, right: 0, width: 272,
+            position: 'absolute', bottom: 56, right: 0, width: 300,
             background: 'white', borderRadius: 14, boxShadow: 'var(--shadow-lg, 0 8px 30px rgba(0,0,0,0.15))',
             padding: 16, border: '1px solid var(--border, #E2E8F0)',
           }}
         >
           <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Accessibilité</p>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Taille du texte</p>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>
             {TAILLES.map((t) => (
               <button
                 key={t.value}
                 onClick={() => setReglages((r) => ({ ...r, taille: t.value }))}
                 style={{
-                  flex: 1, padding: '6px 2px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, cursor: 'pointer',
+                  padding: '6px 2px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, cursor: 'pointer',
                   border: reglages.taille === t.value ? '2px solid var(--blue)' : '1px solid var(--border, #E2E8F0)',
                   background: reglages.taille === t.value ? 'var(--accent-soft, #EEF3FF)' : 'white',
                   color: reglages.taille === t.value ? 'var(--blue)' : 'var(--ink-2)',
