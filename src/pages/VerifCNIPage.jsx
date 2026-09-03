@@ -66,12 +66,12 @@ export default function VerifCNIPage() {
         fontSize: 15,
         marginBottom: 24
       }}>
-          Votre identité a déjà été vérifiée. Vous pouvez publier des annonces librement.
+          Votre identité a déjà été vérifiée — elle facilite votre reconnaissance dans tout établissement partenaire.
         </p>
-        <button onClick={() => navigate('/publier')} className="btn-primary" style={{
+        <button onClick={() => navigate('/mon-compte')} className="btn-primary" style={{
         display: 'inline-flex'
       }}>
-          Publier une annonce
+          Retour à mon compte
         </button>
       </div>
     </div>;
@@ -190,7 +190,7 @@ export default function VerifCNIPage() {
           <p style={{
           fontSize: 13,
           color: '#64748B'
-        }}>Obligatoire pour publier des annonces</p>
+        }}>Facilite votre reconnaissance dans tout établissement partenaire</p>
         </div>
       </div>
 

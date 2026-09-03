@@ -37,6 +37,15 @@ export async function listerFacturesEnAttente(patientUid, etablissementId) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+// Vue "Mon compte" — toutes les factures du patient, tous établissements et
+// statuts confondus (contrairement à listerFacturesEnAttente, scopée à un
+// seul établissement pour l'espace établissement).
+export async function getMesFactures(patientUid) {
+  const q = query(collection(db, 'factures'), where('patientUid', '==', patientUid));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
 export async function initierPaiementFacture(factureId, phoneNumber) {
   const externalId = `facture_${factureId}_${Date.now()}`;
   return factureProxy('initier_paiement_facture', { factureId, phoneNumber, externalId });
