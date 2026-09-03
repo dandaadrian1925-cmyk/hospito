@@ -77,7 +77,7 @@ export default function DemandeEtablissementPage() {
             width: 56,
             height: 56,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))',
+            background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

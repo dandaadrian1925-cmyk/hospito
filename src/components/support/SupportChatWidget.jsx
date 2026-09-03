@@ -43,7 +43,7 @@ function MessageBubble({ msg, convId }) {
   const isEscalade = msg.content.includes('[ESCALADE_OPERATEUR]');
   const displayContent = msg.content.replace('[ESCALADE_OPERATEUR]', '').trim();
   return <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', gap: 8, justifyContent: isBot || isOperator ? 'flex-start' : 'flex-end', marginBottom: 10 }}>
-    {(isBot || isOperator) && <div style={{ width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, background: isOperator ? '#2F7D5C' : 'linear-gradient(135deg, var(--blue), var(--primary-dark))' }}>
+    {(isBot || isOperator) && <div style={{ width: 26, height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2, background: isOperator ? '#2F7D5C' : 'linear-gradient(135deg, var(--blue), var(--accent-dark))' }}>
       {isOperator ? <Headphones style={{ width: 13, height: 13, color: 'white' }} /> : <Bot style={{ width: 13, height: 13, color: 'white' }} />}
     </div>}
     <div style={{ maxWidth: '78%' }}>
@@ -233,7 +233,7 @@ export default function SupportChatWidget() {
         background: 'white', borderRadius: 18, boxShadow: '0 12px 40px rgba(0,0,0,0.22)',
         border: '1.5px solid var(--border)', display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
-        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))', color: 'white' }}>
+        <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))', color: 'white' }}>
           <div style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.2)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Bot style={{ width: 17, height: 17 }} />
           </div>
@@ -256,7 +256,7 @@ export default function SupportChatWidget() {
           {messages.map((msg, i) => <MessageBubble key={i} msg={msg} convId={supportConvId} />)}
 
           {loading && <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <div style={{ width: 26, height: 26, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 26, height: 26, background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Bot style={{ width: 13, height: 13, color: 'white' }} />
             </div>
             <div style={{ padding: '8px 14px', background: 'var(--bg-2)', border: '1.5px solid var(--border)', borderRadius: '4px 12px 12px 12px', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -302,7 +302,7 @@ export default function SupportChatWidget() {
 
     <motion.button onClick={() => setOpen((o) => !o)} whileTap={{ scale: 0.93 }} style={{
       width: 56, height: 56, borderRadius: '50%', border: 'none', cursor: 'pointer',
-      background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))',
+      background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       boxShadow: '0 6px 20px rgba(26,86,219,0.35)',
     }}>

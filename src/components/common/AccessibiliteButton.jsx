@@ -6,6 +6,7 @@ import { Accessibility, X } from 'lucide-react';
 // (aucun compte requis, s'applique dès la prochaine visite sur cet appareil).
 const STORAGE_KEY = 'hospito-accessibilite';
 const TAILLES = [
+  { value: 'petite', label: 'Petite' },
   { value: 'normal', label: 'Normal' },
   { value: 'grand', label: 'Grand' },
   { value: 'tres-grand', label: 'Très grand' },
@@ -21,7 +22,8 @@ function lireReglages() {
 
 function appliquer(reglages) {
   const root = document.documentElement;
-  root.classList.remove('a11y-grand', 'a11y-tres-grand', 'a11y-contraste');
+  root.classList.remove('a11y-petite', 'a11y-grand', 'a11y-tres-grand', 'a11y-contraste');
+  if (reglages.taille === 'petite') root.classList.add('a11y-petite');
   if (reglages.taille === 'grand') root.classList.add('a11y-grand');
   if (reglages.taille === 'tres-grand') root.classList.add('a11y-tres-grand');
   if (reglages.contraste) root.classList.add('a11y-contraste');
@@ -41,7 +43,7 @@ export default function AccessibiliteButton() {
       {ouvert && (
         <div
           style={{
-            position: 'absolute', bottom: 56, right: 0, width: 240,
+            position: 'absolute', bottom: 56, right: 0, width: 272,
             background: 'white', borderRadius: 14, boxShadow: 'var(--shadow-lg, 0 8px 30px rgba(0,0,0,0.15))',
             padding: 16, border: '1px solid var(--border, #E2E8F0)',
           }}
@@ -54,7 +56,7 @@ export default function AccessibiliteButton() {
                 key={t.value}
                 onClick={() => setReglages((r) => ({ ...r, taille: t.value }))}
                 style={{
-                  flex: 1, padding: '6px 4px', borderRadius: 8, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                  flex: 1, padding: '6px 2px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, cursor: 'pointer',
                   border: reglages.taille === t.value ? '2px solid var(--blue)' : '1px solid var(--border, #E2E8F0)',
                   background: reglages.taille === t.value ? 'var(--accent-soft, #EEF3FF)' : 'white',
                   color: reglages.taille === t.value ? 'var(--blue)' : 'var(--ink-2)',

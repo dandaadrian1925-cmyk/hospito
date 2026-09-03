@@ -111,7 +111,7 @@ function MessageBubble({
       justifyContent: 'center',
       flexShrink: 0,
       marginTop: 2,
-      background: isOperator ? '#2F7D5C' : 'linear-gradient(135deg, var(--blue), var(--primary-dark))'
+      background: isOperator ? '#2F7D5C' : 'linear-gradient(135deg, var(--blue), var(--accent-dark))'
     }}>
           {isOperator ? <Headphones style={{
         width: 16,
@@ -455,7 +455,7 @@ export default function ContactPage() {
             <div style={{
             width: 44,
             height: 44,
-            background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))',
+            background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))',
             borderRadius: 12,
             display: 'flex',
             alignItems: 'center',
@@ -555,7 +555,7 @@ export default function ContactPage() {
               <div style={{
             width: 32,
             height: 32,
-            background: 'linear-gradient(135deg, var(--blue), var(--primary-dark))',
+            background: 'linear-gradient(135deg, var(--blue), var(--accent-dark))',
             borderRadius: 10,
             display: 'flex',
             alignItems: 'center',
