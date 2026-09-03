@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   Clock,
   LifeBuoy,
+  Star,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DossierMedicalView from '../components/dossier/DossierMedicalView';
@@ -21,6 +22,7 @@ import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVo
 import { listerSpecialistesDuService } from '../services/planningService';
 import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamationsService';
 import { ouvrirSignalementSecurite, getSignalementsSecuritePatient } from '../services/signalementsSecuriteService';
+import { deposerAvis, getAvisEtablissement, getMonAvis } from '../services/avisEtablissementsService';
 import { getOrCreateConversation, envoyerMessage, listenMessages } from '../services/chatService';
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
 import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFacture } from '../services/facturesService';
@@ -34,6 +36,7 @@ const TABS = [
   { id: 'paiement', label: 'Paiement', icon: Wallet },
   { id: 'reclamations', label: 'Réclamations', icon: Flag },
   { id: 'securite', label: 'Sécurité', icon: LifeBuoy },
+  { id: 'avis', label: 'Avis', icon: Star },
 ];
 
 function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
@@ -553,6 +556,86 @@ function TabReclamations({ etablissementId, patientUid }) {
   );
 }
 
+function TabAvis({ etablissementId, patientUid, patientNom }) {
+  const [note, setNote] = useState(0);
+  const [commentaire, setCommentaire] = useState('');
+  const [envoi, setEnvoi] = useState(false);
+  const [avis, setAvis] = useState([]);
+  const [monAvisId, setMonAvisId] = useState(null);
+
+  const recharger = useCallback(() => {
+    Promise.all([getAvisEtablissement(etablissementId), getMonAvis(patientUid, etablissementId)])
+      .then(([tous, mien]) => {
+        setAvis(tous);
+        if (mien) {
+          setMonAvisId(mien.id);
+          setNote(mien.note);
+          setCommentaire(mien.commentaire || '');
+        }
+      })
+      .catch((e) => console.error('Chargement des avis a échoué :', e));
+  }, [etablissementId, patientUid]);
+
+  useEffect(() => { recharger(); }, [recharger]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!note) { toast.error('Merci de choisir une note'); return; }
+    setEnvoi(true);
+    try {
+      await deposerAvis({ patientUid, patientNom, etablissementId, note, commentaire });
+      toast.success(monAvisId ? 'Avis mis à jour' : 'Avis envoyé');
+      recharger();
+    } catch (err) {
+      console.error('deposerAvis a échoué :', err);
+      toast.error("Échec de l'envoi de l'avis");
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  return (
+    <div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Votre note</label>
+          <div style={{ display: 'flex', gap: 4 }}>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button key={n} type="button" onClick={() => setNote(n)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                <Star size={26} fill={n <= note ? '#F59E0B' : 'none'} color={n <= note ? '#F59E0B' : '#CBD5E1'} />
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-bold text-gray-700 mb-2">Commentaire (optionnel)</label>
+          <textarea value={commentaire} onChange={(e) => setCommentaire(e.target.value)} className="input-field" rows={3} />
+        </div>
+        <button type="submit" disabled={envoi} className="btn-primary">
+          {envoi ? 'Envoi…' : monAvisId ? 'Mettre à jour mon avis' : 'Envoyer mon avis'}
+        </button>
+      </form>
+
+      {avis.length > 0 && (
+        <div style={{ marginTop: 28 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Avis des patients</p>
+          <div className="space-y-2">
+            {avis.map((a) => (
+              <div key={a.id} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <strong>{a.patientNom || 'Patient'}</strong>
+                  <span style={{ color: '#F59E0B' }}>{'★'.repeat(a.note)}{'☆'.repeat(5 - a.note)}</span>
+                </div>
+                {a.commentaire && <p style={{ color: 'var(--ink-3)', marginTop: 4 }}>{a.commentaire}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LABEL_TYPE_INCIDENT = { harcelement: 'Harcèlement', vol: 'Vol', agression: 'Agression', autre: 'Autre' };
 
 function TabSecurite({ etablissementId, patientUid }) {
@@ -919,6 +1002,7 @@ export default function EtablissementSpacePage() {
       {tab === 'paiement' && <TabPaiement patientUid={user.uid} etablissementId={etablissementId} />}
       {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
       {tab === 'securite' && <TabSecurite etablissementId={etablissementId} patientUid={user.uid} />}
+      {tab === 'avis' && <TabAvis etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />}
 
       <ServiceDetailOverlay
         service={serviceDetail}
