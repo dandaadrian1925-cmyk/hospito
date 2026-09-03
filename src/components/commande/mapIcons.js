@@ -12,5 +12,5 @@ const creerIcone = (emoji, couleur) => L.divIcon({
 
 export const ICONE_ACHETEUR = creerIcone('🏠', '#059669');
 export const ICONE_VENDEUR = creerIcone('🏪', '#D97706');
-export const ICONE_LIVREUR = creerIcone('🚚', '#2451C4');
+export const ICONE_LIVREUR = creerIcone('🚚', '#2FB4A0');
 export const ICONE_DESTINATION = creerIcone('📍', '#DC2626');

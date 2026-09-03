@@ -352,7 +352,7 @@ function TabPaiement({ patientUid, etablissementId }) {
         style={{
           padding: '16px 20px',
           borderRadius: 12,
-          background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+          background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
           color: 'white',
           marginBottom: 20,
         }}
@@ -543,7 +543,7 @@ function ServicesSection({ etablissementId, onSelectService }) {
             <div
               style={{
                 height: 90,
-                background: s.photoURL ? `url(${s.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+                background: s.photoURL ? `url(${s.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -625,7 +625,7 @@ function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
         <div
           style={{
             height: 140, borderRadius: 12, marginBottom: 16,
-            background: service.photoURL ? `url(${service.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+            background: service.photoURL ? `url(${service.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
@@ -707,7 +707,7 @@ export default function EtablissementSpacePage() {
             width: 56,
             height: 56,
             borderRadius: 14,
-            background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+            background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

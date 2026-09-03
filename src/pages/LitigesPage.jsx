@@ -17,7 +17,7 @@ const steps = [{
 }, {
   num: '03',
   icon: Clock,
-  color: '#2451C4',
+  color: '#2FB4A0',
   title: 'Examen par MAKET',
   desc: 'Notre équipe examine la vidéo de l\'annonce, les photos de réception, l\'historique du chat et toutes les preuves sous 48h.'
 }, {
@@ -35,7 +35,7 @@ const outcomes = [{
   consequences: ['Remboursement total via CamPay', 'Score du vendeur impacté négativement']
 }, {
   result: 'Litige en faveur du vendeur',
-  color: '#2451C4',
+  color: '#2FB4A0',
   bg: '#EFF6FF',
   border: '#BFDBFE',
   consequences: ['Paiement libéré, vendeur payé intégralement', 'Avertissement sur le compte acheteur si litige abusif']

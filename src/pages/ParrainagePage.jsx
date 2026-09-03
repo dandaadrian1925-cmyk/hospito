@@ -87,7 +87,7 @@ export default function ParrainagePage() {
   }}>
       {}
       <div style={{
-      background: 'linear-gradient(135deg, #17337D, #2451C4)',
+      background: 'linear-gradient(135deg, #174858, #2FB4A0)',
       padding: '56px 24px',
       textAlign: 'center'
     }}>
@@ -138,7 +138,7 @@ export default function ParrainagePage() {
           icon: Users,
           value: `${settings.nombreVentesReduitesFilleul || 0} ventes`,
           label: 'à commission réduite pour votre filleul',
-          color: '#2451C4'
+          color: '#2FB4A0'
         }, {
           icon: Gift,
           value: `${settings.pourcentageCommissionParrain ?? 100}%`,
@@ -209,7 +209,7 @@ export default function ParrainagePage() {
               Mon code de parrainage
             </h2>
             <div style={{
-          background: 'linear-gradient(135deg, #17337D, #2451C4)',
+          background: 'linear-gradient(135deg, #174858, #2FB4A0)',
           borderRadius: 20,
           padding: '28px 24px'
         }}>
@@ -260,7 +260,7 @@ export default function ParrainagePage() {
               }} /> : <Copy style={{
                 width: 16,
                 height: 16,
-                color: '#2451C4'
+                color: '#2FB4A0'
               }} />}
                 </button>
               </div>
@@ -449,7 +449,7 @@ export default function ParrainagePage() {
             <Gift style={{
           width: 40,
           height: 40,
-          color: '#2451C4',
+          color: '#2FB4A0',
           margin: '0 auto 12px'
         }} />
             <h3 style={{
@@ -529,7 +529,7 @@ export default function ParrainagePage() {
               <div style={{
             width: 32,
             height: 32,
-            background: 'linear-gradient(135deg, #2451C4, #17337D)',
+            background: 'linear-gradient(135deg, #2FB4A0, #174858)',
             borderRadius: 10,
             display: 'flex',
             alignItems: 'center',

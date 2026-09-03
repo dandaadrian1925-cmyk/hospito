@@ -48,7 +48,7 @@ export default function CookieConsentBanner() {
       }}>
             HostoConnect utilise uniquement des cookies essentiels (connexion, sécurité du compte) — aucun cookie publicitaire ou de suivi.{' '}
             <Link to="/cookies" style={{
-          color: 'var(--blue, #2451C4)',
+          color: 'var(--blue, #2FB4A0)',
           fontWeight: 600,
           textDecoration: 'underline'
         }}>En savoir plus</Link>

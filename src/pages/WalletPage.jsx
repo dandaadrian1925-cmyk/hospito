@@ -246,7 +246,7 @@ function TransactionDetailModal({
             gap: 6,
             fontSize: 13.5,
             fontWeight: 700,
-            color: '#2451C4',
+            color: '#2FB4A0',
             textDecoration: 'none'
           }}>
                 <ShoppingBag style={{
@@ -468,7 +468,7 @@ export default function WalletPage() {
       {}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <div style={{
-        background: 'linear-gradient(135deg, #17337D, #2451C4)',
+        background: 'linear-gradient(135deg, #174858, #2FB4A0)',
         borderRadius: 18,
         padding: 20,
         color: 'white',
@@ -561,7 +561,7 @@ export default function WalletPage() {
       <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl">
         {[['apercu', 'Historique'], ['depot', 'Déposer'], ['retrait', 'Retirer']].map(([v, l]) => <button key={v} onClick={() => setTab(v)} className="flex-1 py-2 rounded-lg text-sm font-bold transition-all" style={{
         background: tab === v ? 'white' : 'transparent',
-        color: tab === v ? '#2451C4' : '#64748B',
+        color: tab === v ? '#2FB4A0' : '#64748B',
         boxShadow: tab === v ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
       }}>
             {l}
@@ -688,9 +688,9 @@ export default function WalletPage() {
               <label className="block text-sm font-bold text-gray-700 mb-3">Montant à déposer (XAF)</label>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {MONTANTS_RAPIDES.map(m => <button key={m} onClick={() => setMontantDepot(String(m))} className="p-2.5 rounded-xl border-2 text-sm font-bold transition-all" style={{
-              borderColor: montantDepot === String(m) ? '#2451C4' : '#E2E8F0',
+              borderColor: montantDepot === String(m) ? '#2FB4A0' : '#E2E8F0',
               background: montantDepot === String(m) ? '#EFF6FF' : 'white',
-              color: montantDepot === String(m) ? '#2451C4' : '#64748B'
+              color: montantDepot === String(m) ? '#2FB4A0' : '#64748B'
             }}>
                     {m.toLocaleString()}
                   </button>)}
@@ -702,7 +702,7 @@ export default function WalletPage() {
               <label className="block text-sm font-bold text-gray-700 mb-2">Opérateur</label>
               <div className="grid grid-cols-2 gap-3">
                 {OPERATEURS.map(op => <button key={op.id} type="button" onClick={() => setOperateurDepot(op.id)} disabled={attenteDepot} className="p-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center gap-2.5" style={{
-              borderColor: operateurDepot === op.id ? '#2451C4' : '#E2E8F0',
+              borderColor: operateurDepot === op.id ? '#2FB4A0' : '#E2E8F0',
               background: operateurDepot === op.id ? '#EFF6FF' : 'white'
             }}>
                     <OperatorLogo id={op.id} size={26} />
@@ -766,7 +766,7 @@ export default function WalletPage() {
               <label className="block text-sm font-bold text-gray-700 mb-2">Opérateur</label>
               <div className="grid grid-cols-2 gap-3">
                 {OPERATEURS.map(op => <button key={op.id} type="button" onClick={() => setOperateur(op.id)} className="p-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center gap-2.5" style={{
-              borderColor: operateur === op.id ? '#2451C4' : '#E2E8F0',
+              borderColor: operateur === op.id ? '#2FB4A0' : '#E2E8F0',
               background: operateur === op.id ? '#EFF6FF' : 'white'
             }}>
                     <OperatorLogo id={op.id} size={26} />

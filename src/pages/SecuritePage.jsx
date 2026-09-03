@@ -3,7 +3,7 @@ import { Shield, Lock, Eye, AlertTriangle, CheckCircle, XCircle, KeyRound, FileT
 import { Link } from 'react-router-dom';
 const pillars = [{
   icon: Shield,
-  color: '#2451C4',
+  color: '#2FB4A0',
   title: 'Secret médical protégé',
   desc: 'Votre dossier médical n\'est visible que par le personnel soignant autorisé de l\'établissement où vous êtes actuellement suivi — jamais par un autre patient, ni par un établissement où vous ne consultez pas.',
   points: ['Accès réservé au personnel soignant (médecin, infirmier)', 'Aucune lecture par le personnel administratif', 'Contenu clinique jamais modifiable a posteriori']
@@ -48,7 +48,7 @@ export default function SecuritePage() {
   }}>
       {}
       <div style={{
-      background: 'linear-gradient(135deg, #17337D, #2451C4)',
+      background: 'linear-gradient(135deg, #174858, #2FB4A0)',
       padding: '56px 24px',
       textAlign: 'center'
     }}>

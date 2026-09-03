@@ -4,8 +4,8 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: { 50: '#EEF3FD', 100: '#DCE7FC', 200: '#B9CFF8', 300: '#8DAEF2', 400: '#5C87E8', 500: '#3563D6', 600: '#2451C4', 700: '#1D40A0', 800: '#17337D', 900: '#142B66', 950: '#0D1B40' },
-        maket: { blue: '#2451C4', dark: '#17337D', light: '#EAF0FD', accent: '#F59E0B' }
+        primary: { 50: '#F3FBF9', 100: '#E2F5F2', 200: '#C5EAE4', 300: '#9FDDD3', 400: '#72CCBE', 500: '#4CBFAD', 600: '#2FB4A0', 700: '#227978', 800: '#174858', 900: '#123642', 950: '#0D2830' },
+        maket: { blue: '#2FB4A0', dark: '#174858', light: '#E2F5F2', accent: '#F59E0B' }
       },
       fontFamily: { sans: ['Inter', 'sans-serif'], display: ['Fraunces', 'serif'] },
       animation: {

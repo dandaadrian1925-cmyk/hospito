@@ -6,7 +6,7 @@ const CATEGORIES = [{
   id: 'compte',
   label: 'Compte & Inscription',
   icon: User,
-  color: '#2451C4',
+  color: '#2FB4A0',
   faqs: [{
     q: 'Combien coûte l\'inscription sur HostoConnect ?',
     r: 'L\'inscription est entièrement gratuite.'
@@ -168,7 +168,7 @@ export default function FAQPage() {
   }}>
       {}
       <div style={{
-      background: 'linear-gradient(135deg, #17337D, #2451C4)',
+      background: 'linear-gradient(135deg, #174858, #2FB4A0)',
       padding: '56px 24px',
       textAlign: 'center'
     }}>

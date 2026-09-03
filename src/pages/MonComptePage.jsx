@@ -66,7 +66,7 @@ function MenuRow({ to, label, icon: Icon, sub }) {
         <Icon style={{
         width: 17,
         height: 17,
-        color: '#2451C4'
+        color: '#2FB4A0'
       }} />
       </div>
       <div style={{
@@ -367,7 +367,7 @@ function AccountHome() {
 
       {}
       <div style={{
-      background: 'linear-gradient(135deg, #17337D, #2451C4)',
+      background: 'linear-gradient(135deg, #174858, #2FB4A0)',
       borderRadius: 20,
       padding: 24,
       color: 'white'
@@ -415,7 +415,7 @@ function AccountHome() {
               width: 28,
               height: 28,
               borderRadius: '50%',
-              background: 'var(--primary-700, #2451C4)',
+              background: 'var(--primary-700, #2FB4A0)',
               border: '2px solid white',
               display: 'flex',
               alignItems: 'center',
@@ -728,7 +728,7 @@ function ModifierProfil() {
           cursor: 'pointer',
           fontSize: 12,
           fontWeight: 700,
-          color: '#2451C4',
+          color: '#2FB4A0',
           fontFamily: 'var(--font)'
         }}>
               <Edit2 style={{
@@ -761,7 +761,7 @@ function ModifierProfil() {
             display: 'flex',
             alignItems: 'center',
             gap: 4,
-            background: '#2451C4',
+            background: '#2FB4A0',
             border: 'none',
             padding: '6px 12px',
             borderRadius: 10,
@@ -1008,7 +1008,7 @@ function ModifierProfil() {
       cursor: envoiReset ? 'default' : 'pointer', textAlign: 'left'
     }}>
         <div style={{ width: 38, height: 38, background: '#EFF6FF', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <KeyRound style={{ width: 17, height: 17, color: '#2451C4' }} />
+          <KeyRound style={{ width: 17, height: 17, color: '#2FB4A0' }} />
         </div>
         <span style={{ flex: 1, fontSize: 13.5, fontWeight: 700, color: 'var(--ink)', fontFamily: 'var(--font)' }}>
           {envoiReset ? 'Envoi…' : 'Réinitialiser mon mot de passe'}

@@ -60,7 +60,7 @@ function PageLoader() {
       width: 32,
       height: 32,
       border: '3px solid #E2E8F0',
-      borderTopColor: 'var(--blue, #2451C4)',
+      borderTopColor: 'var(--blue, #2FB4A0)',
       borderRadius: '50%',
       display: 'inline-block',
       animation: 'maket-spin 0.7s linear infinite'

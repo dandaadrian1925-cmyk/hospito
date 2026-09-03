@@ -11,7 +11,7 @@ export default function ConfirmDialog({
   onCancel
 }) {
   const [busy, setBusy] = useState(false);
-  const couleur = danger ? '#DC2626' : (accentColor || 'var(--accent, #2451C4)');
+  const couleur = danger ? '#DC2626' : (accentColor || 'var(--accent, #2FB4A0)');
   const couleurFond = danger ? '#FEF2F2' : accentColor ? `color-mix(in srgb, ${accentColor} 12%, white)` : '#EFF6FF';
   const handleConfirm = async () => {
     setBusy(true);

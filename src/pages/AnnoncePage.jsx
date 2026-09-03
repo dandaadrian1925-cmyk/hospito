@@ -1083,7 +1083,7 @@ export default function AnnoncePage() {
             icon: KeyRound,
             label: 'Remise sécurisée',
             desc: 'Code à 4 chiffres',
-            color: '#2451C4'
+            color: '#2FB4A0'
           }, {
             icon: Package,
             label: 'Remboursement 24h',

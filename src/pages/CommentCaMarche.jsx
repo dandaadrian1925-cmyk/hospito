@@ -8,7 +8,7 @@ const etapesVendeur = [{
   icon: Camera,
   title: 'Publie ton annonce',
   desc: 'Photos, vidéo honnête de l\'article, prix et description. Publication gratuite en V1.',
-  color: '#2451C4'
+  color: '#2FB4A0'
 }, {
   num: '02',
   icon: FileText,
@@ -26,14 +26,14 @@ const etapesVendeur = [{
   icon: Star,
   title: 'Tu es payé !',
   desc: 'Après 24h sans litige suivant la remise, le paiement est libéré et l\'argent crédité sur ton compte.',
-  color: '#2451C4'
+  color: '#2FB4A0'
 }];
 const etapesAcheteur = [{
   num: '01',
   icon: ShoppingBag,
   title: 'Choisis ton article',
   desc: 'Photos, vidéo honnête et facture vérifiée (pour le high-value) avant même de payer.',
-  color: '#2451C4'
+  color: '#2FB4A0'
 }, {
   num: '02',
   icon: Shield,
@@ -83,7 +83,7 @@ export default function CommentCaMarche() {
   }}>
       {}
       <div style={{
-      background: 'linear-gradient(135deg, #17337D, #2451C4)',
+      background: 'linear-gradient(135deg, #174858, #2FB4A0)',
       padding: '60px 24px',
       textAlign: 'center'
     }}>
@@ -313,7 +313,7 @@ export default function CommentCaMarche() {
                   <CheckCircle style={{
                 width: 18,
                 height: 18,
-                color: '#2451C4',
+                color: '#2FB4A0',
                 flexShrink: 0,
                 marginTop: 2
               }} />

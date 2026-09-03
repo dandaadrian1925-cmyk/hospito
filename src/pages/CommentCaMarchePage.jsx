@@ -9,7 +9,7 @@ const etapes = [
     icon: Building2,
     title: 'Trouvez votre établissement',
     desc: "Parcourez l'annuaire des établissements de santé partenaires et découvrez leurs services, disponibles où que vous soyez au Cameroun.",
-    color: '#2451C4',
+    color: '#2FB4A0',
   },
   {
     num: '02',
@@ -66,7 +66,7 @@ export default function CommentCaMarchePage() {
 
   return (
     <div style={{ background: 'white' }}>
-      <div style={{ background: 'linear-gradient(135deg, #17337D, #2451C4)', padding: '60px 24px', textAlign: 'center' }}>
+      <div style={{ background: 'linear-gradient(135deg, #174858, #2FB4A0)', padding: '60px 24px', textAlign: 'center' }}>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <span style={{ display: 'inline-block', background: 'rgba(255,255,255,0.15)', color: 'white', fontSize: 12, fontWeight: 700, padding: '4px 14px', borderRadius: 20, marginBottom: 16, letterSpacing: '0.05em' }}>
             SIMPLE & SÉCURISÉ
@@ -121,7 +121,7 @@ export default function CommentCaMarchePage() {
                 style={{ background: 'white', borderRadius: 16, padding: 20, border: '1.5px solid #E2E8F0' }}
               >
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <CheckCircle style={{ width: 18, height: 18, color: '#2451C4', flexShrink: 0, marginTop: 2 }} />
+                  <CheckCircle style={{ width: 18, height: 18, color: '#2FB4A0', flexShrink: 0, marginTop: 2 }} />
                   <div>
                     <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--ink)', marginBottom: 6 }}>{faq.q}</p>
                     <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.65 }}>{faq.r}</p>

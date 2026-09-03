@@ -64,7 +64,7 @@ export default function EtablissementCard({ etablissement, index = 0, initialFav
             style={{
               position: 'relative',
               height: 110,
-              background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #1a3a8f))',
+              background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

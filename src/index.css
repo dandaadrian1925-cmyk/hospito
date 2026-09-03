@@ -13,9 +13,9 @@
   --ink-2: #4B4F54;
   --ink-3: #7A7E85;
   --ink-4: #A6A9AE;
-  --accent: #2451C4;      /* bleu vif premium, couleur de marque */
-  --accent-soft: #EAF0FD;
-  --accent-dark: #17337D;
+  --accent: #2FB4A0;      /* teal-vert du logo HostoConnect — couleur de marque */
+  --accent-soft: #E2F5F2;
+  --accent-dark: #174858; /* bleu marine du logo HostoConnect */
   /* Accent chaud secondaire — jusqu'ici seulement dans tailwind.config.js
      (maket.accent) et jamais réellement utilisé : sert à donner du relief aux
      temps forts (Flash, badges premium, CTA parrainage) sans diluer le bleu de

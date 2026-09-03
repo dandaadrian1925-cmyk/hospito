@@ -144,45 +144,6 @@ export default function Navbar() {
           </Link>
 
           {}
-          <form onSubmit={handleSearch} style={{
-          flex: 1,
-          maxWidth: 560,
-          display: 'none'
-        }} className="md-search">
-            <div style={{
-            position: 'relative'
-          }}>
-              <Search style={{
-              position: 'absolute',
-              left: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 15,
-              height: 15,
-              color: 'var(--ink-4)'
-            }} />
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Rechercher un établissement, une ville…" style={{
-              width: '100%',
-              padding: '9px 14px 9px 38px',
-              background: 'var(--bg-2)',
-              border: '1px solid transparent',
-              borderRadius: 999,
-              fontSize: 13.5,
-              outline: 'none',
-              fontFamily: 'var(--font)',
-              color: 'var(--ink)',
-              transition: 'all 0.15s'
-            }} onFocus={e => {
-              e.target.style.borderColor = 'var(--ink)';
-              e.target.style.background = 'white';
-            }} onBlur={e => {
-              e.target.style.borderColor = 'transparent';
-              e.target.style.background = 'var(--bg-2)';
-            }} />
-            </div>
-          </form>
-
-          {}
           <div className="nav-actions" style={{
           display: 'flex',
           alignItems: 'center',
@@ -497,7 +458,6 @@ export default function Navbar() {
       {}
       <style>{`
         @media (min-width: 768px) {
-          .md-search { display: block !important; }
           .desktop-icon { display: flex !important; }
           .desktop-auth { display: flex !important; }
           #desktop-cta, #desktop-rdv { display: inline-flex !important; }

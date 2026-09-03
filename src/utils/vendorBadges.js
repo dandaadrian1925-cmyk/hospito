@@ -22,7 +22,7 @@ export function getVendorBadges(vendeur, avisData) {
     badges.push({
       id: 'verifie',
       label: 'Vendeur vérifié',
-      color: '#2451C4',
+      color: '#2FB4A0',
       bg: '#EFF6FF'
     });
   }

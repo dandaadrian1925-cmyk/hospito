@@ -124,7 +124,7 @@ export default function VerifCNIPage() {
         <Clock style={{
         width: 56,
         height: 56,
-        color: '#2451C4',
+        color: '#2FB4A0',
         margin: '0 auto 16px'
       }} />
         <h2 style={{
@@ -175,7 +175,7 @@ export default function VerifCNIPage() {
           <Shield style={{
           width: 22,
           height: 22,
-          color: '#2451C4'
+          color: '#2FB4A0'
         }} />
         </div>
         <div>
@@ -209,7 +209,7 @@ export default function VerifCNIPage() {
           <AlertTriangle style={{
           width: 16,
           height: 16,
-          color: '#2451C4',
+          color: '#2FB4A0',
           flexShrink: 0,
           marginTop: 2
         }} />
@@ -222,7 +222,7 @@ export default function VerifCNIPage() {
           }}>Pourquoi vérifier mon identité ?</p>
             <p style={{
             fontSize: 12,
-            color: '#2451C4',
+            color: '#2FB4A0',
             lineHeight: 1.6
           }}>
               La vérification CNI garantit que chaque vendeur est identifiable et responsable de ses actions. Cela protège tous les utilisateurs MAKET contre les arnaques.

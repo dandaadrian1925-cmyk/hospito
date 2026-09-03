@@ -60,7 +60,7 @@ export default function AppDownloadBanner() {
         height: 46,
         borderRadius: 13,
         flexShrink: 0,
-        background: 'linear-gradient(135deg, var(--blue, #2451C4), var(--blue-dark, #17337D))',
+        background: 'linear-gradient(135deg, var(--blue, #2FB4A0), var(--blue-dark, #174858))',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

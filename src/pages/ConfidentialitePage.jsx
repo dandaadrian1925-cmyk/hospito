@@ -48,7 +48,7 @@ export default function ConfidentialitePage() {
       }}>
           <p style={{
           fontSize: 14,
-          color: '#2451C4',
+          color: '#2FB4A0',
           fontWeight: 600
         }}>
             🔒 HostoConnect protège le secret médical. Nous ne vendons jamais vos données personnelles.
@@ -85,7 +85,7 @@ export default function ConfidentialitePage() {
                 <div style={{
             width: 6,
             height: 6,
-            background: '#2451C4',
+            background: '#2FB4A0',
             borderRadius: '50%',
             flexShrink: 0,
             marginTop: 7
@@ -111,7 +111,7 @@ export default function ConfidentialitePage() {
       }}>
           Des questions sur vos données ?{' '}
           <a href="/contact" style={{
-          color: '#2451C4',
+          color: '#2FB4A0',
           fontWeight: 700,
           textDecoration: 'none'
         }}>

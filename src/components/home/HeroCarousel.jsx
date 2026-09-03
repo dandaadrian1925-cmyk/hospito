@@ -14,7 +14,7 @@ const SLIDES = [{
   secondary: 'Voir les articles',
   secondaryLink: '/catalogue',
   image: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=900&q=65&fm=webp&auto=format&fit=crop',
-  accent: '#2451C4'
+  accent: '#2FB4A0'
 }, {
   id: 2,
   tag: 'Factures vérifiées',
@@ -26,7 +26,7 @@ const SLIDES = [{
   secondary: 'Comment ça marche',
   secondaryLink: '/comment-ca-marche',
   image: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=900&q=65&fm=webp&auto=format&fit=crop',
-  accent: '#5C87E8'
+  accent: '#72CCBE'
 }, {
   id: 3,
   tag: 'Livraison disponible',
@@ -36,7 +36,7 @@ const SLIDES = [{
   cta: 'En savoir plus',
   ctaLink: '/comment-ca-marche',
   image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=900&q=65&fm=webp&auto=format&fit=crop',
-  accent: '#8DAEF2'
+  accent: '#9FDDD3'
 }];
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0);
