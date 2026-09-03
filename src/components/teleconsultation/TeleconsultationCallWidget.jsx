@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import { getAgoraTokenTeleconsultation } from '../../services/teleconsultationService';
 
 // Téléconsultation (§4.14) — appel VIDÉO, à la différence du CallWidget
-// marketplace (audio seul, hérité de MAKET, jamais modifié). Rendez-vous
+// marketplace (audio seul, jamais modifié). Rendez-vous
 // planifié : les deux parties rejoignent le même canal indépendamment,
 // aucune logique de sonnerie/appelant nécessaire (contrairement à un appel
 // ad-hoc acheteur/vendeur↔livreur).

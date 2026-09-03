@@ -10,24 +10,17 @@ import AccessibiliteButton from './components/common/AccessibiliteButton';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
-const CataloguePage = lazy(() => import('./pages/CataloguePage'));
 const AnnoncePage = lazy(() => import('./pages/AnnoncePage'));
 const PublierPage = lazy(() => import('./pages/PublierPage'));
 const MonComptePage = lazy(() => import('./pages/MonComptePage'));
-const ChatPage = lazy(() => import('./pages/ChatPage'));
 const CommandePage = lazy(() => import('./pages/CommandePage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
-const FavorisPage = lazy(() => import('./pages/FavorisPage'));
-const AchatPage = lazy(() => import('./pages/AchatPage'));
-const CommentCaMarche = lazy(() => import('./pages/CommentCaMarche'));
 const CGUPage = lazy(() => import('./pages/CGUPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const FAQPage = lazy(() => import('./pages/FAQPage'));
 const SecuritePage = lazy(() => import('./pages/SecuritePage'));
 const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const CookiesPage = lazy(() => import('./pages/CookiesPage'));
-const LitigesPage = lazy(() => import('./pages/LitigesPage'));
-const ParrainagePage = lazy(() => import('./pages/ParrainagePage'));
 const VerifCNIPage = lazy(() => import('./pages/VerifCNIPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const VendeurPage = lazy(() => import('./pages/VendeurPage'));
@@ -108,30 +101,22 @@ export default function App() {
 
             {}
             <Route path="/" element={<Layout><HomePage /></Layout>} />
-            <Route path="/catalogue" element={<Layout><CataloguePage /></Layout>} />
             <Route path="/annonce/:id" element={<Layout><AnnoncePage /></Layout>} />
             <Route path="/vendeur/:userId" element={<Layout><VendeurPage /></Layout>} />
             <Route path="/publier" element={<Layout><PublierPage /></Layout>} />
             <Route path="/publier/:id" element={<Layout><PublierPage /></Layout>} />
-            <Route path="/favoris" element={<Layout><FavorisPage /></Layout>} />
             <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
-            <Route path="/acheter/:annonceId" element={<Layout><AchatPage /></Layout>} />
             <Route path="/commande/:id" element={<Layout><CommandePage /></Layout>} />
 
             {}
             <Route path="/wallet" element={<Layout><WalletPage /></Layout>} />
             <Route path="/wallet/retour" element={<Layout><WalletPage /></Layout>} />
-            <Route path="/chat" element={<Layout noFooter><ChatPage /></Layout>} />
-            <Route path="/chat/:convId" element={<Layout noFooter><ChatPage /></Layout>} />
 
             {}
             <Route path="/mon-compte/*" element={<Layout><MonComptePage /></Layout>} />
             <Route path="/mon-compte/cni" element={<Layout><VerifCNIPage /></Layout>} />
 
             {}
-            <Route path="/comment-ca-marche" element={<Layout><CommentCaMarche /></Layout>} />
-            <Route path="/parrainage" element={<Layout><ParrainagePage /></Layout>} />
-            <Route path="/litiges" element={<Layout><LitigesPage /></Layout>} />
             <Route path="/faq" element={<Layout><FAQPage /></Layout>} />
             <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
             <Route path="/securite" element={<Layout><SecuritePage /></Layout>} />
