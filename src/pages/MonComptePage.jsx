@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound } from 'lucide-react';
+import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound, FlaskConical } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -13,6 +13,7 @@ import RendezVousPage from './moncompte/RendezVousPage';
 import DossierPage from './moncompte/DossierPage';
 import FacturesPage from './moncompte/FacturesPage';
 import ReclamationsPage from './moncompte/ReclamationsPage';
+import ExamensPage from './moncompte/ExamensPage';
 import toast from 'react-hot-toast';
 
 function SectionPage({ children }) {
@@ -256,6 +257,10 @@ const MENU_ITEMS = [{
   to: '/mon-compte/dossier',
   label: 'Mon dossier médical',
   icon: FolderHeart
+}, {
+  to: '/mon-compte/examens',
+  label: 'Mes examens',
+  icon: FlaskConical
 }, {
   to: '/mon-compte/factures',
   label: 'Mes factures',
@@ -1037,6 +1042,7 @@ export default function MonComptePage() {
         <Route path="profil" element={<SectionPage><ModifierProfil /></SectionPage>} />
         <Route path="rendez-vous" element={<SectionPage><RendezVousPage /></SectionPage>} />
         <Route path="dossier" element={<SectionPage><DossierPage /></SectionPage>} />
+        <Route path="examens" element={<SectionPage><ExamensPage /></SectionPage>} />
         <Route path="factures" element={<SectionPage><FacturesPage /></SectionPage>} />
         <Route path="reclamations" element={<SectionPage><ReclamationsPage /></SectionPage>} />
       </Routes>

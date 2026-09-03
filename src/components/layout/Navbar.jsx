@@ -139,7 +139,7 @@ export default function Navbar() {
           textDecoration: 'none',
           flexShrink: 0
         }}>
-            <HostoConnectLogo size="md" />
+            <HostoConnectLogo size="lg" />
           </Link>
 
           {}
