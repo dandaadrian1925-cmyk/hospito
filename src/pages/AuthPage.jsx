@@ -152,11 +152,7 @@ export default function AuthPage() {
       <div className="w-full max-w-md relative z-10">
         {}
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center">
-            <span className="text-primary-700 font-black text-lg" style={{
-            fontFamily: 'Syne, sans-serif'
-          }}>H</span>
-          </div>
+          <img src="/icon-192.png" alt="HostoConnect" width="40" height="40" style={{ width: 40, height: 40, borderRadius: 12, flexShrink: 0 }} />
           <span className="text-2xl font-black text-white" style={{
           fontFamily: 'Syne, sans-serif'
         }}>HostoConnect</span>
