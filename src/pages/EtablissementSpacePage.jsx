@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVousService';
+import { listerSpecialistesDuService } from '../services/planningService';
 import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamationsService';
 import { getOrCreateConversation, envoyerMessage, listenMessages } from '../services/chatService';
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../services/walletService';
@@ -39,6 +40,8 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
   const [teleconsultation, setTeleconsultation] = useState(false);
   const [envoi, setEnvoi] = useState(false);
   const [demandes, setDemandes] = useState([]);
+  const [specialistes, setSpecialistes] = useState([]);
+  const [medecinPrefere, setMedecinPrefere] = useState(null);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -47,6 +50,20 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
   useEffect(() => {
     if (initialServiceId) setServiceId(initialServiceId);
   }, [initialServiceId]);
+
+  // Spécialistes de garde pour le service choisi, avec leurs prochaines
+  // dates disponibles (planning déjà géré côté accueil de cette spécialité)
+  // — le patient choisit une préférence, l'accueil confirme ensuite.
+  useEffect(() => {
+    setMedecinPrefere(null);
+    if (!serviceId) { setSpecialistes([]); return; }
+    listerSpecialistesDuService(etablissementId, serviceId).then(setSpecialistes).catch(() => setSpecialistes([]));
+  }, [etablissementId, serviceId]);
+
+  const choisirCreneau = (medecin, date) => {
+    setMedecinPrefere({ uid: medecin.uid, nom: medecin.nom, date });
+    setDateSouhaitee(date);
+  };
 
   const recharger = useCallback(() => {
     getMesDemandesRdv(patientUid)
@@ -70,12 +87,14 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
       await creerDemandeRdv({
         etablissementId, patientUid, patientNom, serviceId: serviceId || null, serviceNom: service?.nom || null,
         motif, dateSouhaitee, type: teleconsultation ? 'teleconsultation' : 'presentiel',
+        medecinPrefereId: medecinPrefere?.uid || null, medecinPrefereNom: medecinPrefere?.nom || null,
       });
       toast.success('Demande envoyée — vous serez notifié dès sa confirmation');
       setServiceId('');
       setMotif('');
       setDateSouhaitee('');
       setTeleconsultation(false);
+      setMedecinPrefere(null);
       recharger();
     } catch (err) {
       console.error('creerDemandeRdv a échoué :', err);
@@ -97,13 +116,53 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
             </select>
           </div>
         )}
+        {serviceId && specialistes.length > 0 && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Spécialistes disponibles</label>
+            <div className="space-y-2">
+              {specialistes.map((m) => (
+                <div key={m.uid} style={{ padding: '10px 12px', background: 'var(--bg-2)', borderRadius: 10 }}>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>Dr {m.nom}</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {m.dates.map((date) => {
+                      const selected = medecinPrefere?.uid === m.uid && medecinPrefere?.date === date;
+                      return (
+                        <button
+                          type="button"
+                          key={date}
+                          onClick={() => choisirCreneau(m, date)}
+                          style={{
+                            padding: '5px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                            border: selected ? '1.5px solid var(--blue)' : '1.5px solid var(--border)',
+                            background: selected ? 'var(--blue)' : 'white',
+                            color: selected ? 'white' : 'var(--ink-2)',
+                          }}
+                        >
+                          {new Date(date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {medecinPrefere && (
+              <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 6 }}>
+                Préférence : Dr {medecinPrefere.nom}, {new Date(medecinPrefere.date).toLocaleDateString('fr-FR', { dateStyle: 'medium' })} — confirmée par l'accueil.
+              </p>
+            )}
+          </div>
+        )}
+        {serviceId && specialistes.length === 0 && (
+          <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Aucun planning renseigné pour ce service pour le moment.</p>
+        )}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite *</label>
           <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder="Ex: consultation générale" className="input-field" />
         </div>
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Date souhaitée</label>
-          <input type="date" value={dateSouhaitee} onChange={(e) => setDateSouhaitee(e.target.value)} className="input-field" />
+          <input type="date" value={dateSouhaitee} onChange={(e) => { setDateSouhaitee(e.target.value); if (medecinPrefere && e.target.value !== medecinPrefere.date) setMedecinPrefere(null); }} className="input-field" />
         </div>
         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)', cursor: 'pointer' }}>
           <input type="checkbox" checked={teleconsultation} onChange={(e) => setTeleconsultation(e.target.checked)} />
