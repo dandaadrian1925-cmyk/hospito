@@ -15,6 +15,7 @@ import {
   LifeBuoy,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import DossierMedicalView from '../components/dossier/DossierMedicalView';
 import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVousService';
 import { listerSpecialistesDuService } from '../services/planningService';
@@ -198,18 +199,6 @@ function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-function TabDossier() {
-  return (
-    <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--ink-3)' }}>
-      <FolderHeart style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
-      <p style={{ fontWeight: 600, color: 'var(--ink-2)' }}>Disponible prochainement</p>
-      <p style={{ fontSize: 13, marginTop: 4 }}>
-        Votre dossier médical, unique et partagé entre tous vos établissements, sera consultable ici.
-      </p>
     </div>
   );
 }
@@ -923,7 +912,7 @@ export default function EtablissementSpacePage() {
           initialServiceId={serviceRdvPreselectionne}
         />
       )}
-      {tab === 'dossier' && <TabDossier />}
+      {tab === 'dossier' && <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />}
       {tab === 'messagerie' && (
         <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
       )}
