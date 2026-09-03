@@ -39,7 +39,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-6 sm:py-12 grid grid-cols-2 md:grid-cols-4 gap-5 sm:gap-8">
         <div className="col-span-2 md:col-span-1">
           <div className="flex items-center gap-2 mb-2 sm:mb-4">
-            <img src="/icon-192.png" alt="HostoConnect" className="w-8 h-8" />
+            <img src="/icon-192.png" alt="HostoConnect" width="32" height="32" style={{ width: 32, height: 32, flexShrink: 0, objectFit: 'contain' }} />
             <span className="text-xl font-black" style={{
             fontFamily: 'Syne, sans-serif'
           }}>HostoConnect</span>
