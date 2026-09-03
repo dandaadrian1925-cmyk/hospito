@@ -37,10 +37,9 @@ function HostoConnectLogo({
       fontFamily: 'Syne, sans-serif',
       fontWeight: 800,
       fontSize: s.text,
-      color: 'var(--ink)',
       letterSpacing: '-0.01em'
     }}>
-        HostoConnect
+        <span style={{ color: 'var(--accent-dark)' }}>Hosto</span><span style={{ color: 'var(--accent)' }}>Connect</span>
       </span>
     </span>;
 }

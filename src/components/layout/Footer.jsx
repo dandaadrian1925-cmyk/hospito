@@ -42,7 +42,7 @@ export default function Footer() {
             <img src="/icon-192.png" alt="HostoConnect" width="32" height="32" style={{ width: 32, height: 32, flexShrink: 0, objectFit: 'contain' }} />
             <span className="text-xl font-black" style={{
             fontFamily: 'Syne, sans-serif'
-          }}>HostoConnect</span>
+          }}>Hosto<span style={{ color: 'var(--accent)' }}>Connect</span></span>
           </div>
           <p className="text-sm text-gray-400 leading-relaxed">
             La plateforme qui connecte patients et établissements de santé, partout au Cameroun.
