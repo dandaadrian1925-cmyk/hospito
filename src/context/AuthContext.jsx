@@ -40,7 +40,7 @@ export const AuthProvider = ({
           signOut(auth);
           return;
         }
-        if (profile?.role && profile.role !== 'client') {
+        if (profile?.role && profile.role !== 'patient') {
           toast.error("Accès non autorisé — cet espace est réservé aux comptes patients Hospito.");
           signOut(auth);
           return;

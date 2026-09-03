@@ -579,7 +579,7 @@ export const acheterVendeurPro = async (uid, sourceWallet = 'principal') => {
     const snap = await tx.get(userRef);
     if (!snap.exists()) throw new Error('COMPTE_INTROUVABLE');
     const data = snap.data();
-    if (data.role && data.role !== 'client') throw new Error('ROLE_NON_ELIGIBLE');
+    if (data.role && data.role !== 'patient') throw new Error('ROLE_NON_ELIGIBLE');
     if (!data.cniVerifie) throw new Error('CNI_NON_VERIFIEE');
     const solde = data[champSolde] || 0;
     if (solde < prix) throw new Error('SOLDE_INSUFFISANT');

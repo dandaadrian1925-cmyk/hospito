@@ -115,7 +115,7 @@ export const registerWithEmail = async (email, password, nom, prenom, ville, ref
       nom,
       prenom,
       displayName: `${prenom} ${nom}`,
-      role: 'client',
+      role: 'patient',
       ville,
       quartier: '',
       photoURL: '',
@@ -168,7 +168,7 @@ export const loginWithEmail = async (email, password) => {
         uid: cred.user.uid,
         email: cred.user.email,
         displayName: cred.user.displayName || '',
-        role: 'client',
+        role: 'patient',
         nom: cred.user.displayName?.split(' ')[1] || '',
         prenom: cred.user.displayName?.split(' ')[0] || '',
         ville: '',
@@ -215,7 +215,7 @@ export const loginWithGoogle = async (referralCode = null) => {
         uid: cred.user.uid,
         email: cred.user.email,
         displayName: cred.user.displayName,
-        role: 'client',
+        role: 'patient',
         nom: cred.user.displayName?.split(' ')[1] || '',
         prenom: cred.user.displayName?.split(' ')[0] || '',
         photoURL: cred.user.photoURL || '',
@@ -318,7 +318,7 @@ export const verifierEligibiliteSuppression = async (uid) => {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) throw new Error('COMPTE_INTROUVABLE');
   const data = snap.data();
-  if (data.role && data.role !== 'client') throw new Error('ROLE_NON_SUPPRIMABLE');
+  if (data.role && data.role !== 'patient') throw new Error('ROLE_NON_SUPPRIMABLE');
   if ((data.solde || 0) > 0 || (data.soldeParrainage || 0) > 0) throw new Error('SOLDE_NON_NUL');
   // #sécurité (corrigé, audit) : un compte gelé (soldeSuspect, écart détecté
   // par reconcilierSoldesServeur) pouvait supprimer son compte puis en
