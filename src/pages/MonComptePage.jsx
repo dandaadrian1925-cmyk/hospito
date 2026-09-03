@@ -671,10 +671,13 @@ function ModifierProfil() {
         ...form,
         displayName: `${form.prenom} ${form.nom}`
       };
-      await updateDoc(doc(db, 'users', user.uid), {
-        ...maj,
-        updatedAt: new Date()
-      });
+      // #bug CRITIQUE (corrigé, audit croisé règles/code) : `updatedAt` n'est
+      // pas dans la liste hasOnly de la règle users.update — hasOnly rejette
+      // TOUT l'écrit dès qu'un seul champ dépasse, donc CETTE sauvegarde de
+      // profil échouait silencieusement à chaque tentative (catch générique
+      // masquait l'erreur réelle). Champ retiré : aucun autre code ne lit
+      // users/{uid}.updatedAt, `lastActiveAt` sert déjà cet usage.
+      await updateDoc(doc(db, 'users', user.uid), maj);
       await syncProfilPublic(user.uid, maj);
       setUserProfile(p => ({
         ...p,
