@@ -225,7 +225,7 @@ export default function VerifCNIPage() {
             color: '#2FB4A0',
             lineHeight: 1.6
           }}>
-              La vérification CNI garantit que chaque vendeur est identifiable et responsable de ses actions. Cela protège tous les utilisateurs MAKET contre les arnaques.
+              La vérification CNI garantit que votre identité est bien établie dans le système — elle protège votre dossier médical contre toute usurpation et facilite votre prise en charge dans chaque établissement partenaire.
             </p>
           </div>
         </div>
@@ -508,7 +508,7 @@ export default function VerifCNIPage() {
       marginBottom: 24,
       border: '1.5px solid #F1F5F9'
     }}>
-        {['Vos documents sont chiffrés et stockés de manière sécurisée', 'Seule l\'équipe MAKET y a accès pour la vérification', 'Les photos sont supprimées au plus tard 24h après validation — seul le numéro de CNI est conservé', 'Vérification effectuée sous 24h'].map((item, i) => <div key={i} style={{
+        {['Vos documents sont chiffrés et stockés de manière sécurisée', 'Seule l\'équipe HostoConnect y a accès pour la vérification', 'Les photos sont supprimées au plus tard 24h après validation — seul le numéro de CNI est conservé', 'Vérification effectuée sous 24h'].map((item, i) => <div key={i} style={{
         display: 'flex',
         gap: 8,
         alignItems: 'flex-start',
