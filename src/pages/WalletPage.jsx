@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle, AlertCircle, Plus, ChevronRight, Shield, Info, Smartphone, X, ShoppingBag } from 'lucide-react';
+import { Wallet, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle, AlertCircle, Plus, ChevronRight, Shield, Info, Smartphone, X, ShoppingBag, Receipt } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { listenWallet, getTransactionsBancaires, initierDepot, initierRetrait, transfererSoldeParrainage, attendreConfirmationDepot, reconcilierDepotsEnAttente, verifierEcartSoldePropre, WALLET_TYPES } from '../services/walletService';
 import { getSettings } from '../services/settingsService';
@@ -453,6 +453,11 @@ export default function WalletPage() {
       icon: ArrowUpRight,
       color: '#DC2626',
       bg: '#FEF2F2'
+    },
+    [WALLET_TYPES.PAIEMENT_FACTURE]: {
+      icon: Receipt,
+      color: '#2451C4',
+      bg: '#EFF6FF'
     }
   })[type] || {
     icon: Clock,

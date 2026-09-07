@@ -46,6 +46,24 @@ export async function getMesFactures(patientUid) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+// #nouveau (demande utilisateur, "panier self-service pharmacie") : crée UNE
+// facture pour un ensemble de médicaments/examens choisis par le patient —
+// entièrement côté serveur (jamais un montant/panier fourni tel quel par un
+// client Firestore), voir hospito-facture-paiement::creer_facture_panier.
+export async function creerFacturePanier(etablissementId, { prescriptionItemIds = [], examenIds = [] }) {
+  return factureProxy('creer_facture_panier', { etablissementId, prescriptionItemIds, examenIds });
+}
+
+// #nouveau (demande utilisateur, "c'est avec le solde du compte qu'on peut
+// payer les factures et autres") : second moyen de paiement, en plus de
+// CamPay — débit du solde + bascule de la facture faits atomiquement côté
+// serveur (hospito-facture-paiement::payer_facture_solde), jamais un simple
+// débit client isolé (la facture ET les articles liés — examen, panier —
+// doivent progresser dans le MÊME commit que le débit, comme pour CamPay).
+export async function payerFactureAvecSolde(factureId) {
+  return factureProxy('payer_facture_solde', { factureId });
+}
+
 export async function initierPaiementFacture(factureId, phoneNumber) {
   const externalId = `facture_${factureId}_${Date.now()}`;
   return factureProxy('initier_paiement_facture', { factureId, phoneNumber, externalId });

@@ -25,7 +25,14 @@ export const WALLET_TYPES = {
   RETOUR_LIVRAISON: 'retour_livraison',
   // #nouveau (demande utilisateur, "Vendeur Pro") : pass à durée fixe,
   // paiement ponctuel — même famille que BOOST/FLASH, pas un abonnement.
-  VENDEUR_PRO: 'vendeur_pro'
+  VENDEUR_PRO: 'vendeur_pro',
+  // #nouveau (demande utilisateur, "c'est avec le solde du compte qu'on peut
+  // payer les factures et autres") : débit du solde pour une facture
+  // hospitalière (HostoConnect) — voir facturesService.js::payerFactureAvecSolde,
+  // écrit par hospito-facture-paiement (edge function), jamais par ce client
+  // directement (contrairement aux autres débits ci-dessus), car le paiement
+  // doit rester atomique avec la bascule des articles liés (examen/panier).
+  PAIEMENT_FACTURE: 'paiement_facture'
 };
 const campayProxy = async (action, payload) => {
   if (!auth.currentUser) throw new Error('Vous devez être connecté');

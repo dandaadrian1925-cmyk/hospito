@@ -259,7 +259,7 @@ const MENU_ITEMS = [{
   icon: FolderHeart
 }, {
   to: '/mon-compte/examens',
-  label: 'Mes examens',
+  label: 'Pharmacie & examens',
   icon: FlaskConical
 }, {
   to: '/mon-compte/factures',

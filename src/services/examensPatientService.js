@@ -1,6 +1,16 @@
 import { collection, addDoc, query, where, orderBy, getDocs, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
+// #nouveau (demande utilisateur, "panier self-service pharmacie") :
+// médicaments prescrits, visibles ici selon le même principe que les
+// examens ci-dessous (patientUid copié depuis la fiche interne au moment de
+// la prescription — voir hospito-medecin/prescriptionsService.js).
+export const getMesLignesPrescription = async (patientUid) => {
+  const q = query(collection(db, 'lignes_prescription'), where('patientUid', '==', patientUid), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
 // Examens prescrits par un médecin (hospito-medecin) et visibles ici
 // uniquement si la fiche patient était liée à ce compte au moment de la
 // prescription (patientUid) — voir rechercherCompteAppParCni côté
