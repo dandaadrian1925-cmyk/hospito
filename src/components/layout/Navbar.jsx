@@ -5,6 +5,7 @@ import { Search, Menu, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { logout } from '../../services/authService';
 import { listenUnreadNotificationsCount } from '../../services/notificationsService';
+import WalletBalance from './WalletBalance';
 function HostoConnectLogo({
   size = 'md'
 }) {
@@ -150,6 +151,7 @@ export default function Navbar() {
           marginLeft: 'auto'
         }}>
             {user ? <>
+                <WalletBalance user={user} />
                 <Link to="/mes-favoris" style={{
               ...linkBase,
               display: 'none'
