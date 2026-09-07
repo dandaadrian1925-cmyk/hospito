@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, Mail, Lock, User, MapPin, Gift, Globe, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, MapPin, Globe, ArrowRight } from 'lucide-react';
 import { registerWithEmail, loginWithEmail, loginWithGoogle } from '../services/authService';
 import { getSettings, getVillesFormulaire } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
@@ -20,17 +20,10 @@ export default function AuthPage() {
   useEffect(() => {
     getSettings().then(setSettings);
   }, []);
-  // #retour utilisateur : un lien d'invitation (?ref=CODE, cf.
-  // buildInvitationWhatsApp) doit amener directement sur le formulaire
-  // d'inscription, code déjà rempli — sans ça, l'invité devait retrouver et
-  // retaper le code lui-même après être arrivé sur la page.
-  const [searchParams] = useSearchParams();
-  const codeParrainageUrl = (searchParams.get('ref') || '').toUpperCase();
-  const [mode, setMode] = useState(codeParrainageUrl ? 'register' : 'login');
+  const [mode, setMode] = useState('login');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [referralCode, setReferralCode] = useState(codeParrainageUrl);
   const [form, setForm] = useState({
     email: '',
     password: '',
@@ -75,16 +68,8 @@ export default function AuthPage() {
     setLoading(true);
     try {
       if (mode === 'register') {
-        const {
-          codeInvalide
-        } = await registerWithEmail(form.email, form.password, form.nom, form.prenom, form.ville, referralCode || null);
-        if (codeInvalide) {
-          toast.error('Code de parrainage introuvable — compte créé sans parrain.', {
-            duration: 6000
-          });
-        } else {
-          toast.success('Compte créé ! Bienvenue sur HostoConnect 🎉');
-        }
+        await registerWithEmail(form.email, form.password, form.nom, form.prenom, form.ville);
+        toast.success('Compte créé ! Bienvenue sur HostoConnect 🎉');
       } else {
         await loginWithEmail(form.email, form.password);
         toast.success('Bon retour sur HostoConnect !');
@@ -111,12 +96,8 @@ export default function AuthPage() {
     }
     setGoogleLoading(true);
     try {
-      const { codeInvalide } = await loginWithGoogle(referralCode || null);
-      if (codeInvalide) {
-        toast.error('Code de parrainage introuvable — compte créé sans parrain.', { duration: 6000 });
-      } else {
-        toast.success('Connecté avec Google !');
-      }
+      await loginWithGoogle();
+      toast.success('Connecté avec Google !');
     } catch (err) {
       const googleMsgs = {
         'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cet email via une autre méthode de connexion.',
@@ -216,16 +197,6 @@ export default function AuthPage() {
                     {autreVille && <input value={form.ville} onChange={e => set('ville', e.target.value)} placeholder="Précisez le nom de votre ville" className="input-field text-sm mt-2" />}
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">
-                      Code de parrainage <span className="text-gray-400 font-normal">(optionnel)</span>
-                    </label>
-                    <div className="relative">
-                      <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                      <input value={referralCode} onChange={e => setReferralCode(e.target.value.toUpperCase())} placeholder="CODE123" className="input-field pl-9 text-sm uppercase" />
-                    </div>
-                    {referralCode && <p className="text-xs text-green-600 mt-1 font-medium">✓ Code appliqué — commission réduite sur vos premières ventes</p>}
-                  </div>
                 </motion.div>}
             </AnimatePresence>
 

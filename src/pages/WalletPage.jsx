@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, ArrowDownLeft, ArrowUpRight, Clock, CheckCircle, AlertCircle, Plus, ChevronRight, Shield, Info, Smartphone, X, ShoppingBag, Receipt } from 'lucide-react';
+import { Wallet, ArrowDownLeft, Clock, ChevronRight, Shield, Smartphone, X, ShoppingBag, Receipt } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { listenWallet, getTransactionsBancaires, initierDepot, initierRetrait, transfererSoldeParrainage, attendreConfirmationDepot, reconcilierDepotsEnAttente, verifierEcartSoldePropre, WALLET_TYPES } from '../services/walletService';
-import { getSettings } from '../services/settingsService';
-import ConfirmDialog from '../components/common/ConfirmDialog';
+import { listenWallet, getTransactionsBancaires, initierDepot, attendreConfirmationDepot, reconcilierDepotsEnAttente, verifierEcartSoldePropre, WALLET_TYPES } from '../services/walletService';
 import OperatorLogo from '../components/common/OperatorLogo';
 import { OPERATEURS, operateurCorrespond } from '../utils/operateurs';
 import toast from 'react-hot-toast';
 const MONTANTS_RAPIDES = [1000, 2000, 5000, 10000, 25000, 50000];
 const TYPE_LABELS = {
-  [WALLET_TYPES.DEPOT]: 'Dépôt',
-  [WALLET_TYPES.RETRAIT]: 'Retrait'
+  [WALLET_TYPES.DEPOT]: 'Dépôt'
 };
 const STATUT_LABELS_DEPOT = {
   pending: {
@@ -28,35 +25,8 @@ const STATUT_LABELS_DEPOT = {
     color: '#DC2626'
   }
 };
-const STATUT_LABELS_RETRAIT = {
-  en_cours: {
-    label: 'En attente de traitement',
-    color: '#D97706'
-  },
-  en_cours_versement: {
-    label: 'Versement en cours',
-    color: '#2563EB'
-  },
-  completed: {
-    label: 'Validé',
-    color: '#059669'
-  },
-  echec_versement: {
-    label: 'Échec du versement',
-    color: '#DC2626'
-  },
-  versement_incertain: {
-    label: 'Vérification en cours',
-    color: '#D97706'
-  },
-  rejete: {
-    label: 'Rejeté — montant recrédité',
-    color: '#DC2626'
-  }
-};
 function getStatutInfo(tx) {
-  const table = tx.type === WALLET_TYPES.RETRAIT ? STATUT_LABELS_RETRAIT : STATUT_LABELS_DEPOT;
-  return table[tx.statut] || null;
+  return STATUT_LABELS_DEPOT[tx.statut] || null;
 }
 function TransactionDetailModal({
   tx,
@@ -72,19 +42,19 @@ function TransactionDetailModal({
       color: '#059669',
       bg: '#F0FDF4'
     },
-    [WALLET_TYPES.RETRAIT]: {
-      icon: ArrowUpRight,
-      color: '#DC2626',
-      bg: '#FEF2F2'
+    [WALLET_TYPES.PAIEMENT_FACTURE]: {
+      icon: Receipt,
+      color: '#2451C4',
+      bg: '#EFF6FF'
     }
   })[tx.type] || {
     icon: Clock,
     color: '#94A3B8',
     bg: '#F8FAFC'
   };
-  // #bug (corrigé) : même correctif que la liste — un dépôt/retrait échoué
-  // ne doit jamais s'afficher comme un vrai crédit positif.
-  const pos = tx.montant > 0 && tx.statut !== 'echoue' && tx.statut !== 'echec_versement';
+  // #bug (corrigé) : un dépôt échoué ne doit jamais s'afficher comme un vrai
+  // crédit positif.
+  const pos = tx.montant > 0 && tx.statut !== 'echoue';
   const statutInfo = getStatutInfo(tx);
   const dateComplete = tx.createdAt?.toDate?.()?.toLocaleString('fr-FR', {
     dateStyle: 'long',
@@ -269,8 +239,7 @@ export default function WalletPage() {
   } = useAuth();
   const navigate = useNavigate();
   const [wallet, setWallet] = useState({
-    solde: 0,
-    soldeParrainage: 0
+    solde: 0
   });
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -279,15 +248,7 @@ export default function WalletPage() {
   const [phoneDepot, setPhoneDepot] = useState('');
   const [operateurDepot, setOperateurDepot] = useState('MTN_MOMO_CMR');
   const [attenteDepot, setAttenteDepot] = useState(false);
-  const [montantRetrait, setMontantRetrait] = useState('');
-  const [phone, setPhone] = useState('');
-  const [operateur, setOperateur] = useState('MTN_MOMO_CMR');
   const [submitting, setSubmitting] = useState(false);
-  const [retraitMinimum, setRetraitMinimum] = useState(1000);
-  const [showConfirmRetrait, setShowConfirmRetrait] = useState(false);
-  const [transfertParrainageMinimum, setTransfertParrainageMinimum] = useState(5000);
-  const [showConfirmTransfert, setShowConfirmTransfert] = useState(false);
-  const [transferring, setTransferring] = useState(false);
   const [selectedTx, setSelectedTx] = useState(null);
   useEffect(() => {
     if (!user) {
@@ -308,12 +269,6 @@ export default function WalletPage() {
     verifierEcartSoldePropre(user.uid).catch(e => console.warn('Vérification de l\'écart de solde échouée :', e.message));
     return unsubWallet;
   }, [user]);
-  useEffect(() => {
-    getSettings().then(s => {
-      setRetraitMinimum(s.retraitMinimum);
-      setTransfertParrainageMinimum(s.transfertParrainageMinimum ?? 5000);
-    });
-  }, []);
   const loadTransactions = async () => {
     setLoading(true);
     try {
@@ -374,85 +329,11 @@ export default function WalletPage() {
       setAttenteDepot(false);
     }
   };
-  const handleRetrait = () => {
-    const montant = parseInt(montantRetrait);
-    if (!montant) {
-      toast.error('Entrez un montant');
-      return;
-    }
-    if (!phone || phone.length < 9) {
-      toast.error('Numéro de téléphone invalide');
-      return;
-    }
-    if (!operateurCorrespond(phone, operateur)) {
-      toast.error(`Ce numéro ne correspond pas à ${OPERATEURS.find(o => o.id === operateur)?.label}.`);
-      return;
-    }
-    setShowConfirmRetrait(true);
-  };
-  const handleConfirmerRetrait = async () => {
-    const montant = parseInt(montantRetrait);
-    setSubmitting(true);
-    try {
-      await initierRetrait(user.uid, montant, phone, operateur);
-      toast.success('Demande de retrait soumise — traitement sous 24h');
-      setShowConfirmRetrait(false);
-      setMontantRetrait('');
-      setPhone('');
-      loadTransactions();
-      setTab('apercu');
-    } catch (e) {
-      setShowConfirmRetrait(false);
-      // MOYENNE (audit sécurité, corrigé) : la règle Firestore qui limite un
-      // retrait aux numéros déjà utilisés pour un dépôt confirmé rejette avec
-      // un code générique "permission-denied", sans message — remplacé ici
-      // par un texte clair plutôt que de laisser passer l'erreur technique brute.
-      const message = e.message === 'COMPTE_SUSPENDU_VERIFICATION'
-        ? 'Votre compte est en cours de vérification suite à une anomalie détectée sur votre solde. Contactez le support MAKET.'
-        : e.code === 'permission-denied'
-        ? 'Ce numéro n\'a jamais servi à un dépôt sur ce compte — par sécurité, un retrait ne peut viser qu\'un numéro déjà utilisé pour déposer.'
-        : e.message || 'Erreur retrait';
-      toast.error(message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-  // #nouveau (refonte parrainage v2) : transfert self-service de la totalité du
-  // solde de parrainage vers le solde principal, ensuite retirable normalement
-  // via l'onglet "Retirer" ci-dessus.
-  const handleTransfert = () => {
-    if (!wallet.soldeParrainage || wallet.soldeParrainage < transfertParrainageMinimum) {
-      toast.error(`Montant minimum : ${transfertParrainageMinimum.toLocaleString('fr-FR')} XAF`);
-      return;
-    }
-    setShowConfirmTransfert(true);
-  };
-  const handleConfirmerTransfert = async () => {
-    setTransferring(true);
-    try {
-      await transfererSoldeParrainage(user.uid, wallet.soldeParrainage);
-      toast.success('Solde de parrainage transféré vers votre solde principal !');
-      setShowConfirmTransfert(false);
-    } catch (e) {
-      setShowConfirmTransfert(false);
-      const message = e.message === 'COMPTE_SUSPENDU_VERIFICATION'
-        ? 'Votre compte est en cours de vérification suite à une anomalie détectée sur votre solde. Contactez le support MAKET.'
-        : e.message || 'Erreur lors du transfert';
-      toast.error(message);
-    } finally {
-      setTransferring(false);
-    }
-  };
   const txIcon = type => ({
     [WALLET_TYPES.DEPOT]: {
       icon: ArrowDownLeft,
       color: '#059669',
       bg: '#F0FDF4'
-    },
-    [WALLET_TYPES.RETRAIT]: {
-      icon: ArrowUpRight,
-      color: '#DC2626',
-      bg: '#FEF2F2'
     },
     [WALLET_TYPES.PAIEMENT_FACTURE]: {
       icon: Receipt,
@@ -471,64 +352,33 @@ export default function WalletPage() {
     }}>Mon Wallet</h1>
 
       {}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <div style={{
+      <div className="mb-6" style={{
         background: 'linear-gradient(135deg, #174858, #2FB4A0)',
         borderRadius: 18,
         padding: 20,
         color: 'white',
         boxShadow: '0 10px 26px rgba(23,51,125,0.28)'
       }}>
-          <p style={{
+        <p style={{
           fontSize: 11,
           opacity: 0.7,
           fontWeight: 600,
           marginBottom: 6,
           letterSpacing: '0.05em'
         }}>SOLDE PRINCIPAL</p>
-          <p style={{
+        <p style={{
           fontFamily: 'var(--font-display)',
           fontWeight: 800,
-          fontSize: 22,
+          fontSize: 26,
           fontVariantNumeric: 'tabular-nums'
         }}>{wallet.solde?.toLocaleString()} <span style={{
-            fontSize: 13
+            fontSize: 14
           }}>XAF</span></p>
-          <p style={{
+        <p style={{
           fontSize: 11,
           opacity: 0.6,
           marginTop: 4
-        }}>Retrait possible</p>
-        </div>
-        <div style={{
-        background: 'linear-gradient(135deg, #5B21B6, #7C3AED)',
-        borderRadius: 18,
-        padding: 20,
-        color: 'white',
-        boxShadow: '0 10px 26px rgba(91,33,182,0.28)'
-      }}>
-          <p style={{
-          fontSize: 11,
-          opacity: 0.7,
-          fontWeight: 600,
-          marginBottom: 6,
-          letterSpacing: '0.05em'
-        }}>SOLDE DE PARRAINAGE</p>
-          <p style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 800,
-          fontSize: 22,
-          fontVariantNumeric: 'tabular-nums'
-        }}>{wallet.soldeParrainage?.toLocaleString() || 0} <span style={{
-            fontSize: 13
-          }}>XAF</span></p>
-          <button onClick={handleTransfert} disabled={!wallet.soldeParrainage || wallet.soldeParrainage < transfertParrainageMinimum} className="w-full mt-2 py-1.5 rounded-lg text-xs font-bold transition-all" style={{
-          background: 'rgba(255,255,255,0.15)',
-          opacity: !wallet.soldeParrainage || wallet.soldeParrainage < transfertParrainageMinimum ? 0.5 : 1
-        }}>
-            Transférer vers mon solde principal
-          </button>
-        </div>
+        }}>Utilisable pour payer vos factures HostoConnect</p>
       </div>
 
       {}
@@ -564,7 +414,7 @@ export default function WalletPage() {
 
       {}
       <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl">
-        {[['apercu', 'Historique'], ['depot', 'Déposer'], ['retrait', 'Retirer']].map(([v, l]) => <button key={v} onClick={() => setTab(v)} className="flex-1 py-2 rounded-lg text-sm font-bold transition-all" style={{
+        {[['apercu', 'Historique'], ['depot', 'Déposer']].map(([v, l]) => <button key={v} onClick={() => setTab(v)} className="flex-1 py-2 rounded-lg text-sm font-bold transition-all" style={{
         background: tab === v ? 'white' : 'transparent',
         color: tab === v ? '#2FB4A0' : '#64748B',
         boxShadow: tab === v ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
@@ -598,38 +448,8 @@ export default function WalletPage() {
             } = txIcon(tx.type);
             // #bug (corrigé, retour utilisateur) : un dépôt échoué garde un
             // montant positif en base (le montant TENTÉ, jamais réellement
-            // crédité — cf. dynamic-processor, aucun crédit n'a lieu tant que
-            // statut n'est pas "completed") — affiché en vert avec un "+"
-            // comme s'il avait réussi. echec_versement (retrait) exclu par
-            // cohérence, même si montant y est déjà négatif dans ce cas.
-            const pos = tx.montant > 0 && tx.statut !== 'echoue' && tx.statut !== 'echec_versement';
-            const estRetrait = tx.type === WALLET_TYPES.RETRAIT;
-            const statutRetrait = estRetrait ? {
-              en_cours: {
-                label: 'En attente de traitement',
-                color: '#D97706'
-              },
-              en_cours_versement: {
-                label: 'Versement en cours',
-                color: '#2563EB'
-              },
-              completed: {
-                label: 'Validé',
-                color: '#059669'
-              },
-              echec_versement: {
-                label: 'Échec du versement',
-                color: '#DC2626'
-              },
-              versement_incertain: {
-                label: 'Vérification en cours',
-                color: '#D97706'
-              },
-              rejete: {
-                label: 'Rejeté — montant recrédité',
-                color: '#DC2626'
-              }
-            }[tx.statut] : null;
+            // crédité), affiché en vert avec un "+" comme s'il avait réussi.
+            const pos = tx.montant > 0 && tx.statut !== 'echoue';
             return <motion.div key={tx.id} initial={{
               opacity: 0,
               y: 8
@@ -661,12 +481,8 @@ export default function WalletPage() {
                         <p className="text-sm font-semibold text-gray-800 truncate">{tx.description}</p>
                         <p className="text-xs text-gray-400">
                           {tx.createdAt?.toDate?.()?.toLocaleDateString('fr-FR') || '—'}
-                          {!estRetrait && tx.statut === 'pending' && ' · En attente'}
-                          {!estRetrait && tx.statut === 'echoue' && ' · Échoué'}
-                          {statutRetrait && <span style={{
-                    color: statutRetrait.color,
-                    fontWeight: 700
-                  }}> · {statutRetrait.label}</span>}
+                          {tx.statut === 'pending' && ' · En attente'}
+                          {tx.statut === 'echoue' && ' · Échoué'}
                         </p>
                       </div>
                       <p className="font-black text-sm flex-shrink-0 tabular-nums" style={{
@@ -743,58 +559,8 @@ export default function WalletPage() {
             </button>
           </motion.div>}
 
-        {}
-        {tab === 'retrait' && <motion.div key="retrait" initial={{
-        opacity: 0,
-        y: 10
-      }} animate={{
-        opacity: 1,
-        y: 0
-      }} exit={{
-        opacity: 0
-      }} className="space-y-5">
-            <div className="bg-amber-50 rounded-xl p-4 border border-amber-100 flex items-start gap-2">
-              <Info className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-amber-700">Retrait du solde principal uniquement</p>
-                <p className="text-xs text-amber-600 mt-0.5">Minimum {retraitMinimum.toLocaleString()} XAF · Traitement sous 24h · Solde disponible : {wallet.solde?.toLocaleString()} XAF</p>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Montant à retirer (XAF)</label>
-              <input type="number" value={montantRetrait} onChange={e => setMontantRetrait(e.target.value)} placeholder={`Min. ${retraitMinimum.toLocaleString()} XAF`} className="input-field" min={retraitMinimum} max={wallet.solde} />
-              {montantRetrait && parseInt(montantRetrait) > wallet.solde && <p className="text-xs text-red-500 mt-1">Solde insuffisant</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Opérateur</label>
-              <div className="grid grid-cols-2 gap-3">
-                {OPERATEURS.map(op => <button key={op.id} type="button" onClick={() => setOperateur(op.id)} className="p-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center gap-2.5" style={{
-              borderColor: operateur === op.id ? '#2FB4A0' : '#E2E8F0',
-              background: operateur === op.id ? '#EFF6FF' : 'white'
-            }}>
-                    <OperatorLogo id={op.id} size={26} />
-                    <span className="text-xs">{op.label}</span>
-                  </button>)}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">Numéro Mobile Money</label>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="6XXXXXXXX" className="input-field" maxLength={9} />
-              {!operateurCorrespond(phone, operateur) && <p className="text-xs text-red-500 mt-1">Ce numéro ne correspond pas à {OPERATEURS.find(o => o.id === operateur)?.label}.</p>}
-            </div>
-
-            <button onClick={handleRetrait} disabled={submitting || !montantRetrait || parseInt(montantRetrait) < retraitMinimum || parseInt(montantRetrait) > wallet.solde || phone.length < 9 || !operateurCorrespond(phone, operateur)} className="btn-primary w-full justify-center py-4">
-              {submitting ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Traitement...</span> : `Retirer ${montantRetrait ? parseInt(montantRetrait).toLocaleString() : '—'} XAF`}
-            </button>
-          </motion.div>}
-
       </AnimatePresence>
 
-      {showConfirmRetrait && <ConfirmDialog title="Confirmer ce retrait ?" description={`Vous allez retirer ${parseInt(montantRetrait || 0).toLocaleString('fr-FR')} XAF depuis votre solde principal vers ${phone} (${OPERATEURS.find(o => o.id === operateur)?.label || operateur}).`} confirmLabel="Confirmer le retrait" onConfirm={handleConfirmerRetrait} onCancel={() => setShowConfirmRetrait(false)} />}
-      {showConfirmTransfert && <ConfirmDialog title="Confirmer ce transfert ?" description={`Vous allez transférer ${wallet.soldeParrainage?.toLocaleString('fr-FR')} XAF de votre solde de parrainage vers votre solde principal (ensuite retirable normalement).`} confirmLabel={transferring ? 'Transfert…' : 'Confirmer le transfert'} onConfirm={handleConfirmerTransfert} onCancel={() => setShowConfirmTransfert(false)} />}
       {selectedTx && <TransactionDetailModal tx={selectedTx} onClose={() => setSelectedTx(null)} />}
     </div>;
 }

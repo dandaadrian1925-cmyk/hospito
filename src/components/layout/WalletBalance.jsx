@@ -169,26 +169,6 @@ export default function WalletBalance({
         }}>
               {visible ? fmt(wallet.solde) : '•••• XAF'}
             </p>
-            <div style={{
-          height: 1,
-          background: 'var(--border-2)',
-          margin: '10px 0'
-        }} />
-            <p style={{
-          fontSize: 11,
-          color: 'var(--ink-4)',
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.04em'
-        }}>Solde de parrainage</p>
-            <p style={{
-          fontSize: 16,
-          fontWeight: 700,
-          color: 'var(--ink-2)',
-          marginTop: 2
-        }}>
-              {visible ? fmt(wallet.soldeParrainage) : '•••• XAF'}
-            </p>
             {}
             {wallet.soldeBonus > 0 && <>
               <div style={{
