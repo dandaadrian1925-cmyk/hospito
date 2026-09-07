@@ -11,6 +11,7 @@ import { syncProfilPublic } from '../services/profilPublicService';
 import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../services/settingsService';
 import RendezVousPage from './moncompte/RendezVousPage';
 import DossierPage from './moncompte/DossierPage';
+import DossierAccessGate from '../components/common/DossierAccessGate';
 import FacturesPage from './moncompte/FacturesPage';
 import ReclamationsPage from './moncompte/ReclamationsPage';
 import ExamensPage from './moncompte/ExamensPage';
@@ -1044,7 +1045,7 @@ export default function MonComptePage() {
         <Route index element={<AccountHome />} />
         <Route path="profil" element={<SectionPage><ModifierProfil /></SectionPage>} />
         <Route path="rendez-vous" element={<SectionPage><RendezVousPage /></SectionPage>} />
-        <Route path="dossier" element={<SectionPage><DossierPage /></SectionPage>} />
+        <Route path="dossier" element={<SectionPage><DossierAccessGate><DossierPage /></DossierAccessGate></SectionPage>} />
         <Route path="examens" element={<SectionPage><ExamensPage /></SectionPage>} />
         <Route path="factures" element={<SectionPage><FacturesPage /></SectionPage>} />
         <Route path="reclamations" element={<SectionPage><ReclamationsPage /></SectionPage>} />

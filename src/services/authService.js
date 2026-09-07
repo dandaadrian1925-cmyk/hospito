@@ -6,11 +6,6 @@ import { syncProfilPublic, backfillReferralCodePublicSiAbsent } from './profilPu
 import { removePush } from './pushNotificationsService';
 import { supprimerAnnoncePropre } from './annoncesService';
 import { STATUTS_COMMANDE } from './commandesService';
-const trouverUidParReferralCode = async code => {
-  const q = query(collection(db, 'profils_publics'), where('referralCode', '==', code));
-  const snap = await getDocs(q);
-  return snap.empty ? null : snap.docs[0].id;
-};
 export const generateReferralCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 const SESSION_ID_KEY = 'maket_session_id';
 
@@ -98,17 +93,17 @@ const backfillPseudoSiAbsent = async (uid, pseudoExistant, userDocPourSync) => {
 // chaussures...) répondent à l'objection avant qu'elle soit posée, au lieu
 // d'attendre une relance manuelle du parrain à chaque invitation.
 export const buildInvitationWhatsApp = code => `Un vieux téléphone, des vêtements, des chaussures, un appareil électroménager, un meuble... tu as sûrement quelque chose à vendre ! Fais-le sur *MAKET* — le marketplace d'occasion 100% sécurisé au Cameroun ! Je viens de m'y inscrire et je te partage mon code.\n\n` + `- Paiement bloqué en sécurité jusqu'à la remise de l'article : satisfait ou remboursé, sans discussion\n` + `- Vendeurs vérifiés (CNI + facture) — fini les arnaques entre particuliers\n` + `- Livraison possible, même entre villes\n` + `- Inscription gratuite en 2 minutes\n\n` + `Utilise mon code *${code}* à l'inscription : commission réduite sur tes premières ventes.\n\n` + `https://maket.cm/auth?ref=${code}`;
-export const registerWithEmail = async (email, password, nom, prenom, ville, referralCode = null) => {
+// #nouveau (demande utilisateur, "il n'y a pas de parrainage du tout") :
+// HostoConnect n'a aucun programme de parrainage — referralCode/parainId
+// restent sur le doc `users` (hérités du fork MAKET, lus ailleurs dans le
+// wallet historique) mais ne sont plus jamais RENSEIGNÉS ni exploités ici.
+export const registerWithEmail = async (email, password, nom, prenom, ville) => {
   setConnexionEnCours(true);
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(cred.user, {
       displayName: `${prenom} ${nom}`
     });
-    let parainId = null;
-    if (referralCode) {
-      parainId = await trouverUidParReferralCode(referralCode);
-    }
     const userDoc = {
       uid: cred.user.uid,
       email,
@@ -128,31 +123,13 @@ export const registerWithEmail = async (email, password, nom, prenom, ville, ref
       totalVentes: 0,
       totalAchats: 0,
       avertissements: 0,
-      parainId,
+      parainId: null,
       createdAt: serverTimestamp()
     };
     await setDoc(doc(db, 'users', cred.user.uid), userDoc);
     await syncProfilPublic(cred.user.uid, userDoc);
     await demarrerSessionUnique(cred.user.uid);
-    if (parainId) {
-      await setDoc(doc(db, 'filleuls', cred.user.uid), {
-        parrainId: parainId,
-        createdAt: serverTimestamp()
-      });
-      await creerNotification({
-        userId: parainId,
-        type: 'parrainage',
-        titre: 'Nouveau filleul inscrit',
-        // #confidentialité (audit sécurité, corrigé) : affichait le vrai nom du
-        // filleul au parrain — jamais le vrai nom entre clients, pseudo uniquement.
-        message: `${userDoc.pseudo} s'est inscrit avec votre code. Il vous rapportera une part de la commission MAKET sur ses premières ventes.`,
-        link: '/mon-compte/parrainage'
-      });
-    }
-    return {
-      user: cred.user,
-      codeInvalide: !!(referralCode && !parainId)
-    };
+    return { user: cred.user };
   } finally {
     terminerConnexion();
   }
@@ -212,19 +189,13 @@ export const loginWithEmail = async (email, password) => {
 // aller-retour de page complète) : c'est d'ailleurs exactement l'implémentation
 // qui fonctionne sur MAKET (maket-client, même architecture, authDomain
 // tout aussi cross-origin), confirmant que ce n'était pas un problème de COOP.
-export const loginWithGoogle = async (referralCode = null) => {
+export const loginWithGoogle = async () => {
   setConnexionEnCours(true);
   try {
     const cred = await signInWithPopup(auth, googleProvider);
     const userRef = doc(db, 'users', cred.user.uid);
     const snap = await getDoc(userRef);
-    let codeInvalide = false;
     if (!snap.exists()) {
-      let parainId = null;
-      if (referralCode) {
-        parainId = await trouverUidParReferralCode(referralCode);
-        if (!parainId) codeInvalide = true;
-      }
       const userDoc = {
         uid: cred.user.uid,
         email: cred.user.email,
@@ -244,67 +215,20 @@ export const loginWithGoogle = async (referralCode = null) => {
         totalVentes: 0,
         totalAchats: 0,
         avertissements: 0,
-        parainId,
+        parainId: null,
         createdAt: serverTimestamp()
       };
       await setDoc(userRef, userDoc);
       await syncProfilPublic(cred.user.uid, userDoc);
-      if (parainId) {
-        await setDoc(doc(db, 'filleuls', cred.user.uid), {
-          parrainId: parainId,
-          createdAt: serverTimestamp()
-        });
-        await creerNotification({
-          userId: parainId,
-          type: 'parrainage',
-          titre: 'Nouveau filleul inscrit',
-          message: `${userDoc.pseudo} s'est inscrit avec votre code. Il vous rapportera une part de la commission MAKET sur ses premières ventes.`,
-          link: '/mon-compte/parrainage'
-        });
-      }
     } else {
       await backfillReferralCodePublicSiAbsent(cred.user.uid, snap.data()?.referralCode);
       await backfillPseudoSiAbsent(cred.user.uid, snap.data()?.pseudo, snap.data());
     }
     await demarrerSessionUnique(cred.user.uid);
-    return {
-      user: cred.user,
-      codeInvalide
-    };
+    return { user: cred.user };
   } finally {
     terminerConnexion();
   }
-};
-export const appliquerCodeParrainage = async (userId, code) => {
-  const trimmed = (code || '').trim().toUpperCase();
-  if (!trimmed) throw new Error('CODE_VIDE');
-  const userSnap = await getDoc(doc(db, 'users', userId));
-  const userData = userSnap.data();
-  if (!userData) throw new Error('UTILISATEUR_INTROUVABLE');
-  if (userData.parainId) throw new Error('CODE_DEJA_APPLIQUE');
-  if (trimmed === userData.referralCode) throw new Error('CODE_PROPRE');
-  const parainId = await trouverUidParReferralCode(trimmed);
-  if (!parainId) throw new Error('CODE_INTROUVABLE');
-  if (parainId === userId) throw new Error('CODE_PROPRE');
-  await setDoc(doc(db, 'users', userId), {
-    parainId
-  }, {
-    merge: true
-  });
-  await setDoc(doc(db, 'filleuls', userId), {
-    parrainId: parainId,
-    createdAt: serverTimestamp()
-  });
-  await creerNotification({
-    userId: parainId,
-    type: 'parrainage',
-    titre: 'Nouveau filleul',
-    message: `${userData.pseudo || 'Un utilisateur'} a appliqué votre code de parrainage. Il vous rapportera une part de la commission MAKET sur ses premières ventes.`,
-    link: '/mon-compte/parrainage'
-  });
-  return {
-    parainId
-  };
 };
 export const resetPassword = email => sendPasswordResetEmail(auth, email);
 export const logout = async () => {

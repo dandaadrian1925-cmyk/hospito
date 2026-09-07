@@ -129,7 +129,7 @@ export const initierDepot = async (userId, montant, phoneNumber) => {
       amount: montant,
       phoneNumber,
       externalId,
-      description: 'Dépôt MAKET Wallet',
+      description: 'Dépôt HostoConnect',
       transactionId: txRef.id,
       sessionId: getSessionIdLocal()
     });

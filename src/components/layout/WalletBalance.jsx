@@ -105,7 +105,7 @@ export default function WalletBalance({
       }}>
           {visible ? fmt(wallet.solde) : '•••• XAF'}
         </button>
-        <button onClick={() => navigate('/wallet')} title="Déposer de l'argent" style={{
+        <button onClick={() => navigate('/wallet')} title="Déposer de l'argent" className="wallet-deposit-btn" style={{
         width: 24,
         height: 24,
         borderRadius: '50%',

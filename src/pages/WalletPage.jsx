@@ -323,7 +323,7 @@ export default function WalletPage() {
         });
       }
     } catch (e) {
-      toast.error(e.message === 'COMPTE_SUSPENDU_VERIFICATION' ? 'Votre compte est en cours de vérification suite à une anomalie détectée sur votre solde. Contactez le support MAKET.' : e.message || 'Erreur dépôt');
+      toast.error(e.message === 'COMPTE_SUSPENDU_VERIFICATION' ? 'Votre compte est en cours de vérification suite à une anomalie détectée sur votre solde. Contactez le support HostoConnect.' : e.message || 'Erreur dépôt');
     } finally {
       setSubmitting(false);
       setAttenteDepot(false);

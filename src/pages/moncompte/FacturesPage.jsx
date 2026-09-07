@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { CreditCard, Loader2, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { getMesFactures, initierPaiementFacture, attendreConfirmationFacture } from '../../services/facturesService';
+import { getMesFactures, initierPaiementFacture, attendreConfirmationFacture, payerFactureAvecSolde } from '../../services/facturesService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
+import { listenWallet } from '../../services/walletService';
 
 const STATUT_STYLES = {
   en_attente: { bg: '#FFFBEB', color: '#D97706', label: 'En attente' },
@@ -11,9 +12,15 @@ const STATUT_STYLES = {
   annulee: { bg: '#F1F5F9', color: '#64748B', label: 'Annulée' },
 };
 
-function FactureRow({ facture, etabNom, onPayee }) {
+// #nouveau (demande utilisateur, "tout n'est pas payé qu'à partir du solde
+// principal") : cette page a sa propre voie de paiement CamPay (indépendante
+// du panier de ExamensPage.jsx) — doit offrir le même second moyen de
+// paiement (solde) pour rester cohérente, partout où une facture patient
+// peut être payée.
+function FactureRow({ facture, etabNom, solde, onPayee }) {
   const [phone, setPhone] = useState('');
   const [enCours, setEnCours] = useState(false);
+  const [enCoursSolde, setEnCoursSolde] = useState(false);
   const style = STATUT_STYLES[facture.statut] || { bg: '#F1F5F9', color: '#64748B', label: facture.statut };
 
   const payer = async (e) => {
@@ -42,6 +49,23 @@ function FactureRow({ facture, etabNom, onPayee }) {
     }
   };
 
+  const payerAvecSolde = async () => {
+    setEnCoursSolde(true);
+    try {
+      const { statut, message } = await payerFactureAvecSolde(facture.id);
+      if (statut === 'payee') {
+        toast.success('Facture payée avec votre solde !');
+        onPayee(facture.id);
+      } else {
+        toast.error(message || 'Le paiement a échoué — réessayez');
+      }
+    } catch (err) {
+      toast.error(err.message || "Échec de l'opération");
+    } finally {
+      setEnCoursSolde(false);
+    }
+  };
+
   return <div style={{ background: 'white', borderRadius: 16, border: '1.5px solid #F1F5F9', padding: 16 }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 4 }}>
       <div>
@@ -51,12 +75,29 @@ function FactureRow({ facture, etabNom, onPayee }) {
       <span style={{ flexShrink: 0, background: style.bg, color: style.color, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>{style.label}</span>
     </div>
     <p style={{ fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginTop: 8 }}>{Number(facture.montant).toLocaleString('fr-FR')} XAF</p>
-    {facture.statut === 'en_attente' && <form onSubmit={payer} style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-      <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Numéro Mobile Money" className="input-field" style={{ flex: 1, fontSize: 13 }} />
-      <button type="submit" disabled={enCours} className="btn-primary" style={{ fontSize: 12, padding: '0 16px' }}>
-        {enCours ? 'Traitement…' : 'Payer'}
+    {facture.statut === 'en_attente' && <>
+      <form onSubmit={payer} style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Numéro Mobile Money" className="input-field" style={{ flex: 1, fontSize: 13 }} />
+        <button type="submit" disabled={enCours || enCoursSolde} className="btn-primary" style={{ fontSize: 12, padding: '0 16px' }}>
+          {enCours ? 'Traitement…' : 'Payer'}
+        </button>
+      </form>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0' }}>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+        <span style={{ fontSize: 11, color: '#94A3B8' }}>ou</span>
+        <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
+      </div>
+      <button
+        type="button"
+        onClick={payerAvecSolde}
+        disabled={enCours || enCoursSolde || Number(facture.montant) > solde}
+        className="btn-outline"
+        style={{ width: '100%', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+      >
+        <Wallet style={{ width: 14, height: 14 }} />
+        {enCoursSolde ? 'Traitement…' : `Payer avec mon solde (${solde.toLocaleString('fr-FR')} XAF)`}
       </button>
-    </form>}
+    </>}
   </div>;
 }
 
@@ -64,6 +105,12 @@ export default function FacturesPage() {
   const { user } = useAuth();
   const [factures, setFactures] = useState(null);
   const [etablissements, setEtablissements] = useState({});
+  const [solde, setSolde] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    return listenWallet(user.uid, (w) => setSolde(w.solde || 0));
+  }, [user]);
 
   const recharger = () => {
     getMesFactures(user.uid).then(async (liste) => {
@@ -95,6 +142,6 @@ export default function FacturesPage() {
   }
 
   return <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-    {factures.map((f) => <FactureRow key={f.id} facture={f} etabNom={etablissements[f.etablissementId]?.nom} onPayee={recharger} />)}
+    {factures.map((f) => <FactureRow key={f.id} facture={f} etabNom={etablissements[f.etablissementId]?.nom} solde={solde} onPayee={recharger} />)}
   </div>;
 }

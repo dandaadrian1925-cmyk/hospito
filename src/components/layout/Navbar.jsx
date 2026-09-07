@@ -24,21 +24,24 @@ function HostoConnectLogo({
     }
   };
   const s = sizes[size];
-  return <span style={{
+  return <span className="hosto-logo" style={{
     display: 'inline-flex',
     alignItems: 'center',
-    gap: 8
+    gap: 8,
+    flexShrink: 0,
+    whiteSpace: 'nowrap'
   }}>
-      <img src="/icon-192.png" alt="HostoConnect" style={{
+      <img src="/icon-192.png" alt="HostoConnect" className="hosto-logo-icon" style={{
       width: s.box,
       height: s.box,
       flexShrink: 0
     }} />
-      <span style={{
+      <span className="hosto-logo-text" style={{
       fontFamily: 'Syne, sans-serif',
       fontWeight: 800,
       fontSize: s.text,
-      letterSpacing: '-0.01em'
+      letterSpacing: '-0.01em',
+      whiteSpace: 'nowrap'
     }}>
         <span style={{ color: 'var(--accent-dark)' }}>Hosto</span><span style={{ color: 'var(--accent)' }}>Connect</span>
       </span>
@@ -132,6 +135,8 @@ export default function Navbar() {
         height: 72,
         display: 'flex',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        flexWrap: 'nowrap',
         gap: 28
       }}>
 
@@ -208,7 +213,7 @@ export default function Navbar() {
                 padding: '4px 4px 4px 4px',
                 borderRadius: 20
               }}>
-                    <div style={{
+                    <div className="profile-avatar" style={{
                   width: 30,
                   height: 30,
                   background: 'var(--accent)',
@@ -219,11 +224,12 @@ export default function Navbar() {
                   color: 'white',
                   fontWeight: 700,
                   fontSize: 12.5,
-                  fontFamily: 'var(--font)'
+                  fontFamily: 'var(--font)',
+                  flexShrink: 0
                 }}>
                       {userProfile?.prenom?.[0] || user.email?.[0]?.toUpperCase()}
                     </div>
-                    <ChevronDown style={{
+                    <ChevronDown className="profile-chevron" style={{
                   width: 13,
                   height: 13,
                   color: 'var(--ink-4)'
@@ -279,11 +285,11 @@ export default function Navbar() {
                     to: '/mon-compte',
                     label: 'Mon compte'
                   }, {
-                    to: '/mes-favoris',
-                    label: 'Mes favoris'
+                    to: '/mon-compte/factures',
+                    label: 'Mes factures'
                   }, {
-                    to: '/contact',
-                    label: 'Assistance'
+                    to: '/mon-compte/dossier',
+                    label: 'Mon dossier médical'
                   }, {
                     to: '/notifications',
                     label: 'Notifications',
@@ -466,8 +472,20 @@ export default function Navbar() {
           .mobile-nav-panel { display: none !important; }
         }
         @media (max-width: 767px) {
-          .nav-main-bar { gap: 10px !important; padding: 0 14px !important; }
-          .nav-actions { gap: 10px !important; }
+          .nav-main-bar { gap: 10px !important; padding: 0 14px !important; justify-content: flex-start !important; flex-wrap: nowrap !important; }
+          .nav-actions { gap: 10px !important; margin-left: auto !important; flex-shrink: 0 !important; }
+          /* #nouveau (demande utilisateur, "le HostoConnect de l'entête doit
+             toujours rester à gauche, bonne taille, en responsive") : sur
+             petit écran, le logo "lg" (40px + texte 22px) entrait en
+             compétition avec la pastille solde + l'avatar pour la largeur
+             disponible — jamais de rétrécissement automatique du texte du
+             logo (fontSize fixe posé en JS), donc le logo pouvait déborder
+             et le flex finissait par "recentrer" visuellement la ligne.
+             Rétréci explicitement ici, jamais avec flex-grow/shrink laissés
+             au hasard. */
+          .hosto-logo-icon { width: 26px !important; height: 26px !important; }
+          .hosto-logo-text { font-size: 15px !important; }
+          .wallet-balance-pill { padding: 5px 8px !important; font-size: 12px !important; min-width: 0 !important; }
           /* #nouveau (vraie fusion avatar+hamburger, corrigé — la fusion
              précédente masquait ce menu en CSS sur mobile et rouvrait
              l'ancien panneau hamburger séparé à la place) : un seul menu,
@@ -475,6 +493,26 @@ export default function Navbar() {
              mobile — jamais deux implémentations distinctes à maintenir. */
           .profile-dropdown { position: fixed !important; top: 62px !important; left: 12px !important; right: 12px !important; width: auto !important; max-height: calc(100vh - 80px) !important; overflow-y: auto !important; }
           .dropdown-mobile-search { display: block !important; }
+        }
+        /* #bug (corrigé, retour utilisateur avec capture d'écran réelle sur
+           téléphone) : la ligne complète (logo + solde + dépôt + avatar) ne
+           tenait déjà plus à PARTIR de 375px (iPhone standard), pas
+           seulement sur les très petits écrans comme initialement supposé —
+           mesuré : ~437px de contenu nécessaire pour ~390px de large réel.
+           Un parent en overflow-x:hidden masquait silencieusement le
+           débordement (pastille solde + avatar invisibles, sans barre de
+           défilement) au lieu de le rendre visible comme sur un écran de
+           bureau. Palier remonté à 480px (couvre tous les téléphones en
+           portrait) plutôt que 360px. */
+        @media (max-width: 480px) {
+          .nav-main-bar { gap: 4px !important; padding: 0 8px !important; }
+          .nav-actions { gap: 4px !important; }
+          .hosto-logo-icon { width: 22px !important; height: 22px !important; }
+          .hosto-logo-text { font-size: 12px !important; }
+          .wallet-balance-pill { padding: 3px 5px !important; font-size: 10px !important; }
+          .wallet-deposit-btn { width: 18px !important; height: 18px !important; }
+          .profile-chevron { display: none !important; }
+          .profile-avatar { width: 24px !important; height: 24px !important; font-size: 10px !important; }
         }
       `}</style>
     </>;
