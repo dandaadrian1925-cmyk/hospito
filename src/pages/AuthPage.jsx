@@ -85,6 +85,11 @@ export default function AuthPage() {
         'auth/invalid-email': 'Email invalide'
       };
       toast.error(msgs[err.code] || 'Une erreur est survenue');
+      // #nouveau (demande utilisateur, "partout où on demande un email et un
+      // mot de passe, vider les champs après une tentative") — jamais laisser
+      // un mot de passe erroné (ou celui d'un poste partagé) visible dans le
+      // formulaire.
+      setForm((f) => ({ ...f, email: '', password: '', confirmPassword: '' }));
     } finally {
       setLoading(false);
     }

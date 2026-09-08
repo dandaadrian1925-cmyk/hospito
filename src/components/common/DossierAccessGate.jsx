@@ -56,6 +56,9 @@ export default function DossierAccessGate({ children }) {
         (hasPasswordProvider ? null : messages[e.code])
         || (hasPasswordProvider ? 'Mot de passe incorrect' : 'La reconnexion Google a échoué — réessayez.'),
       );
+      // #nouveau (demande utilisateur, "partout où on demande un email et un
+      // mot de passe, vider les champs après une tentative").
+      setMotDePasse('');
     } finally {
       setLoading(false);
     }

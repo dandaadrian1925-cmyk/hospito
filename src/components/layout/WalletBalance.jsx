@@ -61,6 +61,9 @@ export default function WalletBalance({
       setPwValue('');
     } catch {
       setPwError('Mot de passe incorrect');
+      // #nouveau (demande utilisateur, "partout où on demande un email et un
+      // mot de passe, vider les champs après une tentative").
+      setPwValue('');
     } finally {
       setPwLoading(false);
     }

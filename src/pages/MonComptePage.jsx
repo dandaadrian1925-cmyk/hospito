@@ -192,6 +192,9 @@ function SupprimerCompteRow() {
       navigate('/');
     } catch (e) {
       setErreur(hasPasswordProvider ? 'Mot de passe incorrect' : 'La reconnexion Google a échoué — réessayez.');
+      // #nouveau (demande utilisateur, "partout où on demande un email et un
+      // mot de passe, vider les champs après une tentative").
+      setMotDePasse('');
     } finally {
       setSuppressing(false);
     }
