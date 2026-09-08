@@ -6,6 +6,7 @@ import { db } from '../firebase/config';
 // traitement de ses données, par établissement.
 export const TYPES_DEMANDE_DROIT = [
   { value: 'acces', label: 'Accès à mes données' },
+  { value: 'portabilite', label: 'Portabilité vers un autre établissement' },
   { value: 'rectification', label: 'Rectification de mes données' },
   { value: 'suppression', label: 'Suppression de mes données' },
   { value: 'opposition', label: 'Opposition au traitement' },
