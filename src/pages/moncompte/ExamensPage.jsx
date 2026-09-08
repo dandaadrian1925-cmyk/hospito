@@ -1,11 +1,43 @@
 import { useState, useEffect } from 'react';
-import { FlaskConical, Loader2, Pill, ShoppingCart, Wallet } from 'lucide-react';
+import { FlaskConical, Loader2, Pill, ShoppingCart, Wallet, FileText } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { getMesExamens, getMesLignesPrescription } from '../../services/examensPatientService';
 import { creerFacturePanier, initierPaiementFacture, attendreConfirmationFacture, payerFactureAvecSolde } from '../../services/facturesService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 import { listenWallet } from '../../services/walletService';
+import { getResultatExamenUrl } from '../../supabase/config';
+
+// #nouveau (demande utilisateur, "upload des résultats d'examens") : résout
+// l'URL signée SEULEMENT au clic (jamais au chargement de la liste — le
+// bucket est privé, chaque URL signée expire après 5 min, pas la peine d'en
+// générer une pour un résultat que le patient ne consultera peut-être jamais).
+function BoutonVoirResultat({ path }) {
+  const [ouverture, setOuverture] = useState(false);
+  const ouvrir = async () => {
+    setOuverture(true);
+    try {
+      const urls = await getResultatExamenUrl([path]);
+      const url = urls[path];
+      if (url) window.open(url, '_blank', 'noopener');
+      else toast.error('Fichier introuvable');
+    } catch (err) {
+      toast.error(err.message || "Erreur lors de l'ouverture du fichier");
+    } finally {
+      setOuverture(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={ouvrir}
+      disabled={ouverture}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12.5, fontWeight: 700, color: '#2451C4', background: '#EFF6FF', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer' }}
+    >
+      <FileText style={{ width: 14, height: 14 }} /> {ouverture ? 'Ouverture…' : 'Voir le résultat (fichier)'}
+    </button>
+  );
+}
 
 const TYPES_EXAMEN = {
   laboratoire: 'Laboratoire', imagerie: 'Imagerie médicale',
@@ -167,6 +199,9 @@ function GroupeEtablissement({ etablissementId, etabNom, examens, lignes, solde,
         </div>
         {examen.statut === 'resultat_disponible' && examen.resultat && (
           <p style={{ fontSize: 13, color: 'var(--ink)', marginTop: 8, padding: 10, background: '#F8FAFC', borderRadius: 10 }}>{examen.resultat}</p>
+        )}
+        {examen.statut === 'resultat_disponible' && examen.resultatFichierPath && (
+          <BoutonVoirResultat path={examen.resultatFichierPath} />
         )}
       </div>;
     })}

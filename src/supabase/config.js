@@ -139,6 +139,27 @@ export const getChatSignedUrls = async (bucket, convId, paths) => {
   if (!res.ok) throw new Error(data.error || 'Erreur de génération des URLs signées');
   return data.signedUrls;
 };
+// #nouveau (demande utilisateur, "upload des résultats d'examens") : URLs
+// signées pour le bucket privé "resultats_examens" — le patient ne peut lire
+// que le résultat de SON PROPRE examen (vérifié côté serveur, voir
+// hospito-get-resultat-examen-url), jamais un montant/chemin arbitraire.
+export const getResultatExamenUrl = async paths => {
+  if (!paths || paths.length === 0) return {};
+  const idToken = await auth.currentUser.getIdToken();
+  const res = await fetch(`${supabaseUrl}/functions/v1/hospito-get-resultat-examen-url`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${supabaseAnonKey}`,
+      'apikey': supabaseAnonKey,
+      'X-Firebase-Token': idToken
+    },
+    body: JSON.stringify({ paths })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erreur de génération des URLs signées');
+  return data.signedUrls;
+};
 export const pousserNotification = async notificationId => {
   try {
     if (!auth.currentUser) return;
