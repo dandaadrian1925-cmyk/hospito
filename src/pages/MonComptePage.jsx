@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound, FlaskConical } from 'lucide-react';
+import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound, FlaskConical, Pill } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -9,6 +9,7 @@ import { uploadFile, deleteFile } from '../supabase/config';
 import { logout, verifierEligibiliteSuppression, reauthentifierMotDePasse, reauthentifierGoogle, supprimerCompte, resetPassword } from '../services/authService';
 import { syncProfilPublic } from '../services/profilPublicService';
 import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../services/settingsService';
+import { getTraitementsEnCours } from '../services/examensPatientService';
 import RendezVousPage from './moncompte/RendezVousPage';
 import DossierPage from './moncompte/DossierPage';
 import DossierAccessGate from '../components/common/DossierAccessGate';
@@ -301,6 +302,11 @@ function AccountHome() {
   const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
   const [photoPreviewOpen, setPhotoPreviewOpen] = useState(false);
   const photoMenuRef = useRef(null);
+  const [traitements, setTraitements] = useState([]);
+  useEffect(() => {
+    if (!user) return;
+    getTraitementsEnCours(user.uid).then(setTraitements).catch(() => setTraitements([]));
+  }, [user]);
   // #retour utilisateur : menu à trois points au lieu de deux boutons flottants
   // (caméra + croix) — se ferme au clic en dehors.
   useEffect(() => {
@@ -619,6 +625,24 @@ function AccountHome() {
       }}>
             Vérifier →
           </Link>
+        </div>}
+
+      {traitements.length > 0 && <div style={{
+      background: '#EFF6FF',
+      border: '1.5px solid #BFDBFE',
+      borderRadius: 14,
+      padding: '14px 16px'
+    }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Pill style={{ width: 16, height: 16, color: 'var(--blue)', flexShrink: 0 }} />
+            <p style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>Traitement(s) en cours — rappel</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {traitements.map(t => <p key={t.id} style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+              <strong>{t.nom}</strong> — {t.dose} {t.frequence ? `· ${t.frequence}` : ''}
+            </p>)}
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--ink-4)', marginTop: 8 }}>Poursuivez votre traitement selon la prescription de votre médecin.</p>
         </div>}
 
       {}
