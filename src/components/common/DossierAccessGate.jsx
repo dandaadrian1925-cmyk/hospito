@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getRedirectResult } from 'firebase/auth';
 import { Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { auth } from '../../firebase/config';
 import { reauthentifierMotDePasse, reauthentifierGoogle } from '../../services/authService';
 
 // #nouveau (demande utilisateur, "dans tous les cas pour accéder au dossier
@@ -20,6 +22,21 @@ export default function DossierAccessGate({ children }) {
   const [loading, setLoading] = useState(false);
   const hasPasswordProvider = user?.providerData?.some((p) => p.providerId === 'password');
 
+  // #bug (retour utilisateur, "accessible sur ordinateur, pas sur
+  // téléphone") : sur mobile, le SDK Firebase peut basculer en SILENCE
+  // reauthenticateWithPopup vers un plein redirect (comportement interne
+  // selon le navigateur détecté, jamais documenté comme un choix explicite
+  // de ce code) — la page revient alors d'un aller-retour Google SANS que
+  // le composant n'ait jamais reçu de résultat de popup, donc jamais
+  // déverrouillé. getRedirectResult() récupère ce résultat au retour, quel
+  // que soit l'écran d'où le redirect est parti (recréé à l'identique par
+  // React Router après le retour sur la même URL /mon-compte/dossier).
+  useEffect(() => {
+    getRedirectResult(auth).then((result) => {
+      if (result) setDeverrouille(true);
+    }).catch(() => {});
+  }, []);
+
   if (deverrouille) return children;
 
   const confirmer = async () => {
@@ -30,7 +47,15 @@ export default function DossierAccessGate({ children }) {
       else await reauthentifierGoogle();
       setDeverrouille(true);
     } catch (e) {
-      setErreur(hasPasswordProvider ? 'Mot de passe incorrect' : 'La reconnexion Google a échoué — réessayez.');
+      const messages = {
+        'auth/popup-blocked': 'Fenêtre Google bloquée par votre navigateur — autorisez les popups pour ce site puis réessayez.',
+        'auth/popup-closed-by-user': 'Fenêtre Google fermée avant la fin — réessayez.',
+        'auth/cancelled-popup-request': 'Réessayez — une autre demande de connexion était déjà en cours.',
+      };
+      setErreur(
+        (hasPasswordProvider ? null : messages[e.code])
+        || (hasPasswordProvider ? 'Mot de passe incorrect' : 'La reconnexion Google a échoué — réessayez.'),
+      );
     } finally {
       setLoading(false);
     }
