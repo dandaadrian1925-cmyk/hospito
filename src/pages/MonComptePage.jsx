@@ -10,6 +10,7 @@ import { logout, verifierEligibiliteSuppression, reauthentifierMotDePasse, reaut
 import { syncProfilPublic } from '../services/profilPublicService';
 import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../services/settingsService';
 import { getTraitementsEnCours } from '../services/examensPatientService';
+import { getMesRendezVousAVenir } from '../services/demandesRendezVousService';
 import RendezVousPage from './moncompte/RendezVousPage';
 import DossierPage from './moncompte/DossierPage';
 import DossierAccessGate from '../components/common/DossierAccessGate';
@@ -303,9 +304,11 @@ function AccountHome() {
   const [photoPreviewOpen, setPhotoPreviewOpen] = useState(false);
   const photoMenuRef = useRef(null);
   const [traitements, setTraitements] = useState([]);
+  const [rdvAVenir, setRdvAVenir] = useState([]);
   useEffect(() => {
     if (!user) return;
     getTraitementsEnCours(user.uid).then(setTraitements).catch(() => setTraitements([]));
+    getMesRendezVousAVenir(user.uid).then(setRdvAVenir).catch(() => setRdvAVenir([]));
   }, [user]);
   // #retour utilisateur : menu à trois points au lieu de deux boutons flottants
   // (caméra + croix) — se ferme au clic en dehors.
@@ -625,6 +628,24 @@ function AccountHome() {
       }}>
             Vérifier →
           </Link>
+        </div>}
+
+      {rdvAVenir.length > 0 && <div style={{
+      background: '#F0FDF4',
+      border: '1.5px solid #A7F3D0',
+      borderRadius: 14,
+      padding: '14px 16px'
+    }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <CalendarPlus style={{ width: 16, height: 16, color: '#059669', flexShrink: 0 }} />
+            <p style={{ fontWeight: 700, fontSize: 13, color: 'var(--ink)' }}>Rendez-vous à venir — rappel</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {rdvAVenir.map(d => <p key={d.id} style={{ fontSize: 12.5, color: 'var(--ink-2)', lineHeight: 1.5 }}>
+              <strong>{d.dateHeure.toDate().toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}</strong>
+              {d.serviceNom ? ` — ${d.serviceNom}` : ''}{d.medecinNom ? ` (Dr ${d.medecinNom})` : ''}
+            </p>)}
+          </div>
         </div>}
 
       {traitements.length > 0 && <div style={{

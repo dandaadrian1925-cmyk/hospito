@@ -33,3 +33,18 @@ export async function getMesDemandesRdv(patientUid) {
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+
+// Rappels automatiques de rendez-vous (§4.4) — même limite d'infrastructure
+// que les rappels de médicaments (aucune tâche planifiée dans ce projet) :
+// pas de notification poussée exactement 24h avant, mais un rappel fiable et
+// honnête à chaque ouverture de l'app pour tout RDV confirmé dans les 48h.
+const FENETRE_RAPPEL_MS = 48 * 3600 * 1000;
+export async function getMesRendezVousAVenir(patientUid) {
+  const demandes = await getMesDemandesRdv(patientUid);
+  const maintenant = Date.now();
+  return demandes
+    .filter((d) => d.statut === 'confirme' && d.dateHeure?.toDate)
+    .map((d) => ({ ...d, dateHeureMs: d.dateHeure.toDate().getTime() }))
+    .filter((d) => d.dateHeureMs >= maintenant && d.dateHeureMs <= maintenant + FENETRE_RAPPEL_MS)
+    .sort((a, b) => a.dateHeureMs - b.dateHeureMs);
+}
