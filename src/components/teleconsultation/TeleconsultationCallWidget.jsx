@@ -13,6 +13,12 @@ export default function TeleconsultationCallWidget({ demandeId }) {
   const [statut, setStatut] = useState('idle'); // idle | connecting | active
   const [muted, setMuted] = useState(false);
   const [cameraOff, setCameraOff] = useState(false);
+  // Salle d'attente virtuelle (§4.14) : le patient rejoint le canal seul
+  // (statut 'active') mais reste sur un écran d'attente tant que le médecin
+  // n'est pas détecté dans le canal (événement Agora natif 'user-published')
+  // — pas de nouveau mécanisme de présence à inventer, juste exploiter celui
+  // qui existe déjà.
+  const [autrePartiePresente, setAutrePartiePresente] = useState(false);
   const clientRef = useRef(null);
   const localAudioRef = useRef(null);
   const localVideoRef = useRef(null);
@@ -33,6 +39,7 @@ export default function TeleconsultationCallWidget({ demandeId }) {
     setStatut('idle');
     setMuted(false);
     setCameraOff(false);
+    setAutrePartiePresente(false);
   };
 
   const rejoindre = async () => {
@@ -43,9 +50,11 @@ export default function TeleconsultationCallWidget({ demandeId }) {
       clientRef.current = client;
       client.on('user-published', async (user, mediaType) => {
         await client.subscribe(user, mediaType);
+        setAutrePartiePresente(true);
         if (mediaType === 'video' && remoteVideoElRef.current) user.videoTrack?.play(remoteVideoElRef.current);
         if (mediaType === 'audio') user.audioTrack?.play();
       });
+      client.on('user-left', () => setAutrePartiePresente(false));
       await client.join(appId, channelName, token, uid);
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
       localAudioRef.current = audioTrack;
@@ -87,6 +96,13 @@ export default function TeleconsultationCallWidget({ demandeId }) {
           <p style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13 }}>
             Connexion…
           </p>
+        )}
+        {statut === 'active' && !autrePartiePresente && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(17,17,17,0.85)', color: 'white', textAlign: 'center', padding: 16 }}>
+            <div style={{ width: 36, height: 36, border: '3px solid rgba(255,255,255,0.25)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+            <p style={{ fontSize: 13, fontWeight: 700 }}>Salle d'attente virtuelle</p>
+            <p style={{ fontSize: 12, opacity: 0.75 }}>Vous êtes connecté(e) — en attente que le médecin rejoigne l'appel.</p>
+          </div>
         )}
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: 10, padding: 12, background: '#1a1a1a' }}>
