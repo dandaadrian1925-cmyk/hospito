@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import DossierMedicalView from '../components/dossier/DossierMedicalView';
+import { TEXTE_CONSENTEMENT_PARTAGE, getMonConsentement, signerConsentement } from '../services/consentementsService';
 import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVousService';
 import { listerSpecialistesDuService } from '../services/planningService';
@@ -675,6 +676,118 @@ function TabAvis({ etablissementId, patientUid, patientNom }) {
   );
 }
 
+// Pavé de signature manuscrite (canvas) — capturé en PNG (quelques Ko pour
+// un simple tracé noir sur blanc), stocké directement dans le document
+// Firestore (pas de bucket Supabase dédié : proportionné à ce cas d'usage,
+// jamais pensé pour une pièce jointe volumineuse).
+function SignaturePad({ onChange }) {
+  const canvasRef = useRef(null);
+  const drawingRef = useRef(false);
+
+  const getPos = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const point = e.touches ? e.touches[0] : e;
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  };
+  const start = (e) => {
+    drawingRef.current = true;
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+  const move = (e) => {
+    if (!drawingRef.current) return;
+    e.preventDefault();
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.strokeStyle = '#1E293B';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+  const end = () => {
+    if (!drawingRef.current) return;
+    drawingRef.current = false;
+    onChange(canvasRef.current.toDataURL('image/png'));
+  };
+  const effacer = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    onChange(null);
+  };
+  useEffect(() => { effacer(); }, []);
+
+  return (
+    <div>
+      <canvas
+        ref={canvasRef} width={400} height={140}
+        style={{ width: '100%', maxWidth: 400, height: 140, border: '1.5px dashed #CBD5E1', borderRadius: 10, touchAction: 'none', cursor: 'crosshair', background: 'white' }}
+        onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
+        onTouchStart={start} onTouchMove={move} onTouchEnd={end}
+      />
+      <button type="button" onClick={effacer} style={{ marginTop: 6, fontSize: 12, color: 'var(--ink-3)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}>
+        Effacer
+      </button>
+    </div>
+  );
+}
+
+// Signature électronique du consentement de partage du dossier (§4.13) — un
+// par établissement, jamais réutilisable pour un autre (le patient peut
+// consulter plusieurs hôpitaux, chacun demande sa propre autorisation).
+function ConsentementSignature({ etablissementId, patientUid, patientNom }) {
+  const [consentement, setConsentement] = useState(undefined);
+  const [signatureDataUrl, setSignatureDataUrl] = useState(null);
+  const [signing, setSigning] = useState(false);
+
+  const charger = useCallback(() => {
+    getMonConsentement(patientUid, etablissementId).then(setConsentement).catch(() => setConsentement(null));
+  }, [patientUid, etablissementId]);
+  useEffect(() => { charger(); }, [charger]);
+
+  const signer = async () => {
+    if (!signatureDataUrl) { toast.error('Signez dans le cadre ci-dessus avant de valider'); return; }
+    setSigning(true);
+    try {
+      await signerConsentement({ patientUid, patientNom, etablissementId, signatureDataUrl });
+      toast.success('Consentement signé');
+      charger();
+    } catch (e) {
+      toast.error(e.message || 'Erreur');
+    } finally {
+      setSigning(false);
+    }
+  };
+
+  if (consentement === undefined) return null;
+
+  if (consentement) {
+    return (
+      <div style={{ background: '#F0FDF4', border: '1.5px solid #A7F3D0', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>✓ Consentement de partage signé</p>
+        <p style={{ fontSize: 12, color: '#059669', marginTop: 2 }}>
+          Le {consentement.signeAt?.toDate ? consentement.signeAt.toDate().toLocaleDateString('fr-FR') : '—'}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: 'white', border: '1.5px solid #F1F5F9', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>Consentement de partage du dossier</p>
+      <p style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>{TEXTE_CONSENTEMENT_PARTAGE}</p>
+      <SignaturePad onChange={setSignatureDataUrl} />
+      <button onClick={signer} disabled={signing} className="btn-primary" style={{ marginTop: 12 }}>
+        {signing ? 'Signature…' : "Je signe et j'accepte"}
+      </button>
+    </div>
+  );
+}
+
 const LABEL_TYPE_INCIDENT = { harcelement: 'Harcèlement', vol: 'Vol', agression: 'Agression', autre: 'Autre' };
 
 function TabSecurite({ etablissementId, patientUid }) {
@@ -1034,7 +1147,12 @@ export default function EtablissementSpacePage() {
           initialServiceId={serviceRdvPreselectionne}
         />
       )}
-      {tab === 'dossier' && <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />}
+      {tab === 'dossier' && (
+        <>
+          <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
+          <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
+        </>
+      )}
       {tab === 'messagerie' && (
         <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
       )}
