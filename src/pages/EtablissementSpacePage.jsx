@@ -830,7 +830,7 @@ function TempsAttenteBadge({ etablissementId }) {
   return (
     <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-2)', padding: '6px 12px', borderRadius: 20, fontSize: 12.5, color: 'var(--ink-2)', marginBottom: 20 }}>
       <Clock style={{ width: 13, height: 13, color: 'var(--ink-4)' }} />
-      Temps d'attente moyen aux urgences : ~{temps.tempsAttenteMoyenMinutes} min
+      Temps d'attente moyen en consultation : ~{temps.tempsAttenteMoyenMinutes} min
     </div>
   );
 }
