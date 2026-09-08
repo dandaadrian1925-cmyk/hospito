@@ -145,7 +145,8 @@ export default function Navbar() {
           textDecoration: 'none',
           flexShrink: 0
         }}>
-            <HostoConnectLogo size="lg" />
+            <span className="logo-desktop"><HostoConnectLogo size="lg" /></span>
+            <span className="logo-mobile" style={{ display: 'none' }}><HostoConnectLogo size="sm" /></span>
           </Link>
 
           {}
@@ -478,13 +479,15 @@ export default function Navbar() {
              toujours rester à gauche, bonne taille, en responsive") : sur
              petit écran, le logo "lg" (40px + texte 22px) entrait en
              compétition avec la pastille solde + l'avatar pour la largeur
-             disponible — jamais de rétrécissement automatique du texte du
-             logo (fontSize fixe posé en JS), donc le logo pouvait déborder
-             et le flex finissait par "recentrer" visuellement la ligne.
-             Rétréci explicitement ici, jamais avec flex-grow/shrink laissés
-             au hasard. */
-          .hosto-logo-icon { width: 26px !important; height: 26px !important; }
-          .hosto-logo-text { font-size: 15px !important; }
+             disponible. Corrigé avec un second logo taille "md" (32px +
+             texte 18px, un des presets déjà existants de HostoConnectLogo)
+             substitué au premier en CSS pur — jamais un rétrécissement
+             arbitraire au pixel près, une vraie taille "moyenne" nommée.
+             #retour utilisateur ("c'est encore trop petit") : un premier
+             essai au pixel (22px/12px) rendait le logo illisible — cette
+             version utilise directement le preset "md" du composant. */
+          .logo-desktop { display: none !important; }
+          .logo-mobile { display: inline-flex !important; }
           .wallet-balance-pill { padding: 5px 8px !important; font-size: 12px !important; min-width: 0 !important; }
           /* #nouveau (vraie fusion avatar+hamburger, corrigé — la fusion
              précédente masquait ce menu en CSS sur mobile et rouvrait
@@ -505,14 +508,21 @@ export default function Navbar() {
            bureau. Palier remonté à 480px (couvre tous les téléphones en
            portrait) plutôt que 360px. */
         @media (max-width: 480px) {
-          .nav-main-bar { gap: 4px !important; padding: 0 8px !important; }
-          .nav-actions { gap: 4px !important; }
-          .hosto-logo-icon { width: 22px !important; height: 22px !important; }
-          .hosto-logo-text { font-size: 12px !important; }
-          .wallet-balance-pill { padding: 3px 5px !important; font-size: 10px !important; }
-          .wallet-deposit-btn { width: 18px !important; height: 18px !important; }
+          .nav-main-bar { gap: 3px !important; padding: 0 6px !important; }
+          .nav-actions { gap: 3px !important; }
+          .wallet-balance-pill { padding: 2px 4px !important; font-size: 10px !important; }
+          .wallet-deposit-btn { width: 16px !important; height: 16px !important; }
           .profile-chevron { display: none !important; }
-          .profile-avatar { width: 24px !important; height: 24px !important; font-size: 10px !important; }
+          .profile-avatar { width: 22px !important; height: 22px !important; font-size: 9px !important; }
+        }
+        /* #retour utilisateur (mesuré : logo "sm" + pastille solde + avatar
+           ne tiennent pas en dessous de ~365px de large réel, ex. iPhone SE
+           1ère génération) : le raccourci "dépôt rapide" (+) n'est qu'un
+           raccourci vers /wallet, jamais la seule façon de déposer — masqué
+           ici plutôt que de rétrécir encore le logo (déjà ajusté deux fois
+           suite au retour "trop petit"). */
+        @media (max-width: 364px) {
+          .wallet-deposit-btn { display: none !important; }
         }
       `}</style>
     </>;
