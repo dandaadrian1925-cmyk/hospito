@@ -53,6 +53,11 @@ export const creerFactureExamen = async (examen) => {
     etablissementId: examen.etablissementId,
     patientUid: examen.patientUid,
     examenId: examen.id,
+    // #nouveau (demande utilisateur, "Facturation filtrée par service géré") :
+    // copié depuis l'examen (lui-même dérivé du médecin prescripteur,
+    // hospito-medecin::demanderExamen) — jamais choisi par le patient.
+    serviceId: examen.serviceId || null,
+    serviceNom: examen.serviceNom || null,
     libelle: examen.nature,
     montant: examen.montant,
     statut: 'en_attente',
