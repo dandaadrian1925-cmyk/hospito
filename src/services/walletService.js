@@ -1,31 +1,11 @@
 import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp, runTransaction, query, where, orderBy, getDocs, increment, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '../firebase/config';
 import { creerNotification } from './notificationsService';
-import { getSettings } from './settingsService';
 import { getSessionIdLocal } from './authService';
-export const COMMISSION_VENTE = 0.05;
-export const RETRAIT_MINIMUM = 1000;
 const SUPABASE_FUNCTION_URL = 'https://cekiqtkdgjgawxxerjdf.supabase.co/functions/v1/hospito-dynamic-processor';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const WALLET_TYPES = {
   DEPOT: 'depot',
-  RETRAIT: 'retrait',
-  COMMISSION_PUB: 'commission_publication',
-  VENTE: 'credit_vente',
-  ACHAT: 'achat_commande',
-  REMBOURSEMENT: 'remboursement_commande',
-  BOOST: 'boost_annonce',
-  FLASH: 'flash_annonce',
-  CREDIT_PARRAINAGE: 'credit_parrainage',
-  ACHAT_LIVRAISON: 'achat_livraison',
-  LIVRAISON: 'credit_livraison',
-  TRANSFERT_PARRAINAGE: 'transfert_parrainage',
-  // #nouveau (flux retour, litige gagné par l'acheteur) : débit vendeur,
-  // double des frais de livraison déjà figés sur la commande.
-  RETOUR_LIVRAISON: 'retour_livraison',
-  // #nouveau (demande utilisateur, "Vendeur Pro") : pass à durée fixe,
-  // paiement ponctuel — même famille que BOOST/FLASH, pas un abonnement.
-  VENDEUR_PRO: 'vendeur_pro',
   // #nouveau (demande utilisateur, "c'est avec le solde du compte qu'on peut
   // payer les factures et autres") : débit du solde pour une facture
   // hospitalière (HostoConnect) — voir facturesService.js::payerFactureAvecSolde,
@@ -94,7 +74,7 @@ export const getTransactions = async userId => {
     ...d.data()
   }));
 };
-const TYPES_BANCAIRES = [WALLET_TYPES.DEPOT, WALLET_TYPES.RETRAIT];
+const TYPES_BANCAIRES = [WALLET_TYPES.DEPOT];
 export const getTransactionsBancaires = async userId => {
   const all = await getTransactions(userId);
   return all.filter(t => TYPES_BANCAIRES.includes(t.type));
@@ -316,177 +296,21 @@ export const verifierEcartSoldePropre = async userId => {
   if (!userSnap.exists() || userSnap.data().soldeSuspect) return;
   const txSnap = await getDocs(query(collection(db, 'transactions'), where('userId', '==', userId)));
   let attenduSolde = 0;
-  let attenduParrainage = 0;
+  // Ignore les lignes historiques sourceWallet:'parrainage' (fonctionnalité
+  // retirée) — solde/{parrainage} n'est plus jamais renseigné pour un nouveau
+  // compte, mais un compte déjà existant peut encore en porter d'anciennes.
   for (const t of txSnap.docs.map(d => d.data())) {
+    if (t.sourceWallet === 'parrainage') continue;
     if (t.type === WALLET_TYPES.DEPOT && t.statut !== 'completed') continue;
-    if (t.type === WALLET_TYPES.RETRAIT && t.statut === 'rejete') continue;
-    if (t.sourceWallet === 'parrainage') attenduParrainage += t.montant || 0;else attenduSolde += t.montant || 0;
+    attenduSolde += t.montant || 0;
   }
   const soldeReel = userSnap.data().solde || 0;
-  const parrainageReel = userSnap.data().soldeParrainage || 0;
-  if (soldeReel !== attenduSolde || parrainageReel !== attenduParrainage) {
+  if (soldeReel !== attenduSolde) {
     await updateDoc(doc(db, 'users', userId), {
       soldeSuspect: true
     }).catch(() => {});
   }
 };
-export const initierRetrait = async (userId, montant, phoneNumber, operateur) => {
-  const {
-    retraitMinimum,
-    retraitMaximum
-  } = await getSettings();
-  if (montant < retraitMinimum) throw new Error(`Montant minimum : ${retraitMinimum} XAF`);
-  if (retraitMaximum && montant > retraitMaximum) throw new Error(`Montant maximum par retrait : ${retraitMaximum} XAF`);
-  // #nouveau (demande utilisateur, "avant qu'un retrait ne soit possible,
-  // refaire le calcul pour voir si le solde est faux") : verifierEcartSoldePropre
-  // n'était déclenché que passivement au chargement de WalletPage — un compte
-  // pouvait donc tenter un retrait avant ce recalcul (ou entre deux visites de
-  // la page). Recalcul EXPLICITE juste avant, jamais après — s'il détecte un
-  // écart, il gèle soldeSuspect (self-service, false→true uniquement, cf.
-  // firestore.rules), et la vérification déjà présente dans la transaction
-  // ci-dessous (userSnap.data()?.soldeSuspect) bloque alors le retrait avec
-  // le message existant. La vraie déconnexion suit via le listener temps réel
-  // déjà en place (AuthContext), pas quelque chose à refaire ici.
-  await verifierEcartSoldePropre(userId);
-  await runTransaction(db, async tx => {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await tx.get(userRef);
-    if (userSnap.data()?.soldeSuspect) throw new Error('COMPTE_SUSPENDU_VERIFICATION');
-    const solde = userSnap.data()?.solde || 0;
-    if (solde < montant) throw new Error(`Solde insuffisant (${solde} XAF disponibles)`);
-    tx.update(userRef, {
-      solde: increment(-montant)
-    });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId,
-      type: WALLET_TYPES.RETRAIT,
-      montant: -montant,
-      sourceWallet: 'principal',
-      phoneNumber,
-      operateur,
-      statut: 'en_cours',
-      description: `Retrait vers ${phoneNumber} (${operateur})`,
-      createdAt: serverTimestamp()
-    });
-  });
-  await creerNotification({
-    userId,
-    type: 'retrait',
-    titre: 'Demande de retrait envoyée',
-    message: `Votre demande de retrait de ${montant.toLocaleString('fr-FR')} XAF vers ${phoneNumber} est en cours de traitement.`,
-    link: '/wallet'
-  });
-};
-// #nouveau (refonte parrainage v2) : transfert self-service du solde de
-// parrainage vers le solde principal — ensuite retirable comme n'importe quel
-// solde normal (retraitMinimum/retraitMaximum, initierRetrait ci-dessus),
-// aucun nouveau chemin de retrait à créer. Deux lignes de grand livre
-// appariées (une par wallet) pour que la réconciliation (verifierEcartSoldePropre)
-// reste cohérente, même idiome que achat_commande côté firestore.rules.
-export const transfererSoldeParrainage = async (userId, montant) => {
-  const { transfertParrainageMinimum } = await getSettings();
-  if (montant < (transfertParrainageMinimum ?? 5000)) {
-    throw new Error(`Montant minimum : ${transfertParrainageMinimum ?? 5000} XAF`);
-  }
-  await runTransaction(db, async tx => {
-    const userRef = doc(db, 'users', userId);
-    const userSnap = await tx.get(userRef);
-    if (userSnap.data()?.soldeSuspect) throw new Error('COMPTE_SUSPENDU_VERIFICATION');
-    const soldeParrainage = userSnap.data()?.soldeParrainage || 0;
-    if (soldeParrainage < montant) throw new Error(`Solde de parrainage insuffisant (${soldeParrainage} XAF disponibles)`);
-    tx.update(userRef, {
-      soldeParrainage: increment(-montant),
-      solde: increment(montant)
-    });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId,
-      type: WALLET_TYPES.TRANSFERT_PARRAINAGE,
-      montant: -montant,
-      sourceWallet: 'parrainage',
-      description: 'Transfert vers le solde principal',
-      createdAt: serverTimestamp()
-    });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId,
-      type: WALLET_TYPES.TRANSFERT_PARRAINAGE,
-      montant,
-      sourceWallet: 'principal',
-      description: 'Transfert depuis le solde de parrainage',
-      createdAt: serverTimestamp()
-    });
-  });
-};
-// #nouveau (campagne de lancement) : sourceWallet 'bonus' possible.
-export const payerFraisLivraison = async (commandeId, acheteurId, sourceWallet = 'principal') => {
-  const commandeRef = doc(db, 'commandes', commandeId);
-  const acheteurRef = doc(db, 'users', acheteurId);
-  const champSolde = sourceWallet === 'bonus' ? 'soldeBonus' : 'solde';
-  let montantPaye = 0;
-  let titreAnnonce = '';
-  let vendeurId = null;
-  let livreurCollecteId = null;
-  let livreurLivraisonId = null;
-  await runTransaction(db, async tx => {
-    const [commandeSnap, acheteurSnap] = await Promise.all([tx.get(commandeRef), tx.get(acheteurRef)]);
-    if (!commandeSnap.exists()) throw new Error('COMMANDE_INTROUVABLE');
-    const commande = commandeSnap.data();
-    if (commande.acheteurId !== acheteurId) throw new Error('COMMANDE_INVALIDE');
-    if (commande.statut !== 'prix_propose') throw new Error('STATUT_INVALIDE');
-    const montant = (commande.fraisLivraison || 0) + (commande.interVilles ? commande.fraisLivraisonInterVilles || 0 : 0);
-    const solde = acheteurSnap.data()?.[champSolde] || 0;
-    if (montant > 0 && solde < montant) throw new Error('SOLDE_INSUFFISANT');
-    tx.update(acheteurRef, {
-      [champSolde]: increment(-montant)
-    });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId: acheteurId,
-      type: WALLET_TYPES.ACHAT_LIVRAISON,
-      montant: -montant,
-      sourceWallet,
-      commandeId,
-      description: `Frais de livraison : ${commande.titreAnnonce || 'commande'}`,
-      createdAt: serverTimestamp()
-    });
-    const historique = commande.historiqueStatuts || [];
-    historique.push({
-      statut: 'livreur_assigne',
-      date: new Date().toISOString()
-    });
-    tx.update(commandeRef, {
-      statut: 'livreur_assigne',
-      historiqueStatuts: historique,
-      updatedAt: serverTimestamp(),
-      // #sécurité (corrigé, audit) : figé au paiement, jamais réévalué — voir
-      // sourceWalletAchat plus haut, même principe (firestore.rules,
-      // refundChampsCorrects).
-      sourceWalletLivraison: sourceWallet
-    });
-    montantPaye = montant;
-    titreAnnonce = commande.titreAnnonce || '';
-    vendeurId = commande.vendeurId;
-    livreurCollecteId = commande.livreurCollecteId || null;
-    livreurLivraisonId = commande.livreurLivraisonId || null;
-  });
-  if (vendeurId) {
-    await creerNotification({
-      userId: vendeurId,
-      type: 'commande',
-      titre: 'Livraison confirmée',
-      message: `L'acheteur a payé les frais de livraison pour "${titreAnnonce}" — le livreur va venir chercher l'article.`,
-      link: `/commande/${commandeId}`
-    });
-  }
-  const livreursANotifier = new Set([livreurCollecteId, livreurLivraisonId].filter(Boolean));
-  await Promise.all([...livreursANotifier].map(livreurId => creerNotification({
-    userId: livreurId,
-    type: 'commande',
-    titre: 'Frais de livraison payés',
-    message: `L'acheteur a payé les frais pour "${titreAnnonce}" — vous pouvez récupérer l'article.`,
-    link: `/commandes/${commandeId}`
-  }).catch(e => console.error('Notification livreur (paiement frais) échouée :', e))));
-  return montantPaye;
-};
-
 // #nouveau (flux retour, litige gagné par l'acheteur, demande utilisateur
 // "le vendeur va payer doublement les frais de transport pour aller
 // récupérer l'article et lui remettre. Rien à faire quand il aura payé les
@@ -506,112 +330,4 @@ export const payerFraisLivraison = async (commandeId, acheteurId, sourceWallet =
 // reçu sa commande") : même générateur que le code de remise normal
 // (commandesService.js, non exporté — copié ici pour éviter une dépendance
 // croisée entre les deux services).
-const genererCodeRetour = () => String(Math.floor(1000 + Math.random() * 9000));
-export const payerRetourLivraison = async (commandeId, vendeurId) => {
-  const commandeRef = doc(db, 'commandes', commandeId);
-  const vendeurRef = doc(db, 'users', vendeurId);
-  const codeRetourRef = doc(db, 'commandes', commandeId, 'prive', 'retour_remise');
-  const codeRetour = genererCodeRetour();
-  let montantPaye = 0;
-  let titreAnnonce = '';
-  let retourLivreurId = null;
-  await runTransaction(db, async tx => {
-    const [commandeSnap, vendeurSnap] = await Promise.all([tx.get(commandeRef), tx.get(vendeurRef)]);
-    if (!commandeSnap.exists()) throw new Error('COMMANDE_INTROUVABLE');
-    const commande = commandeSnap.data();
-    if (commande.vendeurId !== vendeurId) throw new Error('COMMANDE_INVALIDE');
-    if (commande.statut !== 'annule' || !commande.retourEligible) throw new Error('RETOUR_NON_ELIGIBLE');
-    if (commande.retourStatut) throw new Error('RETOUR_DEJA_PAYE');
-    const montant = 2 * ((commande.fraisLivraison || 0) + (commande.interVilles ? commande.fraisLivraisonInterVilles || 0 : 0));
-    const solde = vendeurSnap.data()?.solde || 0;
-    if (montant > 0 && solde < montant) throw new Error('SOLDE_INSUFFISANT');
-    tx.update(vendeurRef, {
-      solde: increment(-montant),
-      commandeId
-    });
-    tx.set(codeRetourRef, { code: codeRetour, createdAt: serverTimestamp() });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId: vendeurId,
-      type: WALLET_TYPES.RETOUR_LIVRAISON,
-      montant: -montant,
-      sourceWallet: 'principal',
-      commandeId,
-      description: `Retour livraison (double frais) : ${commande.titreAnnonce || 'commande'}`,
-      createdAt: serverTimestamp()
-    });
-    const livreurId = commande.livreurLivraisonId || commande.livreurCollecteId;
-    const historique = commande.retourHistorique || [];
-    historique.push({ statut: 'paye', date: new Date().toISOString() });
-    tx.update(commandeRef, {
-      retourStatut: 'paye',
-      retourLivreurId: livreurId,
-      retourFraisPayes: montant,
-      retourHistorique: historique,
-      updatedAt: serverTimestamp()
-    });
-    montantPaye = montant;
-    titreAnnonce = commande.titreAnnonce || '';
-    retourLivreurId = livreurId;
-  });
-  if (retourLivreurId) {
-    await creerNotification({
-      userId: retourLivreurId,
-      type: 'commande',
-      titre: 'Retour à effectuer',
-      message: `Le vendeur a payé le retour pour "${titreAnnonce}" — allez récupérer le colis chez l'acheteur.`,
-      // #bug (corrigé) : /commandes/{id} (maket-livreur) est la page de
-      // livraison normale — un retour a sa propre page dédiée (/retours/{id},
-      // RetourDetailPage), jamais atteinte depuis cette notification jusqu'ici.
-      link: `/retours/${commandeId}`
-    }).catch(e => console.error('Notification livreur (retour payé) échouée :', e));
-  }
-  return montantPaye;
-};
-
-// #nouveau (demande utilisateur, "Vendeur Pro") : pass à durée fixe, paiement
-// ponctuel — même famille que boosterAnnonce (annoncesService.js), mais sur
-// le profil du vendeur plutôt qu'une annonce précise. Rachat AVANT expiration
-// = prolonge depuis l'expiration actuelle (aucun jour perdu) ; racheté APRÈS
-// expiration = repart de maintenant.
-// #nouveau (campagne de lancement) : sourceWallet 'bonus' possible, même
-// principe que payerEtActiver (annoncesService.js).
-export const acheterVendeurPro = async (uid, sourceWallet = 'principal') => {
-  const settings = await getSettings();
-  const prix = settings.vendeurProPrix ?? 5000;
-  const dureeJours = settings.vendeurProDureeJours ?? 30;
-  const champSolde = sourceWallet === 'bonus' ? 'soldeBonus' : 'solde';
-  const userRef = doc(db, 'users', uid);
-  let nouvelleExpiry = null;
-  await runTransaction(db, async tx => {
-    const snap = await tx.get(userRef);
-    if (!snap.exists()) throw new Error('COMPTE_INTROUVABLE');
-    const data = snap.data();
-    if (data.role && data.role !== 'patient') throw new Error('ROLE_NON_ELIGIBLE');
-    if (!data.cniVerifie) throw new Error('CNI_NON_VERIFIEE');
-    const solde = data[champSolde] || 0;
-    if (solde < prix) throw new Error('SOLDE_INSUFFISANT');
-    const expiryActuelle = data.vendeurProExpiry?.toDate?.();
-    const depart = expiryActuelle && expiryActuelle.getTime() > Date.now() ? expiryActuelle.getTime() : Date.now();
-    nouvelleExpiry = new Date(depart + dureeJours * 24 * 60 * 60 * 1000);
-    tx.update(userRef, {
-      [champSolde]: increment(-prix),
-      vendeurProExpiry: nouvelleExpiry
-    });
-    // #nouveau (demande utilisateur, "badge Vendeur Pro visible partout") :
-    // AnnoncePage/ProductCard/VendeurPage lisent profils_publics, jamais
-    // users/{uid} (privé) — sans ce mirror, le badge ne pourrait jamais
-    // s'afficher publiquement. Corrélé exactement à l'écriture ci-dessus
-    // (cf. firestore.rules, jamais une valeur libre).
-    tx.set(doc(db, 'profils_publics', uid), { vendeurProExpiry: nouvelleExpiry }, { merge: true });
-    tx.set(doc(collection(db, 'transactions')), {
-      userId: uid,
-      type: WALLET_TYPES.VENDEUR_PRO,
-      montant: -prix,
-      sourceWallet,
-      description: `Pass Vendeur Pro (${dureeJours} jours)`,
-      createdAt: serverTimestamp()
-    });
-  });
-  return nouvelleExpiry;
-};
 

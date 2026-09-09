@@ -1,12 +1,9 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, sendPasswordResetEmail, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../firebase/config';
 import { creerNotification } from './notificationsService';
-import { syncProfilPublic, backfillReferralCodePublicSiAbsent } from './profilPublicService';
+import { syncProfilPublic } from './profilPublicService';
 import { removePush } from './pushNotificationsService';
-import { supprimerAnnoncePropre } from './annoncesService';
-import { STATUTS_COMMANDE } from './commandesService';
-export const generateReferralCode = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 const SESSION_ID_KEY = 'maket_session_id';
 
 // #correctif (course avec le contrôle de session unique) : entre le moment où
@@ -57,46 +54,6 @@ export const getSessionIdLocal = () => {
     return null;
   }
 };
-export const generatePseudo = () => `Membre${Math.floor(1000 + Math.random() * 9000)}`;
-const backfillPseudoSiAbsent = async (uid, pseudoExistant, userDocPourSync) => {
-  try {
-    if (pseudoExistant) {
-      await syncProfilPublic(uid, {
-        pseudo: pseudoExistant
-      });
-      return;
-    }
-    const pseudo = generatePseudo();
-    await setDoc(doc(db, 'users', uid), {
-      pseudo
-    }, {
-      merge: true
-    });
-    await syncProfilPublic(uid, {
-      ...(userDocPourSync || {}),
-      pseudo
-    });
-  } catch (e) {
-    console.error('backfillPseudoSiAbsent a échoué :', e);
-  }
-};
-// #retour utilisateur : le message ne faisait allusion à aucune garantie
-// (satisfait ou remboursé), pourtant l'argument le plus rassurant pour
-// convaincre quelqu'un qui ne connaît pas encore MAKET. Le lien pointe
-// maintenant directement vers l'inscription avec le code déjà rempli
-// (?ref=CODE, lu par AuthPage.jsx) — avant, il fallait retaper le code à la
-// main après être arrivé sur la page d'accueil, une friction inutile.
-// #bug (corrigé, retour utilisateur — "beaucoup disent qu'ils n'ont rien à
-// vendre jusqu'à ce que je leur pose certaines questions") : "des choses que
-// tu n'utilises plus" restait trop abstrait, personne ne visualise rien de
-// concret spontanément. Des exemples concrets (téléphone, vêtements,
-// chaussures...) répondent à l'objection avant qu'elle soit posée, au lieu
-// d'attendre une relance manuelle du parrain à chaque invitation.
-export const buildInvitationWhatsApp = code => `Un vieux téléphone, des vêtements, des chaussures, un appareil électroménager, un meuble... tu as sûrement quelque chose à vendre ! Fais-le sur *MAKET* — le marketplace d'occasion 100% sécurisé au Cameroun ! Je viens de m'y inscrire et je te partage mon code.\n\n` + `- Paiement bloqué en sécurité jusqu'à la remise de l'article : satisfait ou remboursé, sans discussion\n` + `- Vendeurs vérifiés (CNI + facture) — fini les arnaques entre particuliers\n` + `- Livraison possible, même entre villes\n` + `- Inscription gratuite en 2 minutes\n\n` + `Utilise mon code *${code}* à l'inscription : commission réduite sur tes premières ventes.\n\n` + `https://maket.cm/auth?ref=${code}`;
-// #nouveau (demande utilisateur, "il n'y a pas de parrainage du tout") :
-// HostoConnect n'a aucun programme de parrainage — referralCode/parainId
-// restent sur le doc `users` (hérités du fork MAKET, lus ailleurs dans le
-// wallet historique) mais ne sont plus jamais RENSEIGNÉS ni exploités ici.
 export const registerWithEmail = async (email, password, nom, prenom, ville) => {
   setConnexionEnCours(true);
   try {
@@ -114,16 +71,8 @@ export const registerWithEmail = async (email, password, nom, prenom, ville) => 
       ville,
       quartier: '',
       photoURL: '',
-      referralCode: generateReferralCode(),
-      pseudo: generatePseudo(),
-      soldeParrainage: 0,
-      scoreFilabilite: 5,
       cniVerifie: false,
       badgeVerifie: false,
-      totalVentes: 0,
-      totalAchats: 0,
-      avertissements: 0,
-      parainId: null,
       createdAt: serverTimestamp()
     };
     await setDoc(doc(db, 'users', cred.user.uid), userDoc);
@@ -151,23 +100,12 @@ export const loginWithEmail = async (email, password) => {
         ville: '',
         quartier: '',
         photoURL: cred.user.photoURL || '',
-        referralCode: generateReferralCode(),
-        pseudo: generatePseudo(),
-        soldeParrainage: 0,
-        scoreFilabilite: 5,
         cniVerifie: false,
         badgeVerifie: false,
-        totalVentes: 0,
-        totalAchats: 0,
-        avertissements: 0,
-        parainId: null,
         createdAt: serverTimestamp()
       };
       await setDoc(userRef, userDoc);
       await syncProfilPublic(cred.user.uid, userDoc);
-    } else {
-      await backfillReferralCodePublicSiAbsent(cred.user.uid, snap.data()?.referralCode);
-      await backfillPseudoSiAbsent(cred.user.uid, snap.data()?.pseudo, snap.data());
     }
     await demarrerSessionUnique(cred.user.uid);
     return cred.user;
@@ -206,23 +144,12 @@ export const loginWithGoogle = async () => {
         photoURL: cred.user.photoURL || '',
         ville: '',
         quartier: '',
-        referralCode: generateReferralCode(),
-        pseudo: generatePseudo(),
-        soldeParrainage: 0,
-        scoreFilabilite: 5,
         cniVerifie: false,
         badgeVerifie: false,
-        totalVentes: 0,
-        totalAchats: 0,
-        avertissements: 0,
-        parainId: null,
         createdAt: serverTimestamp()
       };
       await setDoc(userRef, userDoc);
       await syncProfilPublic(cred.user.uid, userDoc);
-    } else {
-      await backfillReferralCodePublicSiAbsent(cred.user.uid, snap.data()?.referralCode);
-      await backfillPseudoSiAbsent(cred.user.uid, snap.data()?.pseudo, snap.data());
     }
     await demarrerSessionUnique(cred.user.uid);
     return { user: cred.user };
@@ -239,15 +166,6 @@ export const logout = async () => {
   await signOut(auth);
 };
 
-// #nouveau (demande utilisateur, "un utilisateur doit pouvoir supprimer son
-// compte") : statuts de commande non terminaux — un compte avec un achat ou
-// une vente encore en cours (jusqu'au litige inclus) ne peut pas se
-// supprimer, pour ne jamais laisser une commande orpheline sans acheteur/
-// vendeur joignable.
-const STATUTS_COMMANDE_NON_TERMINAUX = Object.values(STATUTS_COMMANDE).filter(
-  s => s !== STATUTS_COMMANDE.TERMINE && s !== STATUTS_COMMANDE.ANNULE
-);
-
 // Vérifie l'éligibilité SANS rien modifier — appelé avant même de proposer le
 // mot de passe/la reconnexion Google, pour ne jamais interrompre l'utilisateur
 // avec un prompt de sécurité s'il ne peut de toute façon pas supprimer son
@@ -257,17 +175,12 @@ export const verifierEligibiliteSuppression = async (uid) => {
   if (!snap.exists()) throw new Error('COMPTE_INTROUVABLE');
   const data = snap.data();
   if (data.role && data.role !== 'patient') throw new Error('ROLE_NON_SUPPRIMABLE');
-  if ((data.solde || 0) > 0 || (data.soldeParrainage || 0) > 0) throw new Error('SOLDE_NON_NUL');
+  if ((data.solde || 0) > 0) throw new Error('SOLDE_NON_NUL');
   // #sécurité (corrigé, audit) : un compte gelé (soldeSuspect, écart détecté
   // par reconcilierSoldesServeur) pouvait supprimer son compte puis en
   // recréer un autre gratuitement, effaçant la sanction — repris ici en
   // filet côté client (la vraie garantie est dans firestore.rules).
   if (data.soldeSuspect) throw new Error('COMPTE_GELE');
-  const [achats, ventes] = await Promise.all([
-    getDocs(query(collection(db, 'commandes'), where('acheteurId', '==', uid), where('statut', 'in', STATUTS_COMMANDE_NON_TERMINAUX))),
-    getDocs(query(collection(db, 'commandes'), where('vendeurId', '==', uid), where('statut', 'in', STATUTS_COMMANDE_NON_TERMINAUX))),
-  ]);
-  if (!achats.empty || !ventes.empty) throw new Error('COMMANDES_EN_COURS');
 };
 
 // Reconnexion requise par Firebase Auth avant deleteUser() si la session
@@ -292,9 +205,6 @@ export const reauthentifierGoogle = async () => {
 // détruit (deleteUser), rendant toute reconnexion future impossible.
 export const supprimerCompte = async (uid) => {
   await verifierEligibiliteSuppression(uid);
-
-  const mesAnnonces = await getDocs(query(collection(db, 'annonces'), where('userId', '==', uid), where('statut', '==', 'en_vente')));
-  for (const a of mesAnnonces.docs) await supprimerAnnoncePropre(a.id);
 
   await setDoc(doc(db, 'profils_publics', uid), {
     displayName: 'Utilisateur supprimé',

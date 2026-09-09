@@ -11,10 +11,7 @@ import SupportChatWidget from './components/support/SupportChatWidget';
 const HomePage = lazy(() => import('./pages/HomePage'));
 const AuthPage = lazy(() => import('./pages/AuthPage'));
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
-const AnnoncePage = lazy(() => import('./pages/AnnoncePage'));
-const PublierPage = lazy(() => import('./pages/PublierPage'));
 const MonComptePage = lazy(() => import('./pages/MonComptePage'));
-const CommandePage = lazy(() => import('./pages/CommandePage'));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
 const CGUPage = lazy(() => import('./pages/CGUPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
@@ -24,7 +21,6 @@ const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const CookiesPage = lazy(() => import('./pages/CookiesPage'));
 const VerifCNIPage = lazy(() => import('./pages/VerifCNIPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
-const VendeurPage = lazy(() => import('./pages/VendeurPage'));
 const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissementPage'));
 const EtablissementSpacePage = lazy(() => import('./pages/EtablissementSpacePage'));
 const EtablissementsPage = lazy(() => import('./pages/EtablissementsPage'));
@@ -105,12 +101,7 @@ export default function App() {
 
             {}
             <Route path="/" element={<Layout><HomePage /></Layout>} />
-            <Route path="/annonce/:id" element={<Layout><AnnoncePage /></Layout>} />
-            <Route path="/vendeur/:userId" element={<Layout><VendeurPage /></Layout>} />
-            <Route path="/publier" element={<Layout><PublierPage /></Layout>} />
-            <Route path="/publier/:id" element={<Layout><PublierPage /></Layout>} />
             <Route path="/notifications" element={<Layout><NotificationsPage /></Layout>} />
-            <Route path="/commande/:id" element={<Layout><CommandePage /></Layout>} />
 
             {}
             <Route path="/wallet" element={<Layout><WalletPage /></Layout>} />
