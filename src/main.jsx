@@ -15,3 +15,11 @@ if (syneFontLink) {
 ReactDOM.createRoot(document.getElementById('root')).render(<React.StrictMode>
     <App />
   </React.StrictMode>);
+
+// Fiche d'urgence hors connexion (§5.6) — scope '/urgence' strictement
+// distinct de firebase-messaging-sw.js (scope '/', notifications push) :
+// aucune permission requise, contrairement au push, donc enregistré sans
+// condition, best-effort (jamais bloquant si non supporté/échoue).
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw-urgence.js', { scope: '/urgence' }).catch(() => {});
+}

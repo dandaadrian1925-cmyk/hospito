@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { initializeAppCheck, ReCaptchaV3Provider, getToken as getAppCheckToken } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
 import { isSupported, getMessaging } from "firebase/messaging";
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -46,7 +46,15 @@ export const getAppCheckTokenSafe = async () => {
 };
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+// #nouveau (audit, "accès d'urgence hors connexion", §5.6) : cache persistant
+// (IndexedDB) plutôt que le cache mémoire par défaut — un get() déjà effectué
+// une fois en ligne (ex. la fiche d'urgence, /urgence) reste lisible hors
+// connexion. `persistentMultipleTabManager` : plusieurs onglets ouverts ne
+// désactivent pas silencieusement la persistance sur le second onglet
+// (contrairement à `persistentSingleTabManager`, le défaut historique).
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+});
 export const googleProvider = new GoogleAuthProvider();
 export const getMessagingSafe = async () => {
   try {

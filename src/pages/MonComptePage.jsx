@@ -285,6 +285,11 @@ const MENU_ITEMS = [{
   icon: Shield,
   sub: 'Accès, rectification et suppression de vos données'
 }, {
+  to: '/urgence',
+  label: "Fiche d'urgence",
+  icon: AlertTriangle,
+  sub: 'Groupe sanguin, allergies — disponible hors connexion'
+}, {
   to: '/notifications',
   label: 'Notifications',
   icon: Bell
