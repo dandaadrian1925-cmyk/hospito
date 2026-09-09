@@ -47,3 +47,23 @@ export const getSettings = async () => {
   }
   return cache;
 };
+
+// #nouveau (demande utilisateur, "enrichir les paramètres métiers") :
+// document DISTINCT de `settings/global` ci-dessus (reliquat marketplace) —
+// `settings/{etablissementId}` est le vrai document de paramètres métiers
+// par établissement, celui que le sysadmin configure depuis
+// hospito-super-admin (durée de validité du billet, délai de rappel RDV...).
+// Un patient peut avoir des rendez-vous dans plusieurs établissements, d'où
+// un cache par établissement plutôt qu'un cache global unique.
+const DEFAULTS_ETABLISSEMENT = { delaiRappelRendezVousHeures: 24 };
+const cacheEtablissements = {};
+export const getSettingsEtablissement = async (etablissementId) => {
+  if (cacheEtablissements[etablissementId]) return cacheEtablissements[etablissementId];
+  try {
+    const snap = await getDoc(doc(db, 'settings', etablissementId));
+    cacheEtablissements[etablissementId] = snap.exists() ? { ...DEFAULTS_ETABLISSEMENT, ...snap.data() } : DEFAULTS_ETABLISSEMENT;
+  } catch {
+    cacheEtablissements[etablissementId] = DEFAULTS_ETABLISSEMENT;
+  }
+  return cacheEtablissements[etablissementId];
+};
