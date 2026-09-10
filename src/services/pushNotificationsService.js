@@ -18,7 +18,7 @@ const initPushNative = async userId => {
       });
     });
     await PushNotifications.addListener('pushNotificationReceived', notification => {
-      const titre = notification.title || 'Hospito';
+      const titre = notification.title || 'HostoConnect';
       const link = notification.data?.link;
       toast(titre, link ? {
         icon: '🔔',
@@ -55,7 +55,7 @@ export const initPush = async userId => {
       fcmTokens: arrayUnion(token)
     });
     onMessage(messaging, payload => {
-      const titre = payload.notification?.title || 'Hospito';
+      const titre = payload.notification?.title || 'HostoConnect';
       const link = payload.fcmOptions?.link || payload.data?.link;
       toast(titre, link ? {
         icon: '🔔',
