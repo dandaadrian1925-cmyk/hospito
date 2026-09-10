@@ -79,6 +79,16 @@ function MessageBubble({ msg, convId }) {
 // établissement (hospito-admin) plutôt qu'à la plateforme.
 const REGEX_ESPACE_ETABLISSEMENT = /^\/etablissement\/([^/]+)/;
 
+// #corrigé (bug remonté, "les messages de réponse du support ne s'affichent
+// pas chez le patient") : supportConvId n'était qu'un état React — un
+// rechargement de page (ou juste revenir plus tard) le remettait à `null`,
+// perdant tout lien avec la conversation en cours. Le patient ne voyait donc
+// plus jamais la réponse de l'opérateur, écrite pourtant sur le même
+// document. Persisté par compte ('anonyme' pour un visiteur non connecté —
+// le widget reste utilisable sans compte, cf. firestore.rules,
+// support_conversations.create).
+const CLE_STOCKAGE = (uid) => `hospito-support-conv-id:${uid || 'anonyme'}`;
+
 export default function SupportChatWidget() {
   const { user, userProfile } = useAuth();
   const location = useLocation();
@@ -102,6 +112,16 @@ export default function SupportChatWidget() {
       .then(([demandesRdv, reclamations]) => setUserData({ demandesRdv, reclamations }))
       .catch((e) => console.error('Erreur chargement données utilisateur:', e));
   }, [user]);
+
+  // Reprend une conversation déjà en cours (voir CLE_STOCKAGE ci-dessus) —
+  // sans ça, un patient qui revient plus tard ne voit jamais la réponse de
+  // l'opérateur, écrite pourtant sur ce même document pendant son absence.
+  useEffect(() => {
+    try {
+      const idSauvegarde = localStorage.getItem(CLE_STOCKAGE(user?.uid));
+      if (idSauvegarde) setSupportConvId(idSauvegarde);
+    } catch { /* stockage indisponible (navigation privée...) — pas bloquant */ }
+  }, [user?.uid]);
 
   useEffect(() => {
     const welcome = userProfile
@@ -152,6 +172,7 @@ export default function SupportChatWidget() {
       });
       setSupportConvId(ref.id);
       setSupportStatut('en_attente_operateur');
+      try { localStorage.setItem(CLE_STOCKAGE(user?.uid), ref.id); } catch { /* pas bloquant */ }
       toast.success('Demande transmise à un opérateur !');
     } catch (e) {
       console.error('Erreur création demande support :', e);
@@ -170,6 +191,7 @@ export default function SupportChatWidget() {
     setSupportConvId(null);
     setSupportStatut(null);
     setMessages([{ role: 'assistant', content: 'Bonjour à nouveau ! 👋 Comment puis-je vous aider ?', timestamp: Date.now() }]);
+    try { localStorage.removeItem(CLE_STOCKAGE(user?.uid)); } catch { /* pas bloquant */ }
   };
 
   const send = async () => {
