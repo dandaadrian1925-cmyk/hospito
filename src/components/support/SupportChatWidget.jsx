@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Headphones, AlertTriangle, CheckCircle, X, Loader, Paperclip, FileText, Download, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getMesDemandesRdv } from '../../services/demandesRendezVousService';
 import { getReclamationsPatient } from '../../services/reclamationsService';
+import { getEtablissement } from '../../services/etablissementsPublicService';
 import { collection, addDoc, doc, updateDoc, arrayUnion, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import { uploadFile, getChatSignedUrls } from '../../supabase/config';
@@ -70,8 +72,17 @@ function MessageBubble({ msg, convId }) {
   </motion.div>;
 }
 
+// Route de l'espace établissement (cf. App.jsx, "/etablissement/:etablissementId")
+// — permet de savoir SUR QUELLE PAGE le patient ouvre le widget, sans devoir
+// faire remonter ce contexte depuis chaque page. Un patient qui écrit depuis
+// la fiche d'un établissement précis voit sa demande adressée à CET
+// établissement (hospito-admin) plutôt qu'à la plateforme.
+const REGEX_ESPACE_ETABLISSEMENT = /^\/etablissement\/([^/]+)/;
+
 export default function SupportChatWidget() {
   const { user, userProfile } = useAuth();
+  const location = useLocation();
+  const etablissementIdActuel = location.pathname.match(REGEX_ESPACE_ETABLISSEMENT)?.[1] || null;
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -125,10 +136,15 @@ export default function SupportChatWidget() {
 
   const creerDemandeOperateur = async (messagesActuels) => {
     try {
+      // Établissement résolu au moment de l'envoi (pas à l'ouverture du
+      // widget) : le patient a pu naviguer pendant qu'il écrivait.
+      const etablissement = etablissementIdActuel ? await getEtablissement(etablissementIdActuel).catch(() => null) : null;
       const ref = await addDoc(collection(db, 'support_conversations'), {
         userId: user?.uid || null,
         userEmail: user?.email || 'anonyme',
         userName: userProfile?.displayName || 'Anonyme',
+        etablissementId: etablissement?.id || null,
+        etablissementNom: etablissement?.nom || null,
         messages: messagesActuels.map((m) => ({ role: m.role, content: m.content.replace('[ESCALADE_OPERATEUR]', '').trim(), timestamp: m.timestamp })),
         statut: 'en_attente_operateur',
         createdAt: serverTimestamp(),
