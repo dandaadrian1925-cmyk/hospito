@@ -9,6 +9,11 @@ const STATUT_STYLES = {
   en_attente: { bg: '#FFFBEB', color: '#D97706', label: 'En attente de confirmation' },
   confirme: { bg: '#F0FDF4', color: '#059669', label: 'Confirmé' },
   refuse: { bg: '#FEF2F2', color: '#DC2626', label: 'Refusé' },
+  // #nouveau (automatisation, tâche planifiée côté serveur) : un RDV confirmé
+  // dont l'heure est passée sans qu'aucune admission n'ait suivi bascule
+  // automatiquement ici — jusque-là un RDV manqué restait "Confirmé" pour
+  // toujours, sans distinction avec un RDV réellement honoré.
+  absent: { bg: '#FEF2F2', color: '#DC2626', label: 'Non honoré' },
 };
 
 const formatDate = (value) => {
