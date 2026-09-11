@@ -22,7 +22,19 @@ const CookiesPage = lazy(() => import('./pages/CookiesPage'));
 const VerifCNIPage = lazy(() => import('./pages/VerifCNIPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissementPage'));
-const EtablissementSpacePage = lazy(() => import('./pages/EtablissementSpacePage'));
+const EtablissementLayout = lazy(() => import('./pages/etablissement/EtablissementLayout'));
+const EtablissementAccueilPage = lazy(() => import('./pages/etablissement/EtablissementAccueilPage'));
+const EtablissementServicesPage = lazy(() => import('./pages/etablissement/EtablissementServicesPage'));
+const EtablissementEquipePage = lazy(() => import('./pages/etablissement/EtablissementEquipePage'));
+const EtablissementTarifsPage = lazy(() => import('./pages/etablissement/EtablissementTarifsPage'));
+const EtablissementAvisPage = lazy(() => import('./pages/etablissement/EtablissementAvisPage'));
+const EtablissementContactPage = lazy(() => import('./pages/etablissement/EtablissementContactPage'));
+const EtablissementRdvPage = lazy(() => import('./pages/etablissement/EtablissementRdvPage'));
+const EtablissementDossierPage = lazy(() => import('./pages/etablissement/EtablissementDossierPage'));
+const EtablissementMessageriePage = lazy(() => import('./pages/etablissement/EtablissementMessageriePage'));
+const EtablissementPaiementPage = lazy(() => import('./pages/etablissement/EtablissementPaiementPage'));
+const EtablissementReclamationsPage = lazy(() => import('./pages/etablissement/EtablissementReclamationsPage'));
+const EtablissementSecuritePage = lazy(() => import('./pages/etablissement/EtablissementSecuritePage'));
 const EtablissementsPage = lazy(() => import('./pages/EtablissementsPage'));
 const FavorisEtablissementsPage = lazy(() => import('./pages/FavorisEtablissementsPage'));
 const CommentCaMarchePage = lazy(() => import('./pages/CommentCaMarchePage'));
@@ -120,7 +132,20 @@ export default function App() {
             <Route path="/confidentialite" element={<Layout><ConfidentialitePage /></Layout>} />
             <Route path="/cookies" element={<Layout><CookiesPage /></Layout>} />
             <Route path="/etablissements/demande" element={<Layout><DemandeEtablissementPage /></Layout>} />
-            <Route path="/etablissement/:etablissementId" element={<Layout><EtablissementSpacePage /></Layout>} />
+            <Route path="/etablissement/:etablissementId" element={<Layout><EtablissementLayout /></Layout>}>
+              <Route index element={<EtablissementAccueilPage />} />
+              <Route path="services" element={<EtablissementServicesPage />} />
+              <Route path="equipe" element={<EtablissementEquipePage />} />
+              <Route path="tarifs" element={<EtablissementTarifsPage />} />
+              <Route path="avis" element={<EtablissementAvisPage />} />
+              <Route path="contact" element={<EtablissementContactPage />} />
+              <Route path="rdv" element={<EtablissementRdvPage />} />
+              <Route path="dossier" element={<EtablissementDossierPage />} />
+              <Route path="messagerie" element={<EtablissementMessageriePage />} />
+              <Route path="paiement" element={<EtablissementPaiementPage />} />
+              <Route path="reclamations" element={<EtablissementReclamationsPage />} />
+              <Route path="securite" element={<EtablissementSecuritePage />} />
+            </Route>
             <Route path="/etablissements" element={<Layout><EtablissementsPage /></Layout>} />
             <Route path="/mes-favoris" element={<Layout><FavorisEtablissementsPage /></Layout>} />
             <Route path="/mes-droits" element={<Layout><MesDroitsPage /></Layout>} />

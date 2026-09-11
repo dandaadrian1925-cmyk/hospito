@@ -4,9 +4,10 @@ import { getMonDossier, getMesPrescriptions, dossierLocalDisponible } from '../.
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
 // Dossier médical + prescriptions, UNIQUE et partagé entre tous les
-// établissements du patient — réutilisé à l'identique dans l'onglet "Mon
-// dossier" d'un espace établissement (EtablissementSpacePage) et dans
-// moncompte/DossierPage. Volontairement PAS filtré par établissement : le
+// établissements du patient — réutilisé à l'identique sur la page "Mon
+// dossier" du site vitrine d'un établissement (pages/etablissement/
+// EtablissementDossierPage) et dans moncompte/DossierPage. Volontairement
+// PAS filtré par établissement : le
 // but de cette vue est justement de montrer qu'une entrée créée par
 // l'hôpital A reste visible même depuis l'espace de l'hôpital B.
 const TYPES_ENTREE = {
