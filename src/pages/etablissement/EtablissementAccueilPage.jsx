@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon, FolderHeart, Wallet, Flag, LifeBuoy } from 'lucide-react';
+import { CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon, FolderHeart, Wallet, Flag, LifeBuoy, Building2, Users, Star } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { listerSpecialistesDuService } from '../../services/planningService';
+import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import AvisPublicSection from '../../components/etablissement/AvisPublicSection';
 
 const fadeUp = {
@@ -34,11 +35,19 @@ export default function EtablissementAccueilPage() {
   const { etablissement, etablissementId, tarifs, user } = useOutletContext();
   const [services, setServices] = useState(null);
   const [equipe, setEquipe] = useState(null);
+  const [avis, setAvis] = useState(null);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
   }, [etablissementId]);
 
+  useEffect(() => {
+    getAvisEtablissement(etablissementId).then(setAvis).catch(() => setAvis([]));
+  }, [etablissementId]);
+
+  // Toute l'équipe est agrégée ici (pas seulement les 6 affichées) pour que
+  // la statistique "Professionnels" du bandeau ci-dessous soit un vrai
+  // décompte, jamais un chiffre inventé.
   useEffect(() => {
     if (!services?.length) return;
     let annule = false;
@@ -46,10 +55,9 @@ export default function EtablissementAccueilPage() {
       const vus = new Set();
       const trouves = [];
       for (const s of services) {
-        if (trouves.length >= 6) break;
         const medecins = await listerSpecialistesDuService(etablissementId, s.id).catch(() => []);
         medecins.forEach((m) => {
-          if (!vus.has(m.uid) && trouves.length < 6) {
+          if (!vus.has(m.uid)) {
             vus.add(m.uid);
             trouves.push({ ...m, serviceNom: s.nom });
           }
@@ -62,6 +70,7 @@ export default function EtablissementAccueilPage() {
 
   const imageHero = etablissement.photoCarrousel1 || services?.find((s) => s.photoURL)?.photoURL || null;
   const telephone = etablissement.contactTelephone;
+  const moyenneAvis = avis?.length ? avis.reduce((s, a) => s + a.note, 0) / avis.length : null;
 
   return (
     <div>
@@ -103,6 +112,33 @@ export default function EtablissementAccueilPage() {
         </motion.div>
       </div>
 
+      {/* Chiffres réels — jamais estimés ni arrondis à l'esbroufe */}
+      {(!!services?.length || !!equipe?.length || moyenneAvis !== null) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+          {!!services?.length && (
+            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+              <Building2 style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{services.length}</p>
+              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Service{services.length > 1 ? 's' : ''}</p>
+            </div>
+          )}
+          {!!equipe?.length && (
+            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+              <Users style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{equipe.length}</p>
+              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Professionnel{equipe.length > 1 ? 's' : ''}</p>
+            </div>
+          )}
+          {moyenneAvis !== null && (
+            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+              <Star style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{moyenneAvis.toFixed(1)}/5</p>
+              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>{avis.length} avis patients</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Services */}
       {!!services?.length && (
         <div style={{ marginBottom: 36 }}>
@@ -141,7 +177,7 @@ export default function EtablissementAccueilPage() {
         <div style={{ marginBottom: 36 }}>
           <SectionTitle title="Notre équipe médicale" lienTexte="Voir toute l'équipe" lienVers="equipe" />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
-            {equipe.map((m) => (
+            {equipe.slice(0, 6).map((m) => (
               <Link key={m.uid} to="equipe" style={{ textDecoration: 'none', textAlign: 'center', width: 92 }}>
                 {m.photoURL ? (
                   <img src={m.photoURL} alt={m.nom} style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px' }} />
@@ -230,6 +266,33 @@ export default function EtablissementAccueilPage() {
               <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', textAlign: 'center' }}>{label}</span>
             </Link>
           ))}
+        </div>
+      </div>
+
+      {/* Bandeau d'appel à l'action — mêmes vraies coordonnées que la page
+          Contact, jamais une carte/numéro fictif */}
+      <div
+        style={{
+          marginTop: 36, padding: '28px 26px', borderRadius: 16, textAlign: 'center',
+          background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
+        }}
+      >
+        <p style={{ fontSize: 17, fontWeight: 700, color: 'white', marginBottom: 6 }}>Besoin de soins médicaux ?</p>
+        <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.85)', marginBottom: 18 }}>
+          Notre équipe est à votre disposition pour vous accompagner dans votre parcours de santé.
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, justifyContent: 'center' }}>
+          {telephone && (
+            <a href={`tel:${telephone}`} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Phone style={{ width: 15, height: 15 }} /> Nous appeler
+            </a>
+          )}
+          <Link to="contact" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <MapPin style={{ width: 15, height: 15 }} /> Nous trouver
+          </Link>
+          <Link to="messagerie" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <WhatsAppIcon style={{ width: 15, height: 15 }} /> Poser une question
+          </Link>
         </div>
       </div>
     </div>

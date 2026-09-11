@@ -132,7 +132,7 @@ export default function App() {
             <Route path="/confidentialite" element={<Layout><ConfidentialitePage /></Layout>} />
             <Route path="/cookies" element={<Layout><CookiesPage /></Layout>} />
             <Route path="/etablissements/demande" element={<Layout><DemandeEtablissementPage /></Layout>} />
-            <Route path="/etablissement/:etablissementId" element={<Layout><EtablissementLayout /></Layout>}>
+            <Route path="/etablissement/:etablissementId" element={<EtablissementLayout />}>
               <Route index element={<EtablissementAccueilPage />} />
               <Route path="services" element={<EtablissementServicesPage />} />
               <Route path="equipe" element={<EtablissementEquipePage />} />
