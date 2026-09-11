@@ -2,9 +2,10 @@ import { useOutletContext, Link } from 'react-router-dom';
 import { MapPin, Phone, MessageCircle, AlertTriangle, Clock } from 'lucide-react';
 import InfosPratiquesSection from '../../components/etablissement/InfosPratiquesSection';
 import EtablissementAssistantIA from '../../components/etablissement/EtablissementAssistantIA';
+import EtablissementSupportOperateur from '../../components/etablissement/EtablissementSupportOperateur';
 
 export default function EtablissementContactPage() {
-  const { etablissement, etablissementId, tarifs, apropos } = useOutletContext();
+  const { etablissement, etablissementId, tarifs, apropos, user, userProfile } = useOutletContext();
   const telephone = etablissement.contactTelephone;
   const telephoneWhatsapp = telephone ? telephone.replace(/[^\d+]/g, '') : null;
   const aDesCoordonneesGPS = Number.isFinite(etablissement.gpsLat) && Number.isFinite(etablissement.gpsLng);
@@ -56,6 +57,10 @@ export default function EtablissementContactPage() {
 
       <div style={{ marginBottom: 28 }}>
         <EtablissementAssistantIA etablissement={etablissement} tarifs={tarifs} apropos={apropos} />
+      </div>
+
+      <div style={{ marginBottom: 28 }}>
+        <EtablissementSupportOperateur etablissementId={etablissementId} etablissementNom={etablissement.nom} user={user} userProfile={userProfile} />
       </div>
 
       <Link
