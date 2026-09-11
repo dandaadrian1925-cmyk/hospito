@@ -18,7 +18,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import DossierMedicalView from '../components/dossier/DossierMedicalView';
 import { TEXTE_CONSENTEMENT_PARTAGE, getMonConsentement, signerConsentement } from '../services/consentementsService';
-import { getEtablissement, listerServicesActifs } from '../services/etablissementsPublicService';
+import { getEtablissement, listerServicesActifs, listerTarifsConsultation } from '../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../services/demandesRendezVousService';
 import { listerSpecialistesDuService } from '../services/planningService';
 import { ouvrirReclamation, getReclamationsPatient } from '../services/reclamationsService';
@@ -881,7 +881,7 @@ function TabSecurite({ etablissementId, patientUid }) {
   );
 }
 
-function ServicesSection({ etablissementId, onSelectService }) {
+function ServicesSection({ etablissementId, tarifs, onSelectService }) {
   const [services, setServices] = useState(null);
 
   useEffect(() => {
@@ -932,7 +932,17 @@ function ServicesSection({ etablissementId, onSelectService }) {
                 <span style={{ color: 'white', fontSize: 20, fontWeight: 700 }}>{(s.nom || '?').charAt(0).toUpperCase()}</span>
               )}
             </div>
-            <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)', padding: '8px 10px' }}>{s.nom}</p>
+            <div style={{ padding: '8px 10px' }}>
+              <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>{s.nom}</p>
+              {(() => {
+                const tarif = tarifs?.find((t) => t.serviceId === s.id);
+                return tarif ? (
+                  <p style={{ fontSize: 11, color: 'var(--blue)', fontWeight: 700, marginTop: 2 }}>
+                    {Number(tarif.montant).toLocaleString('fr-FR')} XAF
+                  </p>
+                ) : null;
+              })()}
+            </div>
           </button>
         ))}
       </div>
@@ -987,8 +997,60 @@ function InfosPratiquesSection({ etablissementId }) {
   );
 }
 
-function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
+// #enrichi (demande utilisateur, "toutes les informations de tous les
+// services de tous les admins... comme un site web complet") : tarif de
+// consultation (public, cf. firestore.rules) + équipe médicale du service
+// (médecins avec photo — même source que le choix de spécialiste à la prise
+// de RDV, cf. listerSpecialistesDuService) affichés directement dans la
+// fiche du service, avant même de créer un compte.
+// #nouveau (demande utilisateur, "comme un site web complet") : avis
+// publics en lecture seule, visibles sans connexion (déposer un avis reste
+// réservé aux patients connectés, cf. onglet "Avis"). Même donnée que
+// TabAvis (avis_etablissements, statut "visible" déjà public — cf.
+// firestore.rules) mais avec une note moyenne mise en avant.
+function AvisPublicSection({ etablissementId }) {
+  const [avis, setAvis] = useState(null);
+
+  useEffect(() => {
+    getAvisEtablissement(etablissementId).then(setAvis).catch(() => setAvis([]));
+  }, [etablissementId]);
+
+  if (!avis?.length) return null;
+  const moyenne = avis.reduce((s, a) => s + a.note, 0) / avis.length;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+        <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)' }}>Avis des patients</p>
+        <span style={{ color: '#F59E0B', fontSize: 13 }}>{'★'.repeat(Math.round(moyenne))}{'☆'.repeat(5 - Math.round(moyenne))}</span>
+        <span style={{ fontSize: 12, color: 'var(--ink-4)' }}>{moyenne.toFixed(1)}/5 · {avis.length} avis</span>
+      </div>
+      <div className="space-y-2">
+        {avis.slice(0, 5).map((a) => (
+          <div key={a.id} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <strong>{a.patientNom || 'Patient'}</strong>
+              <span style={{ color: '#F59E0B' }}>{'★'.repeat(a.note)}{'☆'.repeat(5 - a.note)}</span>
+            </div>
+            {a.commentaire && <p style={{ color: 'var(--ink-3)', marginTop: 4 }}>{a.commentaire}</p>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ServiceDetailOverlay({ service, etablissementId, tarifs, onClose, onPrendreRdv, peutPrendreRdv }) {
+  const [equipe, setEquipe] = useState(null);
+
+  useEffect(() => {
+    if (!service) { setEquipe(null); return; }
+    listerSpecialistesDuService(etablissementId, service.id).then(setEquipe).catch(() => setEquipe([]));
+  }, [service, etablissementId]);
+
   if (!service) return null;
+  const tarif = tarifs?.find((t) => t.serviceId === service.id);
+
   return (
     <div
       onClick={onClose}
@@ -1001,7 +1063,7 @@ function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
         onClick={(e) => e.stopPropagation()}
         style={{
           background: 'white', borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 520,
-          maxHeight: '80vh', overflowY: 'auto', padding: 24,
+          maxHeight: '85vh', overflowY: 'auto', padding: 24,
         }}
       >
         <div
@@ -1015,24 +1077,62 @@ function ServiceDetailOverlay({ service, onClose, onPrendreRdv }) {
             <span style={{ color: 'white', fontSize: 32, fontWeight: 700 }}>{(service.nom || '?').charAt(0).toUpperCase()}</span>
           )}
         </div>
-        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>{service.nom}</h2>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+          <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--ink)' }}>{service.nom}</h2>
+          {tarif && (
+            <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, color: 'var(--blue)', background: 'var(--bg-2)', padding: '4px 10px', borderRadius: 999 }}>
+              {Number(tarif.montant).toLocaleString('fr-FR')} XAF
+            </span>
+          )}
+        </div>
         <p style={{ fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 20 }}>
           {service.description || "Aucune description fournie par l'établissement pour ce service."}
         </p>
+
+        {!!equipe?.length && (
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Équipe médicale</p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {equipe.map((m) => (
+                <div key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-2)', borderRadius: 999, padding: '6px 12px 6px 6px' }}>
+                  {m.photoURL ? (
+                    <img src={m.photoURL} alt={m.nom} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--ink-3)' }}>
+                      {(m.nom || '?').trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('')}
+                    </div>
+                  )}
+                  <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>Dr {m.nom}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div style={{ display: 'flex', gap: 10 }}>
           <button onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>Fermer</button>
-          <button onClick={() => onPrendreRdv(service)} className="btn-primary" style={{ flex: 1 }}>Prendre RDV</button>
+          {peutPrendreRdv && (
+            <button onClick={() => onPrendreRdv(service)} className="btn-primary" style={{ flex: 1 }}>Prendre RDV</button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
+// #refonte (demande utilisateur, "toutes les informations de tous les
+// services de tous les admins d'un établissement... comme un site web
+// complet") : la fiche établissement (services, équipe, tarifs, avis, infos
+// pratiques) est désormais visible par TOUT LE MONDE, sans connexion — comme
+// le vrai site web d'un hôpital. Seules les actions (prendre RDV, payer,
+// consulter son dossier, écrire un avis…) restent réservées aux patients
+// connectés, via un bandeau d'appel à connexion plutôt qu'une page bloquée.
 export default function EtablissementSpacePage() {
   const { etablissementId } = useParams();
   const [searchParams] = useSearchParams();
   const { user, userProfile } = useAuth();
   const [etablissement, setEtablissement] = useState(null);
+  const [tarifs, setTarifs] = useState([]);
   const [loading, setLoading] = useState(true);
   const tabDemandee = searchParams.get('tab');
   const [tab, setTab] = useState(TABS.some((t) => t.id === tabDemandee) ? tabDemandee : 'rdv');
@@ -1043,6 +1143,7 @@ export default function EtablissementSpacePage() {
     getEtablissement(etablissementId)
       .then(setEtablissement)
       .finally(() => setLoading(false));
+    listerTarifsConsultation(etablissementId).then(setTarifs).catch(() => setTarifs([]));
   }, [etablissementId]);
 
   if (loading) {
@@ -1055,21 +1156,6 @@ export default function EtablissementSpacePage() {
         <p style={{ color: 'var(--ink-3)' }}>Établissement introuvable.</p>
         <Link to="/" className="btn-primary" style={{ display: 'inline-block', marginTop: 16 }}>
           Retour à l'accueil
-        </Link>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '60px 24px', textAlign: 'center' }}>
-        <Building2 style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>{etablissement.nom}</h1>
-        <p style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 20 }}>
-          Connectez-vous pour prendre rendez-vous, consulter votre dossier et échanger avec cet établissement.
-        </p>
-        <Link to="/auth" className="btn-primary">
-          Se connecter
         </Link>
       </div>
     );
@@ -1113,65 +1199,87 @@ export default function EtablissementSpacePage() {
 
       <InfosPratiquesSection etablissementId={etablissementId} />
 
-      <ServicesSection etablissementId={etablissementId} onSelectService={setServiceDetail} />
+      <ServicesSection etablissementId={etablissementId} tarifs={tarifs} onSelectService={setServiceDetail} />
 
-      <div
-        className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide"
-        style={{ borderBottom: '1.5px solid var(--border, #E2E8F0)', marginBottom: 24 }}
-      >
-        {TABS.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              style={{
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '10px 14px',
-                fontSize: 13,
-                fontWeight: 600,
-                border: 'none',
-                background: 'none',
-                cursor: 'pointer',
-                color: active ? 'var(--blue)' : 'var(--ink-3)',
-                borderBottom: active ? '2px solid var(--blue)' : '2px solid transparent',
-              }}
-            >
-              <Icon style={{ width: 15, height: 15 }} />
-              {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <AvisPublicSection etablissementId={etablissementId} />
 
-      {tab === 'rdv' && (
-        <TabRdv
-          etablissementId={etablissementId}
-          patientUid={user.uid}
-          patientNom={patientNom}
-          initialServiceId={serviceRdvPreselectionne}
-        />
-      )}
-      {tab === 'dossier' && (
+      {!user ? (
+        <div style={{ padding: '20px 22px', borderRadius: 14, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))', textAlign: 'center' }}>
+          <Building2 style={{ width: 26, height: 26, margin: '0 auto 8px', color: 'white' }} />
+          <p style={{ fontSize: 15, fontWeight: 700, color: 'white', marginBottom: 4 }}>
+            Prenez rendez-vous, consultez votre dossier et échangez avec {etablissement.nom}
+          </p>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 16 }}>
+            Créez un compte ou connectez-vous — c'est gratuit et ça prend une minute.
+          </p>
+          <Link to="/auth" className="btn-secondary" style={{ display: 'inline-block' }}>
+            Se connecter / Créer un compte
+          </Link>
+        </div>
+      ) : (
         <>
-          <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
-          <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
+          <div
+            className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide"
+            style={{ borderBottom: '1.5px solid var(--border, #E2E8F0)', marginBottom: 24 }}
+          >
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '10px 14px',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    border: 'none',
+                    background: 'none',
+                    cursor: 'pointer',
+                    color: active ? 'var(--blue)' : 'var(--ink-3)',
+                    borderBottom: active ? '2px solid var(--blue)' : '2px solid transparent',
+                  }}
+                >
+                  <Icon style={{ width: 15, height: 15 }} />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {tab === 'rdv' && (
+            <TabRdv
+              etablissementId={etablissementId}
+              patientUid={user.uid}
+              patientNom={patientNom}
+              initialServiceId={serviceRdvPreselectionne}
+            />
+          )}
+          {tab === 'dossier' && (
+            <>
+              <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
+              <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
+            </>
+          )}
+          {tab === 'messagerie' && (
+            <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
+          )}
+          {tab === 'paiement' && <TabPaiement patientUid={user.uid} etablissementId={etablissementId} />}
+          {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
+          {tab === 'securite' && <TabSecurite etablissementId={etablissementId} patientUid={user.uid} />}
+          {tab === 'avis' && <TabAvis etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />}
         </>
       )}
-      {tab === 'messagerie' && (
-        <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
-      )}
-      {tab === 'paiement' && <TabPaiement patientUid={user.uid} etablissementId={etablissementId} />}
-      {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
-      {tab === 'securite' && <TabSecurite etablissementId={etablissementId} patientUid={user.uid} />}
-      {tab === 'avis' && <TabAvis etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />}
 
       <ServiceDetailOverlay
         service={serviceDetail}
+        etablissementId={etablissementId}
+        tarifs={tarifs}
+        peutPrendreRdv={!!user}
         onClose={() => setServiceDetail(null)}
         onPrendreRdv={(s) => {
           setServiceRdvPreselectionne(s.id);

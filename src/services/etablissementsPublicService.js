@@ -17,3 +17,13 @@ export async function listerServicesActifs(etablissementId) {
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+
+// #nouveau (demande utilisateur, "page de découvrir un établissement comme
+// un site web complet") : tarif de consultation, information publique par
+// nature (afficher le prix avant de prendre RDV) — voir firestore.rules,
+// tarifs_consultation.allow read.
+export async function listerTarifsConsultation(etablissementId) {
+  const q = query(collection(db, 'tarifs_consultation'), where('etablissementId', '==', etablissementId));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
