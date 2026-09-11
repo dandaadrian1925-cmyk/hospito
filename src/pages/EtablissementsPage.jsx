@@ -1,32 +1,43 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, Building2 } from 'lucide-react';
-import { listerEtablissementsActifs } from '../services/etablissementsPublicService';
+import { listerEtablissementsActifs, listerTousLesServicesActifs } from '../services/etablissementsPublicService';
 import EtablissementCard from '../components/home/EtablissementCard';
 
 export default function EtablissementsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [etablissements, setEtablissements] = useState([]);
+  const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState(searchParams.get('q') || '');
 
   useEffect(() => {
-    listerEtablissementsActifs()
-      .then(setEtablissements)
+    Promise.all([listerEtablissementsActifs(), listerTousLesServicesActifs()])
+      .then(([etabs, servicesActifs]) => {
+        setEtablissements(etabs);
+        setServices(servicesActifs);
+      })
       .catch((e) => {
-        console.error('listerEtablissementsActifs a échoué :', e);
+        console.error('Chargement des établissements/services a échoué :', e);
         setEtablissements([]);
       })
       .finally(() => setLoading(false));
   }, []);
 
+  // #corrigé (bug remonté, "découvrir un établissement") : le champ promet
+  // "un établissement, une ville, un service" mais ne filtrait jamais
+  // réellement sur les services — un établissement dont le NOM ne matche
+  // pas mais qui a un service "Cardiologie" doit ressortir pour "cardio".
   const filtres = useMemo(() => {
     const terme = q.trim().toLowerCase();
     if (!terme) return etablissements;
-    return etablissements.filter(
-      (e) => e.nom?.toLowerCase().includes(terme) || e.ville?.toLowerCase().includes(terme)
+    const etabsAvecServiceMatch = new Set(
+      services.filter((s) => s.nom?.toLowerCase().includes(terme)).map((s) => s.etablissementId)
     );
-  }, [etablissements, q]);
+    return etablissements.filter(
+      (e) => e.nom?.toLowerCase().includes(terme) || e.ville?.toLowerCase().includes(terme) || etabsAvecServiceMatch.has(e.id)
+    );
+  }, [etablissements, services, q]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
