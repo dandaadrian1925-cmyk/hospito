@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon, FolderHeart, Wallet, Flag, LifeBuoy, Building2, Users, Star } from 'lucide-react';
-import { listerServicesActifs } from '../../services/etablissementsPublicService';
+import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
 import { listerSpecialistesDuService } from '../../services/planningService';
 import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import AvisPublicSection from '../../components/etablissement/AvisPublicSection';
+
+const LABEL_CATEGORIE = { nouveaute: 'Nouveauté', evenement: 'Événement', publication: 'Publication', autre: 'Actualité' };
 
 const fadeUp = {
   initial: { opacity: 0, y: 16 },
@@ -32,10 +34,11 @@ function SectionTitle({ title, lienTexte, lienVers }) {
 // un aperçu concret avec de vraies images/photos et un lien vers sa page
 // complète, comme la home d'un vrai site vitrine d'hôpital.
 export default function EtablissementAccueilPage() {
-  const { etablissement, etablissementId, tarifs, user } = useOutletContext();
+  const { etablissement, etablissementId, tarifs, user, apropos } = useOutletContext();
   const [services, setServices] = useState(null);
   const [equipe, setEquipe] = useState(null);
   const [avis, setAvis] = useState(null);
+  const [actualites, setActualites] = useState(null);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -43,6 +46,10 @@ export default function EtablissementAccueilPage() {
 
   useEffect(() => {
     getAvisEtablissement(etablissementId).then(setAvis).catch(() => setAvis([]));
+  }, [etablissementId]);
+
+  useEffect(() => {
+    listerActualitesPubliees(etablissementId).then(setActualites).catch(() => setActualites([]));
   }, [etablissementId]);
 
   // Toute l'équipe est agrégée ici (pas seulement les 6 affichées) pour que
@@ -112,30 +119,56 @@ export default function EtablissementAccueilPage() {
         </motion.div>
       </div>
 
-      {/* Chiffres réels — jamais estimés ni arrondis à l'esbroufe */}
-      {(!!services?.length || !!equipe?.length || moyenneAvis !== null) && (
+      {/* Chiffres clés — si le sysadmin en a saisi (apropos.chiffresCles),
+          ce sont EUX qui s'affichent (c'est à l'établissement de communiquer
+          ses propres chiffres, pas à nous de les calculer à sa place) ;
+          sinon on retombe sur les stats réellement calculées. Jamais les
+          deux mélangés, jamais rien d'inventé dans les deux cas. */}
+      {!!apropos?.chiffresCles?.length ? (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
-          {!!services?.length && (
-            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
-              <Building2 style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
-              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{services.length}</p>
-              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Service{services.length > 1 ? 's' : ''}</p>
+          {apropos.chiffresCles.map((c, i) => (
+            <div key={i} style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+              <p style={{ fontSize: 22, fontWeight: 700, color: 'var(--blue)' }}>{c.valeur}</p>
+              <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 2 }}>{c.label}</p>
             </div>
-          )}
-          {!!equipe?.length && (
-            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
-              <Users style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
-              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{equipe.length}</p>
-              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Professionnel{equipe.length > 1 ? 's' : ''}</p>
-            </div>
-          )}
-          {moyenneAvis !== null && (
-            <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
-              <Star style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
-              <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{moyenneAvis.toFixed(1)}/5</p>
-              <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>{avis.length} avis patients</p>
-            </div>
-          )}
+          ))}
+        </div>
+      ) : (
+        (!!services?.length || !!equipe?.length || moyenneAvis !== null) && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+            {!!services?.length && (
+              <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+                <Building2 style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+                <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{services.length}</p>
+                <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Service{services.length > 1 ? 's' : ''}</p>
+              </div>
+            )}
+            {!!equipe?.length && (
+              <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+                <Users style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+                <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{equipe.length}</p>
+                <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Professionnel{equipe.length > 1 ? 's' : ''}</p>
+              </div>
+            )}
+            {moyenneAvis !== null && (
+              <div style={{ flex: '1 1 140px', padding: '16px 18px', background: 'var(--bg-2)', borderRadius: 12, textAlign: 'center' }}>
+                <Star style={{ width: 20, height: 20, color: 'var(--blue)', margin: '0 auto 6px' }} />
+                <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--ink)' }}>{moyenneAvis.toFixed(1)}/5</p>
+                <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>{avis.length} avis patients</p>
+              </div>
+            )}
+          </div>
+        )
+      )}
+
+      {/* À propos — court extrait, texte complet sur sa propre page */}
+      {(apropos?.mission || apropos?.histoire) && (
+        <div style={{ marginBottom: 36 }}>
+          <SectionTitle title="À propos" lienTexte="En savoir plus" lienVers="apropos" />
+          <p style={{ fontSize: 14, color: 'var(--ink-2)', lineHeight: 1.6 }}>
+            {(apropos.mission || apropos.histoire).slice(0, 220)}
+            {(apropos.mission || apropos.histoire).length > 220 ? '…' : ''}
+          </p>
         </div>
       )}
 
@@ -168,6 +201,35 @@ export default function EtablissementAccueilPage() {
                 </Link>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Actualités */}
+      {!!actualites?.length && (
+        <div style={{ marginBottom: 36 }}>
+          <SectionTitle title="Actualités" lienTexte="Voir toutes les actualités" lienVers="actualites" />
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
+            {actualites.slice(0, 3).map((a) => (
+              <Link
+                key={a.id}
+                to={`actualites/${a.id}`}
+                style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border, #E2E8F0)', textDecoration: 'none', background: 'white' }}
+              >
+                <div
+                  style={{
+                    height: 100,
+                    background: a.photoURL ? `url(${a.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
+                  }}
+                />
+                <div style={{ padding: '10px 12px' }}>
+                  <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--blue)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    {LABEL_CATEGORIE[a.categorie] || 'Actualité'}
+                  </span>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginTop: 3, lineHeight: 1.3 }}>{a.titre}</p>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       )}

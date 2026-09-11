@@ -14,6 +14,7 @@ const LIENS_SITE = [
   { to: '.', end: true, label: 'Accueil' },
   { to: 'tarifs', label: 'Tarifs' },
   { to: 'avis', label: 'Avis' },
+  { to: 'actualites', label: 'Actualités' },
   { to: 'contact', label: 'Contact' },
 ];
 
@@ -168,7 +169,7 @@ export default function EtablissementSiteHeader({ etablissement }) {
               </button>
             </div>
             <div className="space-y-1" style={{ marginBottom: 20 }}>
-              {[{ to: '.', end: true, label: 'Accueil' }, { to: 'services', label: 'Services' }, { to: 'equipe', label: 'Médecins' }, ...LIENS_SITE.slice(1)].map((l) => (
+              {[{ to: '.', end: true, label: 'Accueil' }, { to: 'services', label: 'Services' }, { to: 'equipe', label: 'Médecins' }, ...LIENS_SITE.slice(1), { to: 'apropos', label: 'À propos' }].map((l) => (
                 <NavLink
                   key={l.to}
                   to={l.to}

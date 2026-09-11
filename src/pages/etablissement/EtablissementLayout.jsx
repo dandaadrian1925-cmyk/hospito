@@ -1,9 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getEtablissement, listerTarifsConsultation } from '../../services/etablissementsPublicService';
+import { getEtablissement, listerTarifsConsultation, getAPropos } from '../../services/etablissementsPublicService';
 import EtablissementSiteHeader from '../../components/etablissement/EtablissementSiteHeader';
 import EtablissementSiteFooter from '../../components/etablissement/EtablissementSiteFooter';
+
+// Assombrit une couleur hex d'un pourcentage donné — utilisé pour dériver
+// une teinte "hover"/foncée à partir de l'unique couleur choisie par le
+// sysadmin (cf. apropos.couleurPrimaire), sans lui demander une palette
+// complète.
+function assombrir(hex, pct) {
+  const n = parseInt(hex.replace('#', ''), 16);
+  const r = Math.max(0, ((n >> 16) & 255) * (1 - pct));
+  const g = Math.max(0, ((n >> 8) & 255) * (1 - pct));
+  const b = Math.max(0, (n & 255) * (1 - pct));
+  return `#${[r, g, b].map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+}
 
 // #refonte (retour utilisateur, capture d'écran d'un vrai site d'hôpital
 // (chuy.cm) : "ça doit afficher le site web entier de l'établissement navbar
@@ -19,6 +31,7 @@ export default function EtablissementLayout() {
   const { user, userProfile } = useAuth();
   const [etablissement, setEtablissement] = useState(null);
   const [tarifs, setTarifs] = useState([]);
+  const [apropos, setApropos] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,7 +39,17 @@ export default function EtablissementLayout() {
       .then(setEtablissement)
       .finally(() => setLoading(false));
     listerTarifsConsultation(etablissementId).then(setTarifs).catch(() => setTarifs([]));
+    getAPropos(etablissementId).then((data) => setApropos(data || {})).catch(() => setApropos({}));
   }, [etablissementId]);
+
+  // #nouveau (demande utilisateur, "la palette de couleur du site de cet
+  // établissement est choisie par le super admin") : une seule couleur
+  // saisie (apropos.couleurPrimaire, cf. ParametresPage) suffit à retheme
+  // tout le site — elle écrase les variables CSS déjà utilisées partout
+  // (--blue/--blue-dark/--primary-dark) via ce wrapper, sans toucher un
+  // seul composant enfant.
+  const couleur = apropos?.couleurPrimaire;
+  const styleTheme = couleur ? { '--blue': couleur, '--blue-dark': assombrir(couleur, 0.18), '--primary-dark': assombrir(couleur, 0.35) } : undefined;
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-3)' }}>Chargement…</div>;
@@ -44,11 +67,11 @@ export default function EtablissementLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white', ...styleTheme }}>
       <EtablissementSiteHeader etablissement={etablissement} />
 
       <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px' }}>
-        <Outlet context={{ etablissement, tarifs, etablissementId, user, userProfile }} />
+        <Outlet context={{ etablissement, tarifs, apropos, etablissementId, user, userProfile }} />
       </div>
 
       <EtablissementSiteFooter etablissement={etablissement} />

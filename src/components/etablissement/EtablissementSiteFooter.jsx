@@ -6,6 +6,8 @@ const LIENS_SITE = [
   { to: 'equipe', label: 'Équipe médicale' },
   { to: 'tarifs', label: 'Tarifs' },
   { to: 'avis', label: 'Avis patients' },
+  { to: 'actualites', label: 'Actualités' },
+  { to: 'apropos', label: 'À propos' },
   { to: 'contact', label: 'Contact' },
 ];
 

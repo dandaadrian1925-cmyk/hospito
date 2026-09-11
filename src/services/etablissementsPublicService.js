@@ -39,3 +39,32 @@ export async function listerTarifsConsultation(etablissementId) {
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+
+// #nouveau (demande utilisateur, "c'est le super admin qui les ajoutes
+// dynamiquement") : "À propos" (histoire, mission, valeurs, agrément,
+// chiffres clés, couleur du site) — saisi par le sysadmin depuis
+// hospito-super-admin (cf. contenuVitrineService.js), doc public, absent
+// tant que rien n'a été saisi (jamais de contenu inventé côté patient).
+export async function getAPropos(etablissementId) {
+  const snap = await getDoc(doc(db, 'apropos', etablissementId));
+  return snap.exists() ? snap.data() : null;
+}
+
+// Actualités publiées uniquement (statut=='publie') — un brouillon n'est
+// jamais lisible ici, cf. firestore.rules.
+export async function listerActualitesPubliees(etablissementId) {
+  const q = query(
+    collection(db, 'actualites'),
+    where('etablissementId', '==', etablissementId),
+    where('statut', '==', 'publie'),
+  );
+  const snap = await getDocs(q);
+  return snap.docs
+    .map((d) => ({ id: d.id, ...d.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+}
+
+export async function getActualite(actualiteId) {
+  const snap = await getDoc(doc(db, 'actualites', actualiteId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
