@@ -89,9 +89,12 @@ export default function EtablissementSiteHeader({ etablissement }) {
         </a>
       )}
 
-      {/* Nav principale */}
-      <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderBottom: '1px solid var(--border, #E2E8F0)' }}>
-        <Link to="." style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0, marginRight: 8 }}>
+      {/* Nav principale — logo à gauche, tout le reste regroupé à droite
+          (retour utilisateur : "les options doivent être à droite mais
+          avant le bouton Prendre RDV"), et le hamburger toujours épinglé à
+          l'extrême droite sur mobile même quand le reste est masqué. */}
+      <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: 'white', borderBottom: '1px solid var(--border, #E2E8F0)' }}>
+        <Link to="." style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           <div
             style={{
               width: 40, height: 40, borderRadius: 10, flexShrink: 0,
@@ -104,42 +107,44 @@ export default function EtablissementSiteHeader({ etablissement }) {
           <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 15 }}>{etablissement.nom}</span>
         </Link>
 
-        <nav className="etab-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 4, flex: 1 }}>
-          <NavLink
-            to="."
-            end
-            style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
-          >
-            Accueil
-          </NavLink>
-          <ServicesMenu etablissementId={etablissement.id} />
-          <NavLink
-            to="equipe"
-            style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
-          >
-            Médecins
-          </NavLink>
-          {LIENS_SITE.slice(1).map((l) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <nav className="etab-nav-desktop" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <NavLink
-              key={l.to}
-              to={l.to}
-              style={({ isActive }) => ({
-                padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
-                color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent',
-              })}
+              to="."
+              end
+              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
             >
-              {l.label}
+              Accueil
             </NavLink>
-          ))}
-        </nav>
+            <ServicesMenu etablissementId={etablissement.id} />
+            <NavLink
+              to="equipe"
+              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
+            >
+              Médecins
+            </NavLink>
+            {LIENS_SITE.slice(1).map((l) => (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                style={({ isActive }) => ({
+                  padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
+                  color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent',
+                })}
+              >
+                {l.label}
+              </NavLink>
+            ))}
+          </nav>
 
-        <div className="etab-nav-cta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre RDV
-          </Link>
-          <Link to="dossier" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient
-          </Link>
+          <div className="etab-nav-cta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+            <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre RDV
+            </Link>
+            <Link to="dossier" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient
+            </Link>
+          </div>
         </div>
 
         <button

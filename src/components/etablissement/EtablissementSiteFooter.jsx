@@ -68,10 +68,14 @@ export default function EtablissementSiteFooter({ etablissement }) {
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5,
         }}
       >
-        <span>Propulsé par HostoConnect</span>
+        {/* #corrigé (retour utilisateur, capture d'écran) : la bulle de chat
+            support flottante (fixed, bas-droite) recouvrait ce lien quand il
+            était à droite — placé à gauche, seul le texte décoratif
+            "Propulsé par" reste dans la zone que la bulle peut chevaucher. */}
         <Link to="/" style={{ color: 'white', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
           <ChevronLeft style={{ width: 13, height: 13 }} /> Retour à HostoConnect
         </Link>
+        <span>Propulsé par HostoConnect</span>
       </div>
     </footer>
   );

@@ -7,14 +7,20 @@ export const LABEL_INFO_PRATIQUE = {
 };
 
 export default function InfosPratiquesSection({ etablissementId }) {
-  const [infos, setInfos] = useState(null);
+  const [infos, setInfos] = useState(undefined);
 
   useEffect(() => {
-    getInfosPratiques(etablissementId).then(setInfos).catch(() => setInfos(null));
+    getInfosPratiques(etablissementId).then((data) => setInfos(data || {})).catch(() => setInfos({}));
   }, [etablissementId]);
 
-  const entrees = infos ? Object.entries(LABEL_INFO_PRATIQUE).filter(([key]) => infos[key]?.trim()) : [];
-  if (!entrees.length) return null;
+  if (infos === undefined) return <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>Chargement…</p>;
+  const entrees = Object.entries(LABEL_INFO_PRATIQUE).filter(([key]) => infos[key]?.trim());
+  // #corrigé (retour utilisateur, capture d'écran : page Contact quasi
+  // entièrement vide, donnant l'impression d'une page cassée) : un état vide
+  // explicite plutôt que de ne rien afficher du tout à la place.
+  if (!entrees.length) {
+    return <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>Aucune information pratique renseignée par l'établissement pour le moment.</p>;
+  }
 
   return (
     <div style={{ marginBottom: 28 }}>
