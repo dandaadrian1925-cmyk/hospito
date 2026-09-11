@@ -138,12 +138,12 @@ export default function EtablissementSiteHeader({ etablissement }) {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const telephone = etablissement.contactTelephone;
 
-  // #corrigé (retour utilisateur, "l'entête du site des établissements ne
-  // scrolle pas, reste fixe en haut") : `position: sticky` retiré — l'en-tête
-  // défile désormais normalement avec le reste de la page, comme un site
-  // classique, plutôt que de rester épinglé en haut de l'écran.
+  // #corrigé (retour utilisateur, "l'entête du site de l'établissement doit
+  // rester fixe en haut de l'écran, donc apparaître même quand on scrolle") :
+  // `position: sticky` restauré — un précédent retour utilisateur avait été
+  // mal interprété comme une demande de suppression de ce comportement.
   return (
-    <header style={{ zIndex: 100 }}>
+    <header style={{ position: 'sticky', top: 0, zIndex: 100 }}>
       {/* Bandeau Urgences — très visible, uniquement si un vrai numéro existe (jamais un service fictif) */}
       {telephone && (
         <a
