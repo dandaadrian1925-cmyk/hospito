@@ -2,7 +2,6 @@ import { useOutletContext, Link } from 'react-router-dom';
 import { MapPin, Phone, MessageCircle, AlertTriangle, Clock } from 'lucide-react';
 import InfosPratiquesSection from '../../components/etablissement/InfosPratiquesSection';
 import EtablissementAssistantIA from '../../components/etablissement/EtablissementAssistantIA';
-import EtablissementSupportOperateur from '../../components/etablissement/EtablissementSupportOperateur';
 
 export default function EtablissementContactPage() {
   const { etablissement, etablissementId, tarifs, apropos, user, userProfile } = useOutletContext();
@@ -56,11 +55,7 @@ export default function EtablissementContactPage() {
       <InfosPratiquesSection etablissementId={etablissementId} />
 
       <div style={{ marginBottom: 28 }}>
-        <EtablissementAssistantIA etablissement={etablissement} tarifs={tarifs} apropos={apropos} />
-      </div>
-
-      <div style={{ marginBottom: 28 }}>
-        <EtablissementSupportOperateur etablissementId={etablissementId} etablissementNom={etablissement.nom} user={user} userProfile={userProfile} />
+        <EtablissementAssistantIA etablissement={etablissement} tarifs={tarifs} apropos={apropos} user={user} userProfile={userProfile} />
       </div>
 
       <Link
