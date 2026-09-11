@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { creerDemandeRdv } from '../../services/demandesRendezVousService';
-import { listerSpecialistesDuService } from '../../services/planningService';
+import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
 import { trouverBilletValideDuPatient } from '../../services/billetsService';
 
 export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
@@ -51,7 +51,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   useEffect(() => {
     setMedecinPrefere(null);
     if (!serviceId) { setSpecialistes([]); return; }
-    listerSpecialistesDuService(etablissementId, serviceId).then(setSpecialistes).catch(() => setSpecialistes([]));
+    listerSpecialistesAvecCreneaux(etablissementId, serviceId).then(setSpecialistes).catch(() => setSpecialistes([]));
   }, [etablissementId, serviceId]);
 
   // #nouveau (demande utilisateur, "facilité de prendre rendez-vous avec ce
@@ -161,7 +161,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
           </div>
         )}
         {serviceId && specialistes.length === 0 && (
-          <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Aucun planning renseigné pour ce service pour le moment.</p>
+          <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Aucun horaire renseigné pour ce service pour le moment.</p>
         )}
         {medecinPrefere && (
           <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link, useOutletContext } from 'react-router-dom';
 import { ChevronLeft, Clock, MapPinned, Phone, UserCog, CalendarClock } from 'lucide-react';
 import { getService } from '../../services/etablissementsPublicService';
-import { listerSpecialistesDuService } from '../../services/planningService';
+import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
 import { getProfilPublic } from '../../services/profilPublicService';
 import { getSettingsEtablissement } from '../../services/settingsService';
 
@@ -28,7 +28,7 @@ export default function EtablissementServiceDetailPage() {
 
   useEffect(() => {
     getService(serviceId).then(setService).catch(() => setService(null));
-    listerSpecialistesDuService(etablissementId, serviceId).then(setEquipe).catch(() => setEquipe([]));
+    listerSpecialistesAvecCreneaux(etablissementId, serviceId).then(setEquipe).catch(() => setEquipe([]));
     getSettingsEtablissement(etablissementId).then(setSettings).catch(() => setSettings(null));
   }, [serviceId, etablissementId]);
 
@@ -125,7 +125,7 @@ export default function EtablissementServiceDetailPage() {
         {equipe === null ? (
           <p style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>Chargement…</p>
         ) : !equipe.length ? (
-          <p style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>Aucun planning renseigné pour ce service pour le moment.</p>
+          <p style={{ fontSize: 12.5, color: 'var(--ink-4)' }}>Aucun horaire renseigné pour ce service pour le moment.</p>
         ) : (
           <div className="space-y-2">
             {equipe.map((m) => (

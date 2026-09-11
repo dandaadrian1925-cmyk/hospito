@@ -6,7 +6,7 @@ import {
   Clock, AlertTriangle, Quote, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
-import { listerSpecialistesDuService } from '../../services/planningService';
+import { listerMedecinsDeLEtablissement } from '../../services/planningService';
 import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import { getTransparenceAttente } from '../../services/transparenceService';
 import { IMAGES_GENERIQUES } from '../../components/home/EtablissementHeroCarousel';
@@ -72,28 +72,15 @@ export default function EtablissementAccueilPage() {
     getTransparenceAttente(etablissementId).then(setTemps).catch(() => setTemps(null));
   }, [etablissementId]);
 
-  // Toute l'équipe est agrégée ici (pas seulement les vignettes affichées)
-  // pour que la statistique "Professionnels" soit un vrai décompte, jamais
-  // un chiffre inventé.
+  // #refonte (demande utilisateur, "efface la logique de planning du
+  // personnel actuelle") : `listerMedecinsDeLEtablissement` (medecins_publics)
+  // liste déjà TOUS les médecins actifs de l'établissement en un seul appel,
+  // avec ou sans horaires renseignés — plus besoin de boucler service par
+  // service ni de dédupliquer, la statistique "Professionnels" reste un vrai
+  // décompte, jamais un chiffre inventé.
   useEffect(() => {
-    if (!services?.length) return;
-    let annule = false;
-    (async () => {
-      const vus = new Set();
-      const trouves = [];
-      for (const s of services) {
-        const medecins = await listerSpecialistesDuService(etablissementId, s.id).catch(() => []);
-        medecins.forEach((m) => {
-          if (!vus.has(m.uid)) {
-            vus.add(m.uid);
-            trouves.push({ ...m, serviceNom: s.nom });
-          }
-        });
-      }
-      if (!annule) setEquipe(trouves);
-    })();
-    return () => { annule = true; };
-  }, [services, etablissementId]);
+    listerMedecinsDeLEtablissement(etablissementId).then(setEquipe).catch(() => setEquipe([]));
+  }, [etablissementId]);
 
   // #corrigé (retour utilisateur, capture d'écran : une facture s'affichait
   // en fond du hero) : l'ancien repli piochait la photo d'un service AU
