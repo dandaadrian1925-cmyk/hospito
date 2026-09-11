@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { creerDemandeRdv, getMesDemandesRdv } from '../../services/demandesRendezVousService';
 import { listerSpecialistesDuService } from '../../services/planningService';
+import { trouverBilletValideDuPatient } from '../../services/billetsService';
 import TeleconsultationCallWidget from '../teleconsultation/TeleconsultationCallWidget';
 
-export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
+export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
   const [services, setServices] = useState([]);
   const [serviceId, setServiceId] = useState(initialServiceId || '');
   const [motif, setMotif] = useState('');
@@ -15,6 +17,21 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   const [demandes, setDemandes] = useState([]);
   const [specialistes, setSpecialistes] = useState([]);
   const [medecinPrefere, setMedecinPrefere] = useState(null);
+  // #nouveau (demande utilisateur, "un popup doit dire si on a déjà un
+  // billet de consultation encore valide avant d'envoyer une demande de
+  // RDV, mais ça envoie quand même la demande") : informatif seulement — ne
+  // bloque jamais l'envoi, le patient reste libre de reprendre RDV même
+  // avec un billet en cours (ex. suivi différent).
+  const [billetValide, setBilletValide] = useState(null);
+  const [confirmationOuverte, setConfirmationOuverte] = useState(false);
+
+  useEffect(() => {
+    let annule = false;
+    trouverBilletValideDuPatient(patientUid, etablissementId, serviceId || null)
+      .then((b) => { if (!annule) setBilletValide(b); })
+      .catch(() => { if (!annule) setBilletValide(null); });
+    return () => { annule = true; };
+  }, [patientUid, etablissementId, serviceId]);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -33,6 +50,15 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     listerSpecialistesDuService(etablissementId, serviceId).then(setSpecialistes).catch(() => setSpecialistes([]));
   }, [etablissementId, serviceId]);
 
+  // #nouveau (demande utilisateur, "facilité de prendre rendez-vous avec ce
+  // médecin là", depuis la page Médecins) : préférence choisie hors de la
+  // liste des spécialistes de garde ci-dessus — appliquée APRÈS l'effet qui
+  // la réinitialise au changement de service (déclaré juste au-dessus),
+  // donc jamais écrasée par lui.
+  useEffect(() => {
+    if (initialMedecin?.uid) setMedecinPrefere({ uid: initialMedecin.uid, nom: initialMedecin.nom, date: null });
+  }, [initialMedecin]);
+
   const choisirCreneau = (medecin, date) => {
     setMedecinPrefere({ uid: medecin.uid, nom: medecin.nom, date });
     setDateSouhaitee(date);
@@ -48,12 +74,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     recharger();
   }, [recharger]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!motif.trim()) {
-      toast.error('Merci de préciser le motif');
-      return;
-    }
+  const envoyerLaDemande = async () => {
     setEnvoi(true);
     try {
       const service = services.find((s) => s.id === serviceId);
@@ -68,6 +89,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
       setDateSouhaitee('');
       setTeleconsultation(false);
       setMedecinPrefere(null);
+      setConfirmationOuverte(false);
       recharger();
     } catch (err) {
       console.error('creerDemandeRdv a échoué :', err);
@@ -75,6 +97,21 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     } finally {
       setEnvoi(false);
     }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!motif.trim()) {
+      toast.error('Merci de préciser le motif');
+      return;
+    }
+    // Informe le patient qu'un billet est déjà valide, sans jamais bloquer
+    // l'envoi — c'est lui qui décide s'il en a quand même besoin d'un autre.
+    if (billetValide) {
+      setConfirmationOuverte(true);
+      return;
+    }
+    envoyerLaDemande();
   };
 
   return (
@@ -128,15 +165,16 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
                 </div>
               ))}
             </div>
-            {medecinPrefere && (
-              <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: 6 }}>
-                Préférence : Dr {medecinPrefere.nom}, {new Date(medecinPrefere.date).toLocaleDateString('fr-FR', { dateStyle: 'medium' })} — confirmée par l'accueil.
-              </p>
-            )}
           </div>
         )}
         {serviceId && specialistes.length === 0 && (
           <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>Aucun planning renseigné pour ce service pour le moment.</p>
+        )}
+        {medecinPrefere && (
+          <p style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+            Préférence : Dr {medecinPrefere.nom}
+            {medecinPrefere.date ? `, ${new Date(medecinPrefere.date).toLocaleDateString('fr-FR', { dateStyle: 'medium' })}` : ''} — confirmée par l'accueil.
+          </p>
         )}
         <div>
           <label className="block text-sm font-bold text-gray-700 mb-2">Motif de la visite *</label>
@@ -150,10 +188,38 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
           <input type="checkbox" checked={teleconsultation} onChange={(e) => setTeleconsultation(e.target.checked)} />
           Téléconsultation (visio) plutôt qu'un rendez-vous sur place
         </label>
+        {billetValide && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--ink-2)', background: 'var(--bg-2)', borderRadius: 10, padding: '10px 12px' }}>
+            <CalendarClock style={{ width: 15, height: 15, color: 'var(--blue)', flexShrink: 0, marginTop: 1 }} />
+            Vous avez déjà un billet de consultation valide jusqu'au {billetValide.expireLe.toLocaleDateString('fr-FR', { dateStyle: 'medium' })}
+            {billetValide.serviceNom ? ` (${billetValide.serviceNom})` : ''} — vous pouvez vous présenter directement à l'accueil. Vous pouvez tout de même envoyer une nouvelle demande si besoin.
+          </div>
+        )}
         <button type="submit" disabled={envoi} className="btn-primary">
           {envoi ? 'Envoi…' : 'Envoyer la demande'}
         </button>
       </form>
+
+      {confirmationOuverte && (
+        <div
+          onClick={() => setConfirmationOuverte(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.45)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div onClick={(e) => e.stopPropagation()} style={{ background: 'white', borderRadius: 14, padding: 22, maxWidth: 380, width: '100%' }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)', marginBottom: 8 }}>Billet de consultation encore valide</p>
+            <p style={{ fontSize: 13.5, color: 'var(--ink-2)', lineHeight: 1.5, marginBottom: 18 }}>
+              Vous avez déjà un billet de consultation valide jusqu'au {billetValide?.expireLe?.toLocaleDateString('fr-FR', { dateStyle: 'medium' })}
+              {billetValide?.serviceNom ? ` pour ${billetValide.serviceNom}` : ''}. Vous pouvez vous présenter directement à l'accueil sans nouvelle demande, ou envoyer quand même cette demande.
+            </p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+              <button type="button" onClick={() => setConfirmationOuverte(false)} className="btn-outline">Annuler</button>
+              <button type="button" onClick={envoyerLaDemande} disabled={envoi} className="btn-primary">
+                {envoi ? 'Envoi…' : 'Envoyer quand même'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {demandes.length > 0 && (
         <div style={{ marginTop: 28 }}>

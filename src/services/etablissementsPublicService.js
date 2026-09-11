@@ -18,6 +18,15 @@ export async function listerServicesActifs(etablissementId) {
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
+// #nouveau (demande utilisateur, "il ne doit plus avoir les autres services
+// affichés... une page d'information de ce service") : un service devient
+// une vraie page dédiée (route services/:serviceId) au lieu d'un panneau
+// déplié sous la liste — a besoin de sa propre lecture directe par id.
+export async function getService(serviceId) {
+  const snap = await getDoc(doc(db, 'services', serviceId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
 // #nouveau (demande utilisateur, "découvrir un établissement" — bug trouvé :
 // la recherche promettait "un établissement, une ville, un service" mais ne
 // filtrait jamais réellement sur les services) : tous les services actifs,

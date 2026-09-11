@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, ChevronDown, MessageCircle, Wallet, Flag, LifeBuoy } from 'lucide-react';
+import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, ChevronDown, Wallet, Flag, LifeBuoy } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 
 // #nouveau (demande utilisateur, "enlève Votre espace patient de l'accueil
 // et met tout ça dans espace patient de l'entête dès qu'on clique") : la
 // section grille de l'accueil disparaît, son contenu (liens) migre ici,
 // dans un menu déroulant au clic sur le bouton "Espace Patient".
+// #retiré (demande utilisateur, "messagerie ne sert plus à rien donc
+// enlève") : redondant depuis la fusion assistant IA + opérateur sur la
+// page Contact (EtablissementAssistantIA) — cette messagerie séparée n'a
+// plus d'utilité propre.
 const LIENS_ESPACE_PATIENT = [
   { to: 'dossier', label: 'Mon dossier', icon: FolderHeart },
-  { to: 'messagerie', label: 'Messagerie', icon: MessageCircle },
   { to: 'paiement', label: 'Paiement', icon: Wallet },
   { to: 'reclamations', label: 'Réclamations', icon: Flag },
   { to: 'securite', label: 'Sécurité', icon: LifeBuoy },
@@ -66,9 +69,11 @@ function EspacePatientMenu() {
 // l'entête... déjà inclus dans les informations de chaque service") :
 // "Tarifs" n'a plus de lien dédié — le tarif d'un service reste visible
 // dans sa propre fiche (page Services).
+// #retiré (demande utilisateur, "enlève Avis de l'entête juste ça") : le
+// lien reste dans le footer et la page /avis existe toujours, seul le lien
+// de la navigation principale disparaît.
 const LIENS_SITE = [
   { to: '.', end: true, label: 'Accueil' },
-  { to: 'avis', label: 'Avis' },
   { to: 'actualites', label: 'Actualités' },
   { to: 'contact', label: 'Contact' },
 ];
@@ -109,7 +114,7 @@ function ServicesMenu({ etablissementId }) {
           {services.slice(0, 8).map((s) => (
             <Link
               key={s.id}
-              to={`services?service=${s.id}`}
+              to={`services/${s.id}`}
               style={{ display: 'block', padding: '8px 10px', fontSize: 13, color: 'var(--ink-2)', textDecoration: 'none', borderRadius: 8 }}
             >
               {s.nom}
@@ -150,15 +155,30 @@ export default function EtablissementSiteHeader({ etablissement }) {
           l'extrême droite sur mobile même quand le reste est masqué. */}
       <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: 'white', borderBottom: '1px solid var(--border, #E2E8F0)' }}>
         <Link to="." style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
-          <div
-            style={{
-              width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-              background: (etablissement.logoURL || etablissement.photoCarrousel1) ? `url(${etablissement.logoURL || etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            {!etablissement.logoURL && !etablissement.photoCarrousel1 && <span style={{ color: 'white', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>}
-          </div>
+          {/* #corrigé (retour utilisateur, "le logo que j'ai modifié n'a pas
+              du tout été bien chargé dans l'entête") : un vrai logo
+              (etablissement.logoURL, généralement rectangulaire, souvent sur
+              fond blanc/transparent) rendu en `background-image: cover` dans
+              un carré 40×40 se retrouvait rogné/déformé — illisible. Utilise
+              désormais une vraie balise <img> en `object-fit: contain` sur
+              fond blanc dès qu'un logo existe ; la photo de secours
+              (photoCarrousel1, une vraie photo pas un logo) garde le rendu
+              `cover` d'origine, plus adapté à une photographie. */}
+          {etablissement.logoURL ? (
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <img src={etablissement.logoURL} alt={etablissement.nom} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} />
+            </div>
+          ) : (
+            <div
+              style={{
+                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                background: etablissement.photoCarrousel1 ? `url(${etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              {!etablissement.photoCarrousel1 && <span style={{ color: 'white', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>}
+            </div>
+          )}
           <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 15 }}>{etablissement.nom}</span>
         </Link>
 

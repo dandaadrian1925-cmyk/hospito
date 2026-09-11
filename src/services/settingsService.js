@@ -55,7 +55,10 @@ export const getSettings = async () => {
 // hospito-super-admin (durée de validité du billet, délai de rappel RDV...).
 // Un patient peut avoir des rendez-vous dans plusieurs établissements, d'où
 // un cache par établissement plutôt qu'un cache global unique.
-const DEFAULTS_ETABLISSEMENT = { delaiRappelRendezVousHeures: 24 };
+// #nouveau (demande utilisateur, "la page de service doit afficher... la
+// validité du billet de consultation") : même valeur par défaut que
+// hospito-accueil-medecin/settingsService.js — jamais divergente.
+const DEFAULTS_ETABLISSEMENT = { delaiRappelRendezVousHeures: 24, dureeValiditeBilletJours: 14 };
 const cacheEtablissements = {};
 export const getSettingsEtablissement = async (etablissementId) => {
   if (cacheEtablissements[etablissementId]) return cacheEtablissements[etablissementId];

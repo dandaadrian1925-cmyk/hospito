@@ -48,7 +48,7 @@ function buildSlides(etablissement) {
       cta: 'Consulter mon dossier',
       ctaLink: `${base}/dossier`,
       secondary: 'Nous contacter',
-      secondaryLink: `${base}/messagerie`,
+      secondaryLink: `${base}/contact`,
     },
   ];
 }

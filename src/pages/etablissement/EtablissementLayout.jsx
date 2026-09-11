@@ -42,14 +42,21 @@ export default function EtablissementLayout() {
     getAPropos(etablissementId).then((data) => setApropos(data || {})).catch(() => setApropos({}));
   }, [etablissementId]);
 
-  // #nouveau (demande utilisateur, "la palette de couleur du site de cet
-  // établissement est choisie par le super admin") : une seule couleur
-  // saisie (apropos.couleurPrimaire, cf. ParametresPage) suffit à retheme
-  // tout le site — elle écrase les variables CSS déjà utilisées partout
-  // (--blue/--blue-dark/--primary-dark) via ce wrapper, sans toucher un
-  // seul composant enfant.
-  const couleur = apropos?.couleurPrimaire;
-  const styleTheme = couleur ? { '--blue': couleur, '--blue-dark': assombrir(couleur, 0.18), '--primary-dark': assombrir(couleur, 0.35) } : undefined;
+  // #corrigé (retour utilisateur, "je ne vois pas l'impact de la couleur
+  // secondaire") : le champ couleurSecondaire (Site web > Informations
+  // générales) était bien enregistré mais jamais lu ici — --primary-dark
+  // (dégradés, fonds sombres : hero, footer, bandeau CTA) restait calculé à
+  // partir de la couleur PRINCIPALE assombrie, sans jamais tenir compte du
+  // second choix du sysadmin. Utilise désormais couleurSecondaire dès
+  // qu'elle existe ; assombrissement automatique de la principale en repli
+  // sinon (comportement d'origine, établissement n'ayant choisi qu'une
+  // couleur).
+  const { couleurPrimaire, couleurSecondaire } = apropos || {};
+  const styleTheme = couleurPrimaire ? {
+    '--blue': couleurPrimaire,
+    '--blue-dark': assombrir(couleurPrimaire, 0.18),
+    '--primary-dark': couleurSecondaire || assombrir(couleurPrimaire, 0.35),
+  } : undefined;
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-3)' }}>Chargement…</div>;

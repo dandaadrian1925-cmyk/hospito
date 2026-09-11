@@ -3,6 +3,43 @@ import { db } from '../firebase/config';
 
 const aujourdHui = () => new Date().toISOString().slice(0, 10);
 
+const LABELS_JOUR = { lundi: 'Lundi', mardi: 'Mardi', mercredi: 'Mercredi', jeudi: 'Jeudi', vendredi: 'Vendredi', samedi: 'Samedi', dimanche: 'Dimanche' };
+const ORDRE_JOUR = Object.keys(LABELS_JOUR);
+
+// #nouveau (demande utilisateur, "la page Médecins doit lister tous les
+// médecins de l'établissement, filtrables par service, avec leurs horaires
+// de travail habituelles") : contrairement à listerSpecialistesDuService
+// (ci-dessous, limité aux médecins ayant un planning DATÉ à venir),
+// s'appuie sur `medecins_publics` (hospito-admin/personnelService.js), le
+// vrai annuaire — tout médecin actif y figure, avec ou sans planning proche.
+// Suspendus/bannis en sont déjà absents (le miroir est supprimé côté admin
+// dès la suspension) — jamais un filtre à refaire ici.
+export const listerMedecinsDeLEtablissement = async (etablissementId, serviceId) => {
+  const clauses = [where('etablissementId', '==', etablissementId)];
+  if (serviceId) clauses.push(where('serviceId', '==', serviceId));
+  const snap = await getDocs(query(collection(db, 'medecins_publics'), ...clauses));
+  const medecins = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+  const uids = medecins.map((m) => m.uid);
+  const photos = {};
+  for (let i = 0; i < uids.length; i += 30) {
+    const chunk = uids.slice(i, i + 30);
+    if (!chunk.length) continue;
+    const snapPublics = await getDocs(query(collection(db, 'profils_publics'), where(documentId(), 'in', chunk)));
+    snapPublics.docs.forEach((d) => { photos[d.id] = d.data().photoURL || null; });
+  }
+
+  return medecins
+    .map((m) => ({
+      ...m,
+      photoURL: photos[m.uid] || null,
+      horairesHabituels: (m.horairesHabituels || []).slice().sort((a, b) => ORDRE_JOUR.indexOf(a.jour) - ORDRE_JOUR.indexOf(b.jour)),
+    }))
+    .sort((a, b) => (a.nom || '').localeCompare(b.nom || ''));
+};
+
+export const LABEL_JOUR_SEMAINE = LABELS_JOUR;
+
 // Vue patient du planning des médecins (lecture seule — géré côté accueil/
 // admin) : pour un service donné, la liste des spécialistes qui y sont de
 // garde à un moment ou un autre, chacun avec les dates où le retrouver.

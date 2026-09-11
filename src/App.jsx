@@ -25,6 +25,7 @@ const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissement
 const EtablissementLayout = lazy(() => import('./pages/etablissement/EtablissementLayout'));
 const EtablissementAccueilPage = lazy(() => import('./pages/etablissement/EtablissementAccueilPage'));
 const EtablissementServicesPage = lazy(() => import('./pages/etablissement/EtablissementServicesPage'));
+const EtablissementServiceDetailPage = lazy(() => import('./pages/etablissement/EtablissementServiceDetailPage'));
 const EtablissementEquipePage = lazy(() => import('./pages/etablissement/EtablissementEquipePage'));
 const EtablissementTarifsPage = lazy(() => import('./pages/etablissement/EtablissementTarifsPage'));
 const EtablissementAvisPage = lazy(() => import('./pages/etablissement/EtablissementAvisPage'));
@@ -34,7 +35,6 @@ const EtablissementActualitesPage = lazy(() => import('./pages/etablissement/Eta
 const EtablissementActualiteDetailPage = lazy(() => import('./pages/etablissement/EtablissementActualiteDetailPage'));
 const EtablissementRdvPage = lazy(() => import('./pages/etablissement/EtablissementRdvPage'));
 const EtablissementDossierPage = lazy(() => import('./pages/etablissement/EtablissementDossierPage'));
-const EtablissementMessageriePage = lazy(() => import('./pages/etablissement/EtablissementMessageriePage'));
 const EtablissementPaiementPage = lazy(() => import('./pages/etablissement/EtablissementPaiementPage'));
 const EtablissementReclamationsPage = lazy(() => import('./pages/etablissement/EtablissementReclamationsPage'));
 const EtablissementSecuritePage = lazy(() => import('./pages/etablissement/EtablissementSecuritePage'));
@@ -138,6 +138,7 @@ export default function App() {
             <Route path="/etablissement/:etablissementId" element={<EtablissementLayout />}>
               <Route index element={<EtablissementAccueilPage />} />
               <Route path="services" element={<EtablissementServicesPage />} />
+              <Route path="services/:serviceId" element={<EtablissementServiceDetailPage />} />
               <Route path="equipe" element={<EtablissementEquipePage />} />
               <Route path="tarifs" element={<EtablissementTarifsPage />} />
               <Route path="avis" element={<EtablissementAvisPage />} />
@@ -147,7 +148,6 @@ export default function App() {
               <Route path="actualites/:actualiteId" element={<EtablissementActualiteDetailPage />} />
               <Route path="rdv" element={<EtablissementRdvPage />} />
               <Route path="dossier" element={<EtablissementDossierPage />} />
-              <Route path="messagerie" element={<EtablissementMessageriePage />} />
               <Route path="paiement" element={<EtablissementPaiementPage />} />
               <Route path="reclamations" element={<EtablissementReclamationsPage />} />
               <Route path="securite" element={<EtablissementSecuritePage />} />

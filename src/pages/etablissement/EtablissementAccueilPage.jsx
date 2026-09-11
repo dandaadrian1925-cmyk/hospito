@@ -258,7 +258,7 @@ export default function EtablissementAccueilPage() {
                         <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700, marginBottom: 10 }}>{Number(tarif.montant).toLocaleString('fr-FR')} XAF</p>
                       )}
                       <Link
-                        to={`services?service=${s.id}`}
+                        to={`services/${s.id}`}
                         style={{ alignSelf: 'flex-start', fontSize: 12.5, fontWeight: 700, color: 'var(--blue)', border: '1.5px solid var(--blue)', borderRadius: 999, padding: '6px 14px', textDecoration: 'none' }}
                       >
                         En savoir plus
@@ -419,7 +419,7 @@ export default function EtablissementAccueilPage() {
             <Link to="contact" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <MapPin style={{ width: 15, height: 15 }} /> Nous trouver
             </Link>
-            <Link to="messagerie" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Link to="contact" className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <WhatsAppIcon style={{ width: 15, height: 15 }} /> Poser une question
             </Link>
           </div>
