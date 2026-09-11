@@ -9,6 +9,7 @@ import { listerServicesActifs, listerActualitesPubliees } from '../../services/e
 import { listerSpecialistesDuService } from '../../services/planningService';
 import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import { getTransparenceAttente } from '../../services/transparenceService';
+import { IMAGES_GENERIQUES } from '../../components/home/EtablissementHeroCarousel';
 
 const LABEL_CATEGORIE = { nouveaute: 'Nouveauté', evenement: 'Événement', publication: 'Publication', autre: 'Actualité' };
 
@@ -53,6 +54,7 @@ export default function EtablissementAccueilPage() {
   const [avis, setAvis] = useState(null);
   const [actualites, setActualites] = useState(null);
   const [temps, setTemps] = useState(null);
+  const [slideHero, setSlideHero] = useState(0);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -93,7 +95,22 @@ export default function EtablissementAccueilPage() {
     return () => { annule = true; };
   }, [services, etablissementId]);
 
-  const imageHero = etablissement.photoCarrousel1 || services?.find((s) => s.photoURL)?.photoURL || null;
+  // #corrigé (retour utilisateur, capture d'écran : une facture s'affichait
+  // en fond du hero) : l'ancien repli piochait la photo d'un service AU
+  // HASARD (services?.find), sans rapport avec l'identité de l'établissement
+  // — retiré. Le hero est désormais un vrai carrousel : les photos réelles
+  // fournies par le sysadmin (photoCarrousel1/2/3) si elles existent, sinon
+  // les MÊMES images génériques que le carrousel d'entrée de HostoConnect
+  // (EtablissementHeroCarousel, page d'accueil de l'app).
+  const imagesHeroReelles = [etablissement.photoCarrousel1, etablissement.photoCarrousel2, etablissement.photoCarrousel3].filter(Boolean);
+  const imagesHero = imagesHeroReelles.length ? imagesHeroReelles : IMAGES_GENERIQUES;
+
+  useEffect(() => {
+    if (imagesHero.length < 2) return;
+    const t = setInterval(() => setSlideHero((i) => (i + 1) % imagesHero.length), 6000);
+    return () => clearInterval(t);
+  }, [imagesHero.length]);
+
   const telephone = etablissement.contactTelephone;
   const moyenneAvis = avis?.length ? avis.reduce((s, a) => s + a.note, 0) / avis.length : null;
   const chiffres = apropos?.chiffresCles?.length
@@ -124,13 +141,19 @@ export default function EtablissementAccueilPage() {
         </div>
       )}
 
-      {/* Hero — pleine largeur, chiffres clés intégrés */}
-      <div
-        style={{
-          ...PLEINE_LARGEUR,
-          background: imageHero ? `url(${imageHero}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
-        }}
-      >
+      {/* Hero — pleine largeur, carrousel de photos, chiffres clés intégrés */}
+      <div style={{ ...PLEINE_LARGEUR, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))' }}>
+        {imagesHero.map((src, i) => (
+          <div
+            key={src}
+            style={{
+              position: 'absolute', inset: 0,
+              backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center',
+              opacity: i === slideHero ? 1 : 0,
+              transition: 'opacity 1.2s ease',
+            }}
+          />
+        ))}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.85) 100%)' }} />
         <motion.div
           initial={fadeUp.initial}

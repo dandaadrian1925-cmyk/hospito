@@ -3,7 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Building2, CalendarPlus, FolderHeart } from 'lucide-react';
 
-const IMAGES_GENERIQUES = [
+// Exporté (demande utilisateur, "remplace par un carrousel des mêmes images
+// que le carrousel d'entrée dans HostoConnect") : réutilisé tel quel comme
+// repli par le hero de l'accueil établissement (EtablissementAccueilPage)
+// quand aucune vraie photo n'a été fournie par le sysadmin — même identité
+// visuelle partout dans l'app plutôt que d'improviser une autre image.
+export const IMAGES_GENERIQUES = [
   'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=900&q=65&fm=webp&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=900&q=65&fm=webp&auto=format&fit=crop',
   'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=900&q=65&fm=webp&auto=format&fit=crop',
