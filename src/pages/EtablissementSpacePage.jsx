@@ -30,15 +30,45 @@ import { listerFacturesEnAttente, initierPaiementFacture, attendreConfirmationFa
 import TeleconsultationCallWidget from '../components/teleconsultation/TeleconsultationCallWidget';
 import { getTransparenceAttente, getInfosPratiques } from '../services/transparenceService';
 
-const TABS = [
-  { id: 'rdv', label: 'Prendre RDV', icon: CalendarPlus },
+// #refonte (demande utilisateur, "ça doit apparaître comme un site web
+// classique mais tout doit se trouver sur une seule page principale") : plus
+// d'onglets qui masquent le reste au clic — chaque section a désormais son
+// ancre, affichée en permanence, et cette nav ne fait QUE défiler la même
+// page vers elle (comme le menu d'un vrai site vitrine).
+const SECTIONS_NAV = [
+  { id: 'services', label: 'Services', icon: Building2 },
+  { id: 'avis-public', label: 'Avis', icon: Star },
+  { id: 'rdv', label: 'Rendez-vous', icon: CalendarPlus },
   { id: 'dossier', label: 'Mon dossier', icon: FolderHeart },
   { id: 'messagerie', label: 'Messagerie', icon: MessageCircle },
   { id: 'paiement', label: 'Paiement', icon: Wallet },
   { id: 'reclamations', label: 'Réclamations', icon: Flag },
   { id: 'securite', label: 'Sécurité', icon: LifeBuoy },
-  { id: 'avis', label: 'Avis', icon: Star },
 ];
+
+function SectionHeading({ icon: Icon, title, id }) {
+  return (
+    <div id={id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, scrollMarginTop: 76 }}>
+      <Icon style={{ width: 18, height: 18, color: 'var(--blue)' }} />
+      <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)' }}>{title}</h2>
+    </div>
+  );
+}
+
+// Remplace l'ancien blocage total de page pour un visiteur non connecté :
+// désormais chaque section réservée reste visible (titre + emplacement),
+// avec juste cette invite à la place du contenu interactif — cohérent avec
+// "tout sur une seule page", y compris les parties qui nécessitent un compte.
+function SectionCTA({ action }) {
+  return (
+    <div style={{ padding: '18px 20px', borderRadius: 12, background: 'var(--bg-2)', textAlign: 'center' }}>
+      <p style={{ fontSize: 13.5, color: 'var(--ink-3)', marginBottom: 12 }}>Connectez-vous pour {action}.</p>
+      <Link to="/auth" className="btn-primary" style={{ display: 'inline-block' }}>
+        Se connecter / Créer un compte
+      </Link>
+    </div>
+  );
+}
 
 function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId }) {
   const [services, setServices] = useState([]);
@@ -881,8 +911,9 @@ function TabSecurite({ etablissementId, patientUid }) {
   );
 }
 
-function ServicesSection({ etablissementId, tarifs, onSelectService }) {
+function ServicesSection({ etablissementId, tarifs, peutPrendreRdv, onPrendreRdv }) {
   const [services, setServices] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     listerServicesActifs(etablissementId)
@@ -894,6 +925,7 @@ function ServicesSection({ etablissementId, tarifs, onSelectService }) {
   }, [etablissementId]);
 
   if (services === null || services.length === 0) return null;
+  const serviceOuvert = services.find((s) => s.id === expandedId) || null;
 
   return (
     <div style={{ marginBottom: 28 }}>
@@ -906,13 +938,13 @@ function ServicesSection({ etablissementId, tarifs, onSelectService }) {
         {services.map((s) => (
           <button
             key={s.id}
-            onClick={() => onSelectService(s)}
+            onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}
             style={{
               flexShrink: 0,
               width: 160,
               borderRadius: 12,
               overflow: 'hidden',
-              border: '1px solid var(--border, #E2E8F0)',
+              border: expandedId === s.id ? '1.5px solid var(--blue)' : '1px solid var(--border, #E2E8F0)',
               background: 'white',
               cursor: 'pointer',
               textAlign: 'left',
@@ -946,6 +978,15 @@ function ServicesSection({ etablissementId, tarifs, onSelectService }) {
           </button>
         ))}
       </div>
+
+      <ServiceDetailPanel
+        service={serviceOuvert}
+        etablissementId={etablissementId}
+        tarifs={tarifs}
+        peutPrendreRdv={peutPrendreRdv}
+        onClose={() => setExpandedId(null)}
+        onPrendreRdv={onPrendreRdv}
+      />
     </div>
   );
 }
@@ -1040,7 +1081,12 @@ function AvisPublicSection({ etablissementId }) {
   );
 }
 
-function ServiceDetailOverlay({ service, etablissementId, tarifs, onClose, onPrendreRdv, peutPrendreRdv }) {
+// #refonte (demande utilisateur, "tout doit se trouver sur une seule page
+// principale") : n'est plus une modale par-dessus la page (position fixed +
+// fond assombri) — le détail d'un service s'ouvre désormais À L'INTÉRIEUR du
+// flux normal de la page, juste sous la vignette cliquée, comme une section
+// qui se déplie sur un vrai site vitrine.
+function ServiceDetailPanel({ service, etablissementId, tarifs, onClose, onPrendreRdv, peutPrendreRdv }) {
   const [equipe, setEquipe] = useState(null);
 
   useEffect(() => {
@@ -1052,81 +1098,61 @@ function ServiceDetailOverlay({ service, etablissementId, tarifs, onClose, onPre
   const tarif = tarifs?.find((t) => t.serviceId === service.id);
 
   return (
-    <div
-      onClick={onClose}
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.45)',
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 100,
-      }}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          background: 'white', borderRadius: '16px 16px 0 0', width: '100%', maxWidth: 520,
-          maxHeight: '85vh', overflowY: 'auto', padding: 24,
-        }}
-      >
-        <div
-          style={{
-            height: 140, borderRadius: 12, marginBottom: 16,
-            background: service.photoURL ? `url(${service.photoURL}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          {!service.photoURL && (
-            <span style={{ color: 'white', fontSize: 32, fontWeight: 700 }}>{(service.nom || '?').charAt(0).toUpperCase()}</span>
-          )}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-          <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--ink)' }}>{service.nom}</h2>
+    <div style={{ background: 'var(--bg-2)', borderRadius: 14, padding: 20, marginTop: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+        <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--ink)' }}>{service.nom}</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
           {tarif && (
-            <span style={{ flexShrink: 0, fontSize: 13, fontWeight: 700, color: 'var(--blue)', background: 'var(--bg-2)', padding: '4px 10px', borderRadius: 999 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--blue)', background: 'white', padding: '4px 10px', borderRadius: 999 }}>
               {Number(tarif.montant).toLocaleString('fr-FR')} XAF
             </span>
           )}
-        </div>
-        <p style={{ fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 20 }}>
-          {service.description || "Aucune description fournie par l'établissement pour ce service."}
-        </p>
-
-        {!!equipe?.length && (
-          <div style={{ marginBottom: 20 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Équipe médicale</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {equipe.map((m) => (
-                <div key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-2)', borderRadius: 999, padding: '6px 12px 6px 6px' }}>
-                  {m.photoURL ? (
-                    <img src={m.photoURL} alt={m.nom} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--ink-3)' }}>
-                      {(m.nom || '?').trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('')}
-                    </div>
-                  )}
-                  <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>Dr {m.nom}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} className="btn-secondary" style={{ flex: 1 }}>Fermer</button>
-          {peutPrendreRdv && (
-            <button onClick={() => onPrendreRdv(service)} className="btn-primary" style={{ flex: 1 }}>Prendre RDV</button>
-          )}
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--ink-4)', lineHeight: 1, padding: 4 }} aria-label="Fermer">
+            ×
+          </button>
         </div>
       </div>
+      <p style={{ fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 16 }}>
+        {service.description || "Aucune description fournie par l'établissement pour ce service."}
+      </p>
+
+      {!!equipe?.length && (
+        <div style={{ marginBottom: 16 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Équipe médicale</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            {equipe.map((m) => (
+              <div key={m.uid} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'white', borderRadius: 999, padding: '6px 12px 6px 6px' }}>
+                {m.photoURL ? (
+                  <img src={m.photoURL} alt={m.nom} style={{ width: 26, height: 26, borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--ink-3)' }}>
+                    {(m.nom || '?').trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('')}
+                  </div>
+                )}
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>Dr {m.nom}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {peutPrendreRdv && (
+        <button onClick={() => onPrendreRdv(service)} className="btn-primary">Prendre RDV pour ce service</button>
+      )}
     </div>
   );
 }
 
-// #refonte (demande utilisateur, "toutes les informations de tous les
-// services de tous les admins d'un établissement... comme un site web
-// complet") : la fiche établissement (services, équipe, tarifs, avis, infos
-// pratiques) est désormais visible par TOUT LE MONDE, sans connexion — comme
-// le vrai site web d'un hôpital. Seules les actions (prendre RDV, payer,
-// consulter son dossier, écrire un avis…) restent réservées aux patients
-// connectés, via un bandeau d'appel à connexion plutôt qu'une page bloquée.
+// #refonte (demande utilisateur, "ça doit apparaître comme un site web
+// classique mais tout doit se trouver sur une seule page principale") : la
+// fiche établissement (services, équipe, tarifs, avis, infos pratiques,
+// prise de RDV, dossier, messagerie, paiement, réclamations, sécurité) est
+// désormais UNE SEULE page qui s'affiche en continu, du haut en bas, comme un
+// vrai site vitrine d'hôpital — plus aucune section n'est masquée derrière un
+// clic d'onglet ou une modale. Un visiteur non connecté voit exactement les
+// mêmes sections dans le même ordre ; seules celles qui exigent un compte
+// (RDV, dossier, messagerie…) affichent une invite à se connecter à la place
+// de leur contenu interactif (SectionCTA), au lieu de disparaître.
 export default function EtablissementSpacePage() {
   const { etablissementId } = useParams();
   const [searchParams] = useSearchParams();
@@ -1134,9 +1160,7 @@ export default function EtablissementSpacePage() {
   const [etablissement, setEtablissement] = useState(null);
   const [tarifs, setTarifs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const tabDemandee = searchParams.get('tab');
-  const [tab, setTab] = useState(TABS.some((t) => t.id === tabDemandee) ? tabDemandee : 'rdv');
-  const [serviceDetail, setServiceDetail] = useState(null);
+  const ancreDemandee = searchParams.get('tab');
   const [serviceRdvPreselectionne, setServiceRdvPreselectionne] = useState(null);
 
   useEffect(() => {
@@ -1145,6 +1169,20 @@ export default function EtablissementSpacePage() {
       .finally(() => setLoading(false));
     listerTarifsConsultation(etablissementId).then(setTarifs).catch(() => setTarifs([]));
   }, [etablissementId]);
+
+  // Compatibilité avec les liens existants du type ?tab=rdv (ex. depuis un
+  // rappel de RDV) : au lieu de sélectionner un onglet, on défile simplement
+  // jusqu'à la section correspondante de cette même page.
+  useEffect(() => {
+    if (!ancreDemandee || loading) return;
+    const el = document.getElementById(ancreDemandee);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [ancreDemandee, loading]);
+
+  const allerPrendreRdv = (service) => {
+    setServiceRdvPreselectionne(service.id);
+    document.getElementById('rdv')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-3)' }}>Chargement…</div>;
@@ -1195,98 +1233,108 @@ export default function EtablissementSpacePage() {
         </div>
       </div>
 
+      {/* Nav d'ancres — ne fait que défiler CETTE MÊME page, comme le menu d'un site vitrine classique */}
+      <div
+        className="flex flex-nowrap gap-1 overflow-x-auto scrollbar-hide"
+        style={{ borderBottom: '1.5px solid var(--border, #E2E8F0)', marginBottom: 28 }}
+      >
+        {SECTIONS_NAV.map((s) => {
+          const Icon = s.icon;
+          return (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              style={{
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                padding: '10px 14px',
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'var(--ink-3)',
+                textDecoration: 'none',
+              }}
+            >
+              <Icon style={{ width: 15, height: 15 }} />
+              {s.label}
+            </a>
+          );
+        })}
+      </div>
+
       <TempsAttenteBadge etablissementId={etablissementId} />
 
       <InfosPratiquesSection etablissementId={etablissementId} />
 
-      <ServicesSection etablissementId={etablissementId} tarifs={tarifs} onSelectService={setServiceDetail} />
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={Building2} title="Services & tarifs" id="services" />
+        <ServicesSection etablissementId={etablissementId} tarifs={tarifs} peutPrendreRdv={!!user} onPrendreRdv={allerPrendreRdv} />
+      </div>
 
-      <AvisPublicSection etablissementId={etablissementId} />
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={Star} title="Avis des patients" id="avis-public" />
+        <AvisPublicSection etablissementId={etablissementId} />
+      </div>
 
-      {!user ? (
-        <div style={{ padding: '20px 22px', borderRadius: 14, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))', textAlign: 'center' }}>
-          <Building2 style={{ width: 26, height: 26, margin: '0 auto 8px', color: 'white' }} />
-          <p style={{ fontSize: 15, fontWeight: 700, color: 'white', marginBottom: 4 }}>
-            Prenez rendez-vous, consultez votre dossier et échangez avec {etablissement.nom}
-          </p>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)', marginBottom: 16 }}>
-            Créez un compte ou connectez-vous — c'est gratuit et ça prend une minute.
-          </p>
-          <Link to="/auth" className="btn-secondary" style={{ display: 'inline-block' }}>
-            Se connecter / Créer un compte
-          </Link>
-        </div>
-      ) : (
-        <>
-          <div
-            className="flex flex-nowrap gap-2 overflow-x-auto scrollbar-hide"
-            style={{ borderBottom: '1.5px solid var(--border, #E2E8F0)', marginBottom: 24 }}
-          >
-            {TABS.map((t) => {
-              const Icon = t.icon;
-              const active = tab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setTab(t.id)}
-                  style={{
-                    flexShrink: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '10px 14px',
-                    fontSize: 13,
-                    fontWeight: 600,
-                    border: 'none',
-                    background: 'none',
-                    cursor: 'pointer',
-                    color: active ? 'var(--blue)' : 'var(--ink-3)',
-                    borderBottom: active ? '2px solid var(--blue)' : '2px solid transparent',
-                  }}
-                >
-                  <Icon style={{ width: 15, height: 15 }} />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={CalendarPlus} title="Prendre rendez-vous" id="rdv" />
+        {user ? (
+          <TabRdv
+            etablissementId={etablissementId}
+            patientUid={user.uid}
+            patientNom={patientNom}
+            initialServiceId={serviceRdvPreselectionne}
+          />
+        ) : (
+          <SectionCTA action="prendre rendez-vous" />
+        )}
+      </div>
 
-          {tab === 'rdv' && (
-            <TabRdv
-              etablissementId={etablissementId}
-              patientUid={user.uid}
-              patientNom={patientNom}
-              initialServiceId={serviceRdvPreselectionne}
-            />
-          )}
-          {tab === 'dossier' && (
-            <>
-              <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
-              <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
-            </>
-          )}
-          {tab === 'messagerie' && (
-            <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
-          )}
-          {tab === 'paiement' && <TabPaiement patientUid={user.uid} etablissementId={etablissementId} />}
-          {tab === 'reclamations' && <TabReclamations etablissementId={etablissementId} patientUid={user.uid} />}
-          {tab === 'securite' && <TabSecurite etablissementId={etablissementId} patientUid={user.uid} />}
-          {tab === 'avis' && <TabAvis etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />}
-        </>
-      )}
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={FolderHeart} title="Mon dossier médical" id="dossier" />
+        {user ? (
+          <>
+            <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
+            <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
+          </>
+        ) : (
+          <SectionCTA action="consulter votre dossier médical" />
+        )}
+      </div>
 
-      <ServiceDetailOverlay
-        service={serviceDetail}
-        etablissementId={etablissementId}
-        tarifs={tarifs}
-        peutPrendreRdv={!!user}
-        onClose={() => setServiceDetail(null)}
-        onPrendreRdv={(s) => {
-          setServiceRdvPreselectionne(s.id);
-          setTab('rdv');
-          setServiceDetail(null);
-        }}
-      />
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={MessageCircle} title="Messagerie" id="messagerie" />
+        {user ? (
+          <TabMessagerie etablissementId={etablissementId} patientUid={user.uid} etablissementNom={etablissement.nom} />
+        ) : (
+          <SectionCTA action="échanger avec l'établissement" />
+        )}
+      </div>
+
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={Wallet} title="Paiement & factures" id="paiement" />
+        {user ? <TabPaiement patientUid={user.uid} etablissementId={etablissementId} /> : <SectionCTA action="gérer vos paiements" />}
+      </div>
+
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={Flag} title="Réclamations" id="reclamations" />
+        {user ? <TabReclamations etablissementId={etablissementId} patientUid={user.uid} /> : <SectionCTA action="ouvrir une réclamation" />}
+      </div>
+
+      <div style={{ marginBottom: 32 }}>
+        <SectionHeading icon={LifeBuoy} title="Sécurité personnelle" id="securite" />
+        {user ? <TabSecurite etablissementId={etablissementId} patientUid={user.uid} /> : <SectionCTA action="faire un signalement" />}
+      </div>
+
+      <div>
+        <SectionHeading icon={Star} title="Donner mon avis" id="mon-avis" />
+        {user ? (
+          <TabAvis etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
+        ) : (
+          <SectionCTA action="déposer votre avis" />
+        )}
+      </div>
     </div>
   );
 }
