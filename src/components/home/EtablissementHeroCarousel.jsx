@@ -27,7 +27,6 @@ function buildSlides(etablissement) {
       ctaLink: base,
       secondary: 'Prendre rendez-vous',
       secondaryLink: `${base}/rdv`,
-      image: etablissement.photoCarrousel1 || etablissement.photoURL || IMAGES_GENERIQUES[0],
     },
     {
       id: 2,
@@ -39,7 +38,6 @@ function buildSlides(etablissement) {
       ctaLink: `${base}/rdv`,
       secondary: "Voir l'établissement",
       secondaryLink: base,
-      image: etablissement.photoCarrousel2 || IMAGES_GENERIQUES[1],
     },
     {
       id: 3,
@@ -51,7 +49,6 @@ function buildSlides(etablissement) {
       ctaLink: `${base}/dossier`,
       secondary: 'Nous contacter',
       secondaryLink: `${base}/messagerie`,
-      image: etablissement.photoCarrousel3 || IMAGES_GENERIQUES[2],
     },
   ];
 }
@@ -61,11 +58,22 @@ export default function EtablissementHeroCarousel({ etablissement }) {
   const [current, setCurrent] = useState(0);
   const [dir, setDir] = useState(1);
   const [showCard, setShowCard] = useState(true);
-  const [loadedIds, setLoadedIds] = useState(() => new Set([slides[0].id]));
+
+  // #corrigé (retour utilisateur, "la grande image doit être remplacée par
+  // un carrousel des mêmes 3 images entrées par le super admin") : avant,
+  // chaque légende marketing (slide 1/2/3) était figée sur SA PROPRE photo
+  // (photoCarrousel1/2/3 respectivement) — si seule photoCarrousel1 était
+  // renseignée, les légendes 2 et 3 retombaient sur des photos génériques,
+  // donnant l'impression que "l'image ne change jamais" en pratique. Le fond
+  // est désormais un vrai carrousel des 3 photos réelles (ou des mêmes
+  // génériques en repli, cf. IMAGES_GENERIQUES), qui tourne indépendamment
+  // du texte affiché.
+  const imagesReelles = [etablissement.photoCarrousel1, etablissement.photoCarrousel2, etablissement.photoCarrousel3].filter(Boolean);
+  const imagesRotation = imagesReelles.length ? imagesReelles : IMAGES_GENERIQUES;
+  const imageActuelle = current % imagesRotation.length;
 
   useEffect(() => {
     setShowCard(true);
-    setLoadedIds((prev) => (prev.has(slides[current].id) ? prev : new Set(prev).add(slides[current].id)));
   }, [current]);
 
   useEffect(() => {
@@ -95,16 +103,16 @@ export default function EtablissementHeroCarousel({ etablissement }) {
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 24px 0' }}>
       <div className="hero-frame" style={{ position: 'relative', overflow: 'hidden', borderRadius: 24, minHeight: 480 }}>
-        {slides.map((s, i) => (
+        {imagesRotation.map((src, i) => (
           <div
-            key={s.id}
+            key={src}
             style={{
               position: 'absolute',
               inset: 0,
-              backgroundImage: loadedIds.has(s.id) ? `url(${s.image})` : 'none',
+              backgroundImage: `url(${src})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: i === current ? 1 : 0,
+              opacity: i === imageActuelle ? 1 : 0,
               transition: 'opacity 0.8s ease',
               zIndex: 0,
             }}
