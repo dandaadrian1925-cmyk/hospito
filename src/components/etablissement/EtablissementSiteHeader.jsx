@@ -153,11 +153,11 @@ export default function EtablissementSiteHeader({ etablissement }) {
           <div
             style={{
               width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-              background: etablissement.photoCarrousel1 ? `url(${etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
+              background: (etablissement.logoURL || etablissement.photoCarrousel1) ? `url(${etablissement.logoURL || etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            {!etablissement.photoCarrousel1 && <span style={{ color: 'white', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>}
+            {!etablissement.logoURL && !etablissement.photoCarrousel1 && <span style={{ color: 'white', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>}
           </div>
           <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 15 }}>{etablissement.nom}</span>
         </Link>
