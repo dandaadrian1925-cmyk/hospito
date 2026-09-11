@@ -1,7 +1,59 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, ChevronDown } from 'lucide-react';
+import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, ChevronDown, MessageCircle, Wallet, Flag, LifeBuoy } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
+
+// #nouveau (demande utilisateur, "enlève Votre espace patient de l'accueil
+// et met tout ça dans espace patient de l'entête dès qu'on clique") : la
+// section grille de l'accueil disparaît, son contenu (liens) migre ici,
+// dans un menu déroulant au clic sur le bouton "Espace Patient".
+const LIENS_ESPACE_PATIENT = [
+  { to: 'dossier', label: 'Mon dossier', icon: FolderHeart },
+  { to: 'messagerie', label: 'Messagerie', icon: MessageCircle },
+  { to: 'paiement', label: 'Paiement', icon: Wallet },
+  { to: 'reclamations', label: 'Réclamations', icon: Flag },
+  { to: 'securite', label: 'Sécurité', icon: LifeBuoy },
+];
+
+function EspacePatientMenu() {
+  const [ouvert, setOuvert] = useState(false);
+
+  return (
+    <div
+      style={{ position: 'relative' }}
+      onMouseEnter={() => setOuvert(true)}
+      onMouseLeave={() => setOuvert(false)}
+    >
+      <button
+        type="button"
+        onClick={() => setOuvert((v) => !v)}
+        className="btn-outline"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', border: 'none' }}
+      >
+        <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient <ChevronDown style={{ width: 13, height: 13 }} />
+      </button>
+      {ouvert && (
+        <div
+          style={{
+            position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)',
+            borderRadius: 12, minWidth: 190, boxShadow: 'var(--shadow-lg, 0 12px 30px rgba(15,23,42,0.12))', padding: 8, zIndex: 60,
+          }}
+        >
+          {LIENS_ESPACE_PATIENT.map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              onClick={() => setOuvert(false)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', fontSize: 13, fontWeight: 600, color: 'var(--ink-2)', textDecoration: 'none', borderRadius: 8 }}
+            >
+              <l.icon style={{ width: 15, height: 15, color: 'var(--blue)' }} /> {l.label}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // #refonte (retour utilisateur : "je n'aime pas le design", + structure de
 // navbar hospitalière détaillée : logo, Accueil, Services/Spécialités en
@@ -144,9 +196,7 @@ export default function EtablissementSiteHeader({ etablissement }) {
             <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre RDV
             </Link>
-            <Link to="dossier" className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient
-            </Link>
+            <EspacePatientMenu />
           </div>
         </div>
 
@@ -189,13 +239,23 @@ export default function EtablissementSiteHeader({ etablissement }) {
                 </NavLink>
               ))}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2" style={{ marginBottom: 20 }}>
               <Link to="rdv" onClick={() => setMenuOuvert(false)} className="btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                 <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre RDV
               </Link>
-              <Link to="dossier" onClick={() => setMenuOuvert(false)} className="btn-outline" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient
-              </Link>
+            </div>
+            <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 8 }}>Espace patient</p>
+            <div className="space-y-1">
+              {LIENS_ESPACE_PATIENT.map((l) => (
+                <NavLink
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setMenuOuvert(false)}
+                  style={({ isActive }) => ({ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px', borderRadius: 8, fontSize: 14, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
+                >
+                  <l.icon style={{ width: 15, height: 15 }} /> {l.label}
+                </NavLink>
+              ))}
             </div>
             <Link to="/" onClick={() => setMenuOuvert(false)} style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 20, fontSize: 13, color: 'var(--ink-3)', textDecoration: 'none' }}>
               <ChevronLeft style={{ width: 13, height: 13 }} /> Retour à HostoConnect

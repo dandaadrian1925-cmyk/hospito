@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon, FolderHeart, Wallet, Flag, LifeBuoy,
+  CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon,
   Clock, AlertTriangle, Quote,
 } from 'lucide-react';
 import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
@@ -48,7 +48,7 @@ function SectionTitle({ title, lienTexte, lienVers, clair }) {
 // référence, avec uniquement de vraies données (aucune image de stock,
 // aucun chiffre inventé : une section sans donnée réelle ne s'affiche pas).
 export default function EtablissementAccueilPage() {
-  const { etablissement, etablissementId, tarifs, user, apropos } = useOutletContext();
+  const { etablissement, etablissementId, tarifs, apropos } = useOutletContext();
   const [services, setServices] = useState(null);
   const [equipe, setEquipe] = useState(null);
   const [avis, setAvis] = useState(null);
@@ -395,31 +395,11 @@ export default function EtablissementAccueilPage() {
           </Link>
         </div>
 
-        {/* Espace patient */}
-        <div style={{ marginBottom: 44 }}>
-          <SectionTitle title="Votre espace patient" />
-          {!user && (
-            <p style={{ fontSize: 12.5, color: 'var(--ink-4)', marginBottom: 12 }}>Connectez-vous pour accéder à ces services.</p>
-          )}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 10 }}>
-            {[
-              { to: 'dossier', label: 'Mon dossier', icon: FolderHeart },
-              { to: 'messagerie', label: 'Messagerie', icon: WhatsAppIcon },
-              { to: 'paiement', label: 'Paiement', icon: Wallet },
-              { to: 'reclamations', label: 'Réclamations', icon: Flag },
-              { to: 'securite', label: 'Sécurité', icon: LifeBuoy },
-            ].map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '16px 10px', background: 'var(--bg-2)', borderRadius: 12, textDecoration: 'none' }}
-              >
-                <Icon style={{ width: 20, height: 20, color: 'var(--blue)' }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', textAlign: 'center' }}>{label}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
+        {/* #retiré (demande utilisateur, "enlève Votre espace patient de
+            l'accueil et met tout ça dans espace patient de l'entête dès
+            qu'on clique") : ces mêmes liens vivent désormais dans le menu
+            déroulant "Espace Patient" de l'en-tête (EtablissementSiteHeader,
+            EspacePatientMenu). */}
       </div>
 
       {/* Bandeau d'appel à l'action — pleine largeur, mêmes vraies
