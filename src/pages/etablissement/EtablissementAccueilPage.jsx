@@ -364,23 +364,11 @@ export default function EtablissementAccueilPage() {
           </div>
         )}
 
-        {/* Tarifs */}
-        {!!tarifs?.length && (
-          <div style={{ marginBottom: 44 }}>
-            <SectionTitle title="Nos tarifs" lienTexte="Voir tous les tarifs" lienVers="tarifs" />
-            <div className="space-y-2">
-              {tarifs.slice(0, 3).map((t) => {
-                const nomService = services?.find((s) => s.id === t.serviceId)?.nom || t.serviceId;
-                return (
-                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
-                    <span style={{ fontWeight: 600, color: 'var(--ink)' }}>{nomService}</span>
-                    <span style={{ fontWeight: 700, color: 'var(--blue)' }}>{Number(t.montant).toLocaleString('fr-FR')} XAF</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* #retiré (demande utilisateur, "enlève Nos tarifs de l'accueil et
+            de l'entête... c'est déjà inclus dans les informations de chaque
+            service") : le tarif d'un service est déjà affiché dans sa
+            propre fiche (ServiceDetailPanel, section Services), doublon
+            encombrant ici. */}
 
         {/* Contact */}
         <div style={{ marginBottom: 44 }}>

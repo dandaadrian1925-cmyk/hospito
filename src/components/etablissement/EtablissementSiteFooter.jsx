@@ -4,7 +4,6 @@ import { MapPin, Phone, Mail, ChevronLeft } from 'lucide-react';
 const LIENS_SITE = [
   { to: 'services', label: 'Services' },
   { to: 'equipe', label: 'Équipe médicale' },
-  { to: 'tarifs', label: 'Tarifs' },
   { to: 'avis', label: 'Avis patients' },
   { to: 'actualites', label: 'Actualités' },
   { to: 'apropos', label: 'À propos' },

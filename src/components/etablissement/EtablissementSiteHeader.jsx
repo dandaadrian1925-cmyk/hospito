@@ -10,9 +10,12 @@ import { listerServicesActifs } from '../../services/etablissementsPublicService
 // et à droite un bouton Se connecter/Espace patient) : en-tête permanent
 // (sticky, cf. EtablissementLayout) qui suit exactement cette structure.
 // Seuls des liens vers des pages RÉELLEMENT construites apparaissent ici.
+// #retiré (demande utilisateur, "enlève Nos tarifs de l'accueil et de
+// l'entête... déjà inclus dans les informations de chaque service") :
+// "Tarifs" n'a plus de lien dédié — le tarif d'un service reste visible
+// dans sa propre fiche (page Services).
 const LIENS_SITE = [
   { to: '.', end: true, label: 'Accueil' },
-  { to: 'tarifs', label: 'Tarifs' },
   { to: 'avis', label: 'Avis' },
   { to: 'actualites', label: 'Actualités' },
   { to: 'contact', label: 'Contact' },
