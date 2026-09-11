@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, useNavigate } from 'react-router-dom';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Clock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { listerMedecinsDeLEtablissement, LABEL_JOUR_SEMAINE } from '../../services/planningService';
 
@@ -64,33 +64,43 @@ export default function EtablissementEquipePage() {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
           {medecins.map((m) => (
-            <div key={m.id} style={{ border: '1px solid var(--border, #E2E8F0)', borderRadius: 14, padding: 16, background: 'white' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <div key={m.id} style={{ border: '1px solid var(--border, #E2E8F0)', borderRadius: 14, padding: 18, background: 'white' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
                 {m.photoURL ? (
-                  <img src={m.photoURL} alt={m.nom} style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+                  <img src={m.photoURL} alt={m.nom} style={{ width: 68, height: 68, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, color: 'var(--ink-3)', flexShrink: 0 }}>
+                  <div style={{ width: 68, height: 68, borderRadius: '50%', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, color: 'var(--ink-3)', flexShrink: 0 }}>
                     {(m.nom || '?').trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('')}
                   </div>
                 )}
                 <div>
-                  <p style={{ fontSize: 14.5, fontWeight: 700, color: 'var(--ink)' }}>Dr {m.nom || '—'}</p>
-                  {m.serviceNom && <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 600 }}>{m.serviceNom}</p>}
+                  <p style={{ fontSize: 15.5, fontWeight: 700, color: 'var(--ink)' }}>Dr {m.nom || '—'}</p>
+                  {m.serviceNom && <p style={{ fontSize: 12.5, color: 'var(--blue)', fontWeight: 600 }}>{m.serviceNom}</p>}
                 </div>
               </div>
 
-              {!!m.horairesHabituels?.length && (
-                <div style={{ marginBottom: 12 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 6 }}>Horaires habituels</p>
+              {/* #corrigé (retour utilisateur, "son emploi du temps de
+                  travail habituel n'est pas directement visible") : cette
+                  section n'apparaissait que si des horaires étaient déjà
+                  renseignés, donnant l'impression que le champ n'existait
+                  pas du tout. Toujours affichée désormais, avec un état
+                  explicite "non renseignés" sinon. */}
+              <div style={{ marginBottom: 14, padding: '10px 12px', background: 'var(--bg-2)', borderRadius: 10 }}>
+                <p style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 700, color: 'var(--ink-4)', textTransform: 'uppercase', letterSpacing: '0.03em', marginBottom: 8 }}>
+                  <Clock style={{ width: 13, height: 13 }} /> Horaires habituels
+                </p>
+                {m.horairesHabituels?.length ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {m.horairesHabituels.map((h) => (
-                      <span key={h.jour} style={{ fontSize: 11.5, color: 'var(--ink-2)', background: 'var(--bg-2)', padding: '4px 9px', borderRadius: 999 }}>
+                      <span key={h.jour} style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)', background: 'white', padding: '5px 10px', borderRadius: 999 }}>
                         {LABEL_JOUR_SEMAINE[h.jour] || h.jour} · {h.heureDebut}–{h.heureFin}
                       </span>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p style={{ fontSize: 12, color: 'var(--ink-4)' }}>Non renseignés par l'établissement.</p>
+                )}
+              </div>
 
               {user && (
                 <button type="button" onClick={() => prendreRdv(m)} className="btn-outline" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
