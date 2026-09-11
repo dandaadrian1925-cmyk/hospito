@@ -67,7 +67,7 @@ export default function EtablissementLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white', ...styleTheme }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white', overflowX: 'hidden', ...styleTheme }}>
       <EtablissementSiteHeader etablissement={etablissement} />
 
       <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px' }}>
