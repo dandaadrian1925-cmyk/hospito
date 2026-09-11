@@ -1,15 +1,31 @@
 import { useState, useEffect } from 'react';
+import { Clock, MapPinned, Phone, UserCog } from 'lucide-react';
 import { listerSpecialistesDuService } from '../../services/planningService';
+import { getProfilPublic } from '../../services/profilPublicService';
 
-// Détail d'un service, déplié dans le flux de la page (juste sous la
-// vignette cliquée) — jamais une modale par-dessus le reste du contenu.
+// Reprend exactement les libellés de hospito-admin (servicesService.js,
+// TYPES_SERVICE) — purement informatif côté patient.
+const LABEL_TYPE_SERVICE = {
+  hospitalisation: 'Hospitalisation', plateau_technique: 'Plateau technique', consultation: 'Consultation',
+};
+
+// #enrichi (retour utilisateur, "ça prend toutes les informations entrées
+// par l'admin qui gère ce service") : horaires/localisation/téléphone/type/
+// chef de service — tous déjà saisis côté hospito-admin (ServiceHospitalier
+// DetailPage) mais jamais affichés ici jusque-là.
 export default function ServiceDetailPanel({ service, etablissementId, tarifs, onClose, onPrendreRdv, peutPrendreRdv }) {
   const [equipe, setEquipe] = useState(null);
+  const [chefService, setChefService] = useState(null);
 
   useEffect(() => {
     if (!service) { setEquipe(null); return; }
     listerSpecialistesDuService(etablissementId, service.id).then(setEquipe).catch(() => setEquipe([]));
   }, [service, etablissementId]);
+
+  useEffect(() => {
+    if (!service?.chefServiceId) { setChefService(null); return; }
+    getProfilPublic(service.chefServiceId).then(setChefService).catch(() => setChefService(null));
+  }, [service?.chefServiceId]);
 
   if (!service) return null;
   const tarif = tarifs?.find((t) => t.serviceId === service.id);
@@ -29,9 +45,41 @@ export default function ServiceDetailPanel({ service, etablissementId, tarifs, o
           </button>
         </div>
       </div>
+
+      {service.type && LABEL_TYPE_SERVICE[service.type] && (
+        <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, color: 'var(--blue)', background: 'white', padding: '3px 10px', borderRadius: 999, marginBottom: 10 }}>
+          {LABEL_TYPE_SERVICE[service.type]}
+        </span>
+      )}
+
       <p style={{ fontSize: 14, color: 'var(--ink-3)', lineHeight: 1.5, marginBottom: 16 }}>
         {service.description || "Aucune description fournie par l'établissement pour ce service."}
       </p>
+
+      {(service.horaires || service.localisation || service.telephone || chefService?.displayName) && (
+        <div className="space-y-2" style={{ marginBottom: 16 }}>
+          {service.horaires && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)' }}>
+              <Clock style={{ width: 14, height: 14, color: 'var(--ink-4)', flexShrink: 0 }} /> {service.horaires}
+            </div>
+          )}
+          {service.localisation && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)' }}>
+              <MapPinned style={{ width: 14, height: 14, color: 'var(--ink-4)', flexShrink: 0 }} /> {service.localisation}
+            </div>
+          )}
+          {service.telephone && (
+            <a href={`tel:${service.telephone}`} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)', textDecoration: 'none' }}>
+              <Phone style={{ width: 14, height: 14, color: 'var(--ink-4)', flexShrink: 0 }} /> {service.telephone}
+            </a>
+          )}
+          {chefService?.displayName && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-2)' }}>
+              <UserCog style={{ width: 14, height: 14, color: 'var(--ink-4)', flexShrink: 0 }} /> Chef de service : Dr {chefService.displayName}
+            </div>
+          )}
+        </div>
+      )}
 
       {equipe !== null && (
         <div style={{ marginBottom: 16 }}>
