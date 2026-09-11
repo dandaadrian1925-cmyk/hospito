@@ -157,8 +157,8 @@ export default function EtablissementHeroCarousel({ etablissement }) {
                     marginBottom: 18,
                   }}
                 >
-                  <TagIcon style={{ width: 12, height: 12, color: 'var(--blue)' }} />
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--blue)', letterSpacing: '0.03em' }}>{slide.tag}</span>
+                  <TagIcon style={{ width: 12, height: 12, color: 'var(--accent-etab, var(--blue))' }} />
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--accent-etab, var(--blue))', letterSpacing: '0.03em' }}>{slide.tag}</span>
                 </div>
 
                 <h2

@@ -3,7 +3,7 @@ import { useOutletContext, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon,
-  Clock, AlertTriangle, Quote,
+  Clock, AlertTriangle, Quote, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
 import { listerSpecialistesDuService } from '../../services/planningService';
@@ -142,7 +142,7 @@ export default function EtablissementAccueilPage() {
       )}
 
       {/* Hero — pleine largeur, carrousel de photos, chiffres clés intégrés */}
-      <div style={{ ...PLEINE_LARGEUR, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))' }}>
+      <div style={{ ...PLEINE_LARGEUR, position: 'relative', background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))' }}>
         {imagesHero.map((src, i) => (
           <div
             key={src}
@@ -155,6 +155,55 @@ export default function EtablissementAccueilPage() {
           />
         ))}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.85) 100%)' }} />
+
+        {/* #nouveau (retour utilisateur, "je voulais un carrousel dans
+            l'accueil du site de l'établissement") : la rotation automatique
+            existait déjà (imagesHero/slideHero) mais sans aucun repère
+            visuel — rien ne la distinguait d'une simple photo qui change
+            seule. Ajoute des flèches et des points de navigation, comme un
+            vrai carrousel, cliquables manuellement. */}
+        {imagesHero.length > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => setSlideHero((i) => (i - 1 + imagesHero.length) % imagesHero.length)}
+              aria-label="Photo précédente"
+              style={{
+                position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)', zIndex: 3,
+                width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                background: 'rgba(255,255,255,0.25)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
+              }}
+            >
+              <ChevronLeft style={{ width: 18, height: 18 }} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setSlideHero((i) => (i + 1) % imagesHero.length)}
+              aria-label="Photo suivante"
+              style={{
+                position: 'absolute', top: '50%', right: 16, transform: 'translateY(-50%)', zIndex: 3,
+                width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                background: 'rgba(255,255,255,0.25)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
+              }}
+            >
+              <ChevronRight style={{ width: 18, height: 18 }} />
+            </button>
+            <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: 7 }}>
+              {imagesHero.map((src, i) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setSlideHero(i)}
+                  aria-label={`Aller à la photo ${i + 1}`}
+                  style={{
+                    width: i === slideHero ? 20 : 7, height: 7, borderRadius: 999, border: 'none', cursor: 'pointer', padding: 0,
+                    background: i === slideHero ? 'white' : 'rgba(255,255,255,0.5)', transition: 'width 0.3s ease',
+                  }}
+                />
+              ))}
+            </div>
+          </>
+        )}
         <motion.div
           initial={fadeUp.initial}
           animate={fadeUp.animate}
@@ -195,7 +244,7 @@ export default function EtablissementAccueilPage() {
                     marginBottom: 8,
                   }}
                 >
-                  <p style={{ fontSize: 28, fontWeight: 700, color: 'white' }}>{c.valeur}</p>
+                  <p style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent-etab, white)' }}>{c.valeur}</p>
                   <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>{c.label}</p>
                 </div>
               ))}

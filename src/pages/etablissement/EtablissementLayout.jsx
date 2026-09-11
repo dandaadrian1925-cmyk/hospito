@@ -51,11 +51,19 @@ export default function EtablissementLayout() {
   // qu'elle existe ; assombrissement automatique de la principale en repli
   // sinon (comportement d'origine, établissement n'ayant choisi qu'une
   // couleur).
-  const { couleurPrimaire, couleurSecondaire } = apropos || {};
+  // #nouveau (retour utilisateur, "2 couleurs c'est toujours petit mais 3
+  // c'est recommandé") : troisième couleur, dédiée à la mise en avant
+  // (chiffres clés, pastille du carrousel) — distincte de --blue (boutons/
+  // liens) pour ne pas se substituer à lui. --accent-etab n'est posé QUE si
+  // couleurAccent est réellement renseignée : les établissements n'ayant
+  // choisi que 2 couleurs gardent leur rendu actuel (repli déjà géré au cas
+  // par cas par chaque composant, ex. `var(--accent-etab, white)`).
+  const { couleurPrimaire, couleurSecondaire, couleurAccent } = apropos || {};
   const styleTheme = couleurPrimaire ? {
     '--blue': couleurPrimaire,
     '--blue-dark': assombrir(couleurPrimaire, 0.18),
     '--primary-dark': couleurSecondaire || assombrir(couleurPrimaire, 0.35),
+    ...(couleurAccent ? { '--accent-etab': couleurAccent } : {}),
   } : undefined;
 
   if (loading) {
