@@ -66,9 +66,9 @@ export default function EtablissementSiteFooter({ etablissement }) {
           display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', justifyContent: 'space-between', fontSize: 12.5,
         }}
       >
-        <span>Propulsé par Hospito</span>
+        <span>Propulsé par HostoConnect</span>
         <Link to="/" style={{ color: 'white', textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-          <ChevronLeft style={{ width: 13, height: 13 }} /> Retour à Hospito
+          <ChevronLeft style={{ width: 13, height: 13 }} /> Retour à HostoConnect
         </Link>
       </div>
     </footer>

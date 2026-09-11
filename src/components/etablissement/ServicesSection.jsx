@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import ServiceDetailPanel from './ServiceDetailPanel';
 
-export default function ServicesSection({ etablissementId, tarifs, peutPrendreRdv, onPrendreRdv }) {
+export default function ServicesSection({ etablissementId, tarifs, peutPrendreRdv, onPrendreRdv, initialExpandedId }) {
   const [services, setServices] = useState(null);
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedId, setExpandedId] = useState(initialExpandedId || null);
 
   useEffect(() => {
     listerServicesActifs(etablissementId)

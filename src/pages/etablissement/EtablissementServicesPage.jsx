@@ -1,9 +1,11 @@
-import { useOutletContext, useNavigate } from 'react-router-dom';
+import { useOutletContext, useNavigate, useSearchParams } from 'react-router-dom';
 import ServicesSection from '../../components/etablissement/ServicesSection';
 
 export default function EtablissementServicesPage() {
   const { etablissementId, tarifs, user } = useOutletContext();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const serviceInitial = searchParams.get('service');
 
   return (
     <div>
@@ -12,6 +14,7 @@ export default function EtablissementServicesPage() {
         etablissementId={etablissementId}
         tarifs={tarifs}
         peutPrendreRdv={!!user}
+        initialExpandedId={serviceInitial}
         onPrendreRdv={(service) => navigate(`../rdv?service=${service.id}`)}
       />
     </div>
