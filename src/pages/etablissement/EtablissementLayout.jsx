@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, Outlet } from 'react-router-dom';
+import { Home } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getEtablissement, listerTarifsConsultation, getAPropos } from '../../services/etablissementsPublicService';
 import EtablissementSiteHeader from '../../components/etablissement/EtablissementSiteHeader';
@@ -90,6 +91,27 @@ export default function EtablissementLayout() {
       </div>
 
       <EtablissementSiteFooter etablissement={etablissement} />
+
+      {/* #nouveau (demande utilisateur, "un bouton flottant un peu comme
+          celui du support pour revenir à l'accueil de HostoConnect") : le
+          lien "Retour à HostoConnect" existait déjà dans l'en-tête (menu
+          mobile) et le pied de page, mais aucun n'est visible en permanence
+          pendant la navigation — ce bouton flottant, à l'opposé du widget de
+          support (bottom/right, cf. SupportChatWidget.jsx, rendu globalement
+          y compris sur ces pages), reste accessible à tout moment. */}
+      <Link
+        to="/"
+        title="Retour à HostoConnect"
+        style={{
+          position: 'fixed', bottom: 20, left: 20, zIndex: 900,
+          width: 52, height: 52, borderRadius: '50%',
+          background: 'white', border: '1.5px solid var(--border, #E2E8F0)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 6px 20px rgba(15,23,42,0.18)', textDecoration: 'none',
+        }}
+      >
+        <Home style={{ width: 22, height: 22, color: 'var(--blue)' }} />
+      </Link>
     </div>
   );
 }
