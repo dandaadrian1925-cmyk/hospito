@@ -28,7 +28,7 @@ export default function EtablissementTarifsPage() {
           style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--bg-2)', borderRadius: 10 }}
         >
           <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--ink)' }}>{t.serviceNom}</span>
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--blue)' }}>{Number(t.montant).toLocaleString('fr-FR')} XAF</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-etab, var(--blue))' }}>{Number(t.montant).toLocaleString('fr-FR')} XAF</span>
         </div>
       ))}
     </div>

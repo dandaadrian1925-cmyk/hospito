@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
-import { creerDemandeRdv, getMesDemandesRdv } from '../../services/demandesRendezVousService';
+import { creerDemandeRdv } from '../../services/demandesRendezVousService';
 import { listerSpecialistesDuService } from '../../services/planningService';
 import { trouverBilletValideDuPatient } from '../../services/billetsService';
-import TeleconsultationCallWidget from '../teleconsultation/TeleconsultationCallWidget';
 
 export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
   const [services, setServices] = useState([]);
@@ -14,7 +13,6 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   const [dateSouhaitee, setDateSouhaitee] = useState('');
   const [teleconsultation, setTeleconsultation] = useState(false);
   const [envoi, setEnvoi] = useState(false);
-  const [demandes, setDemandes] = useState([]);
   const [specialistes, setSpecialistes] = useState([]);
   const [medecinPrefere, setMedecinPrefere] = useState(null);
   // #nouveau (demande utilisateur, "un popup doit dire si on a déjà un
@@ -22,11 +20,17 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   // RDV, mais ça envoie quand même la demande") : informatif seulement — ne
   // bloque jamais l'envoi, le patient reste libre de reprendre RDV même
   // avec un billet en cours (ex. suivi différent).
-  const [billetValide, setBilletValide] = useState(null);
+  // #corrigé (retour utilisateur, "lorsque ce n'est pas le cas ça affiche
+  // quoi ?") : `undefined` = vérification en cours (rien affiché, pour
+  // éviter un flash) ; `null` = vérifiée, AUCUN billet valide trouvé
+  // (avertissement qu'il faudra en payer un à l'accueil) ; objet = billet
+  // valide trouvé.
+  const [billetValide, setBilletValide] = useState(undefined);
   const [confirmationOuverte, setConfirmationOuverte] = useState(false);
 
   useEffect(() => {
     let annule = false;
+    setBilletValide(undefined);
     trouverBilletValideDuPatient(patientUid, etablissementId, serviceId || null)
       .then((b) => { if (!annule) setBilletValide(b); })
       .catch(() => { if (!annule) setBilletValide(null); });
@@ -64,16 +68,6 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     setDateSouhaitee(date);
   };
 
-  const recharger = useCallback(() => {
-    getMesDemandesRdv(patientUid)
-      .then((all) => setDemandes(all.filter((d) => d.etablissementId === etablissementId)))
-      .catch((e) => console.error('getMesDemandesRdv a échoué :', e));
-  }, [patientUid, etablissementId]);
-
-  useEffect(() => {
-    recharger();
-  }, [recharger]);
-
   const envoyerLaDemande = async () => {
     setEnvoi(true);
     try {
@@ -90,7 +84,6 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
       setTeleconsultation(false);
       setMedecinPrefere(null);
       setConfirmationOuverte(false);
-      recharger();
     } catch (err) {
       console.error('creerDemandeRdv a échoué :', err);
       toast.error("Échec de l'envoi de la demande");
@@ -188,12 +181,25 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
           <input type="checkbox" checked={teleconsultation} onChange={(e) => setTeleconsultation(e.target.checked)} />
           Téléconsultation (visio) plutôt qu'un rendez-vous sur place
         </label>
-        {billetValide && (
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--ink-2)', background: 'var(--bg-2)', borderRadius: 10, padding: '10px 12px' }}>
-            <CalendarClock style={{ width: 15, height: 15, color: 'var(--blue)', flexShrink: 0, marginTop: 1 }} />
-            Vous avez déjà un billet de consultation valide jusqu'au {billetValide.expireLe.toLocaleDateString('fr-FR', { dateStyle: 'medium' })}
-            {billetValide.serviceNom ? ` (${billetValide.serviceNom})` : ''} — vous pouvez vous présenter directement à l'accueil. Vous pouvez tout de même envoyer une nouvelle demande si besoin.
-          </div>
+        {/* #corrigé (retour utilisateur, "lorsque ce n'est pas le cas ça
+            affiche quoi ? il faudrait signaler qu'il n'a pas de billet
+            valide et qu'il faudra en payer un") : le cas négatif (aucun
+            billet valide trouvé) était auparavant silencieux — jamais
+            pertinent pour une téléconsultation, qui n'en exige jamais
+            (cf. hospito-accueil-medecin, confirmerDemande). */}
+        {!teleconsultation && billetValide !== undefined && (
+          billetValide ? (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--ink-2)', background: 'var(--bg-2)', borderRadius: 10, padding: '10px 12px' }}>
+              <CalendarClock style={{ width: 15, height: 15, color: 'var(--blue)', flexShrink: 0, marginTop: 1 }} />
+              Vous avez déjà un billet de consultation valide jusqu'au {billetValide.expireLe.toLocaleDateString('fr-FR', { dateStyle: 'medium' })}
+              {billetValide.serviceNom ? ` (${billetValide.serviceNom})` : ''} — vous pouvez vous présenter directement à l'accueil. Vous pouvez tout de même envoyer une nouvelle demande si besoin.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#9A6B00', background: '#FFF7E6', borderRadius: 10, padding: '10px 12px' }}>
+              <CalendarClock style={{ width: 15, height: 15, color: '#C2802F', flexShrink: 0, marginTop: 1 }} />
+              Vous n'avez pas de billet de consultation valide dans cet établissement — un billet vous sera facturé à l'accueil avant la consultation.
+            </div>
+          )
         )}
         <button type="submit" disabled={envoi} className="btn-primary">
           {envoi ? 'Envoi…' : 'Envoyer la demande'}
@@ -217,29 +223,6 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
                 {envoi ? 'Envoi…' : 'Envoyer quand même'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {demandes.length > 0 && (
-        <div style={{ marginTop: 28 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink-2)', marginBottom: 10 }}>Vos demandes</p>
-          <div className="space-y-2">
-            {demandes.map((d) => (
-              <div key={d.id} style={{ padding: '10px 14px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13 }}>
-                <strong>{d.motif}</strong>
-                {d.serviceNom && <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>({d.serviceNom})</span>}
-                {d.type === 'teleconsultation' && <span style={{ color: 'var(--blue)', marginLeft: 8, fontWeight: 700 }}>Téléconsultation</span>}
-                <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>
-                  {d.statut === 'en_attente' ? 'En attente de confirmation' : d.statut === 'confirme' ? 'Confirmé' : d.statut}
-                </span>
-                {d.type === 'teleconsultation' && d.statut === 'confirme' && (
-                  <div style={{ marginTop: 10 }}>
-                    <TeleconsultationCallWidget demandeId={d.id} />
-                  </div>
-                )}
-              </div>
-            ))}
           </div>
         </div>
       )}

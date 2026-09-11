@@ -12,6 +12,7 @@ const LIENS_SITE = [
 
 const LIENS_PATIENT = [
   { to: 'rdv', label: 'Prendre rendez-vous' },
+  { to: 'mes-rendez-vous', label: 'Mes rendez-vous' },
   { to: 'dossier', label: 'Mon dossier' },
   { to: 'paiement', label: 'Paiement' },
 ];

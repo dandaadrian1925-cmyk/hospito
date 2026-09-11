@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, ChevronDown, Wallet, Flag, LifeBuoy } from 'lucide-react';
+import { Phone, ChevronLeft, Menu, X, FolderHeart, CalendarPlus, CalendarClock, ChevronDown, Wallet, Flag, LifeBuoy } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 
 // #nouveau (demande utilisateur, "enlève Votre espace patient de l'accueil
@@ -11,7 +11,12 @@ import { listerServicesActifs } from '../../services/etablissementsPublicService
 // enlève") : redondant depuis la fusion assistant IA + opérateur sur la
 // page Contact (EtablissementAssistantIA) — cette messagerie séparée n'a
 // plus d'utilité propre.
+// #nouveau (demande utilisateur, "les demandes passées ne s'affichent pas
+// là-bas, enlève ça et affiche-les dans mes rendez-vous de l'espace
+// patient") : liste des demandes de RDV déplacée du formulaire "Prendre
+// RDV" (TabRdv) vers sa propre entrée ici.
 const LIENS_ESPACE_PATIENT = [
+  { to: 'mes-rendez-vous', label: 'Mes rendez-vous', icon: CalendarClock },
   { to: 'dossier', label: 'Mon dossier', icon: FolderHeart },
   { to: 'paiement', label: 'Paiement', icon: Wallet },
   { to: 'reclamations', label: 'Réclamations', icon: Flag },

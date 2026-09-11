@@ -44,7 +44,7 @@ export default function ServicesSection({ etablissementId, tarifs }) {
             <div style={{ padding: '8px 10px' }}>
               <p style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--ink)' }}>{s.nom}</p>
               {tarif && (
-                <p style={{ fontSize: 11, color: 'var(--blue)', fontWeight: 700, marginTop: 2 }}>
+                <p style={{ fontSize: 11, color: 'var(--accent-etab, var(--blue))', fontWeight: 700, marginTop: 2 }}>
                   {Number(tarif.montant).toLocaleString('fr-FR')} XAF
                 </p>
               )}

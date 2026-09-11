@@ -34,6 +34,7 @@ const EtablissementAProposPage = lazy(() => import('./pages/etablissement/Etabli
 const EtablissementActualitesPage = lazy(() => import('./pages/etablissement/EtablissementActualitesPage'));
 const EtablissementActualiteDetailPage = lazy(() => import('./pages/etablissement/EtablissementActualiteDetailPage'));
 const EtablissementRdvPage = lazy(() => import('./pages/etablissement/EtablissementRdvPage'));
+const EtablissementMesRendezVousPage = lazy(() => import('./pages/etablissement/EtablissementMesRendezVousPage'));
 const EtablissementDossierPage = lazy(() => import('./pages/etablissement/EtablissementDossierPage'));
 const EtablissementPaiementPage = lazy(() => import('./pages/etablissement/EtablissementPaiementPage'));
 const EtablissementReclamationsPage = lazy(() => import('./pages/etablissement/EtablissementReclamationsPage'));
@@ -147,6 +148,7 @@ export default function App() {
               <Route path="actualites" element={<EtablissementActualitesPage />} />
               <Route path="actualites/:actualiteId" element={<EtablissementActualiteDetailPage />} />
               <Route path="rdv" element={<EtablissementRdvPage />} />
+              <Route path="mes-rendez-vous" element={<EtablissementMesRendezVousPage />} />
               <Route path="dossier" element={<EtablissementDossierPage />} />
               <Route path="paiement" element={<EtablissementPaiementPage />} />
               <Route path="reclamations" element={<EtablissementReclamationsPage />} />

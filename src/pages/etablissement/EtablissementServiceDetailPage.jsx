@@ -68,7 +68,7 @@ export default function EtablissementServiceDetailPage() {
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
         <h1 style={{ fontSize: 21, fontWeight: 700, color: 'var(--ink)' }}>{service.nom}</h1>
         {tarif && (
-          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--blue)', background: 'var(--bg-2)', padding: '5px 12px', borderRadius: 999, flexShrink: 0 }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-etab, var(--blue))', background: 'var(--bg-2)', padding: '5px 12px', borderRadius: 999, flexShrink: 0 }}>
             {Number(tarif.montant).toLocaleString('fr-FR')} XAF
           </span>
         )}

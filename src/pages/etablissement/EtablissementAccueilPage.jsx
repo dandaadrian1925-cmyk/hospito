@@ -304,7 +304,7 @@ export default function EtablissementAccueilPage() {
                         {s.description ? (s.description.length > 90 ? `${s.description.slice(0, 90)}…` : s.description) : 'Découvrez ce service.'}
                       </p>
                       {tarif && (
-                        <p style={{ fontSize: 12, color: 'var(--blue)', fontWeight: 700, marginBottom: 10 }}>{Number(tarif.montant).toLocaleString('fr-FR')} XAF</p>
+                        <p style={{ fontSize: 12, color: 'var(--accent-etab, var(--blue))', fontWeight: 700, marginBottom: 10 }}>{Number(tarif.montant).toLocaleString('fr-FR')} XAF</p>
                       )}
                       <Link
                         to={`services/${s.id}`}
