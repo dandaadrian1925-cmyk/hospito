@@ -17,11 +17,18 @@ export const listerSpecialistesDuService = async (etablissementId, serviceId) =>
     where('serviceId', '==', serviceId),
     where('date', '>=', aujourdHui()),
   ));
+  // #nouveau (retour utilisateur, "je ne vois pas pour chaque service la
+  // liste des médecins et leurs horaires de travail") : chaque document
+  // `plannings` porte déjà heureDebut/heureFin (cf. hospito-admin,
+  // definirRosterDuJour) — jusqu'ici jetés ici, alors qu'un même jour peut
+  // avoir 2 documents (matin + après-midi) pour UNE seule plage saisie par
+  // l'admin ; on les regroupe donc par date pour n'afficher qu'une seule
+  // plage horaire par jour et par médecin.
   const parMedecin = {};
   snap.docs.forEach((d) => {
     const c = d.data();
-    if (!parMedecin[c.personnelUid]) parMedecin[c.personnelUid] = { uid: c.personnelUid, nom: c.personnelNom, dates: new Set() };
-    parMedecin[c.personnelUid].dates.add(c.date);
+    if (!parMedecin[c.personnelUid]) parMedecin[c.personnelUid] = { uid: c.personnelUid, nom: c.personnelNom, creneaux: new Map() };
+    parMedecin[c.personnelUid].creneaux.set(c.date, { date: c.date, heureDebut: c.heureDebut, heureFin: c.heureFin });
   });
 
   // Photo de profil (demande utilisateur, "chaque médecin peut charger sa
@@ -40,6 +47,9 @@ export const listerSpecialistesDuService = async (etablissementId, serviceId) =>
   }
 
   return Object.values(parMedecin)
-    .map((m) => ({ ...m, dates: [...m.dates].sort(), photoURL: photos[m.uid] || null }))
+    .map((m) => {
+      const horaires = [...m.creneaux.values()].sort((a, b) => a.date.localeCompare(b.date));
+      return { uid: m.uid, nom: m.nom, dates: horaires.map((h) => h.date), horaires, photoURL: photos[m.uid] || null };
+    })
     .sort((a, b) => a.nom.localeCompare(b.nom));
 };
