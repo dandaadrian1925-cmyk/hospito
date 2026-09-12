@@ -92,6 +92,20 @@ body {
   color: var(--ink);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+  /* #corrigé (retour utilisateur, capture d'écran : carrousel pleine
+     largeur coupé, carte à moitié hors écran) : ce garde-fou vivait sur un
+     <div> React (EtablissementLayout) dont l'en-tête sticky était
+     descendant — déplacé une première fois sur un wrapper plus interne
+     pour ne pas casser le sticky, ce qui a alors CLIPPÉ le carrousel
+     pleine largeur (100vw) à la largeur de CE wrapper (1100px, centré) au
+     lieu du vrai viewport, ne laissant visible que sa tranche centrale.
+     Posé ici, sur `body`, il protège contre le débordement horizontal des
+     techniques "pleine largeur" (left:50%/-50vw) SANS jamais devenir un
+     conteneur de défilement au sens CSS (html/body sont un cas spécial du
+     spec Overflow, jamais traités comme un ancêtre de scroll ordinaire) —
+     ne casse donc jamais position:sticky, contrairement à un <div>
+     classique. */
+  overflow-x: hidden;
 }
 
 /* Titres — sobres, resserrés, pas de gradient */

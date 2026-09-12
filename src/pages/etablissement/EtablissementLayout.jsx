@@ -90,15 +90,22 @@ export default function EtablissementLayout() {
           l'en-tête sticky est un DESCENDANT direct — poser overflow-x sur
           un ancêtre force son overflow-y à `auto`, en fait un conteneur de
           défilement à part entière, et casse `position: sticky` dans ce
-          cas précis (Safari en particulier). Déplacé sur le wrapper de
-          contenu ci-dessous (où vivent les sections pleine largeur qui en
-          ont réellement besoin) — l'en-tête, frère et non plus descendant
-          de cet overflow, reste sticky par rapport au vrai défilement de
-          la page.
-      */}
+          cas précis (Safari en particulier).
+          #corrigé une seconde fois (retour utilisateur, capture d'écran :
+          carrousel pleine largeur coupé net, carte à moitié hors écran) :
+          déplacer overflow-x:hidden sur LE WRAPPER CI-DESSOUS (1100px,
+          centré) au lieu du conteneur racine a d'abord semblé résoudre le
+          souci d'en-tête, mais a alors CLIPPÉ tout carrousel pleine largeur
+          (100vw, cf. EtablissementHeroCarousel) à la largeur de CE
+          wrapper au lieu du vrai viewport — seule sa tranche centrale
+          restait visible. La bonne portée pour ce garde-fou n'est ni la
+          racine (casse sticky) ni ce wrapper (clippe le pleine largeur) :
+          posé désormais sur `body` (src/index.css) — html/body sont un cas
+          spécial du spec Overflow, jamais traités comme un conteneur de
+          défilement ordinaire, donc ne cassent jamais position:sticky. */}
       <EtablissementSiteHeader etablissement={etablissement} />
 
-      <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px', overflowX: 'hidden' }}>
+      <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px' }}>
         <Outlet context={{ etablissement, tarifs, apropos, etablissementId, user, userProfile }} />
       </div>
 
