@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { Video, PhoneOff, Mic, MicOff, VideoOff } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -24,6 +24,22 @@ export default function TeleconsultationCallWidget({ demandeId }) {
   const localVideoRef = useRef(null);
   const localVideoElRef = useRef(null);
   const remoteVideoElRef = useRef(null);
+
+  // #corrigé (retour utilisateur, "AgoraRTCError UID_CONFLICT") : chaque
+  // rôle a désormais un uid Agora fixe (patient/médecin, cf.
+  // hospito-agora-token) — un onglet fermé/rafraîchi SANS cliquer
+  // "Raccrocher" (quitter() jamais appelé) laisse ce uid occupé côté
+  // serveur Agora jusqu'à l'expiration de son propre délai de grâce,
+  // bloquant toute reconnexion avec ce même uid entre-temps. best-effort
+  // pour quitter proprement même en cas de fermeture d'onglet.
+  useEffect(() => {
+    const quitterAuDechargement = () => { clientRef.current?.leave().catch(() => {}); };
+    window.addEventListener('beforeunload', quitterAuDechargement);
+    return () => {
+      window.removeEventListener('beforeunload', quitterAuDechargement);
+      clientRef.current?.leave().catch(() => {});
+    };
+  }, []);
 
   const quitter = async () => {
     try {
