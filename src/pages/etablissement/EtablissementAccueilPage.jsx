@@ -1,22 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
-  CalendarPlus, ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon,
-  Clock, AlertTriangle, Quote, ChevronLeft, ChevronRight,
+  ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon,
+  Clock, AlertTriangle, Quote,
 } from 'lucide-react';
 import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
 import { listerMedecinsDeLEtablissement } from '../../services/planningService';
 import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import { getTransparenceAttente } from '../../services/transparenceService';
-import { IMAGES_GENERIQUES } from '../../components/home/EtablissementHeroCarousel';
+import EtablissementHeroCarousel from '../../components/home/EtablissementHeroCarousel';
 
 const LABEL_CATEGORIE = { nouveaute: 'Nouveauté', evenement: 'Événement', publication: 'Publication', autre: 'Actualité' };
-
-const fadeUp = {
-  initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0 },
-};
 
 // Fait ignorer à un élément la largeur/le padding de son parent, pour
 // couvrir toute la largeur de l'écran (bandeaux Urgences/Hero/Services/
@@ -54,7 +48,6 @@ export default function EtablissementAccueilPage() {
   const [avis, setAvis] = useState(null);
   const [actualites, setActualites] = useState(null);
   const [temps, setTemps] = useState(null);
-  const [slideHero, setSlideHero] = useState(0);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -81,22 +74,6 @@ export default function EtablissementAccueilPage() {
   useEffect(() => {
     listerMedecinsDeLEtablissement(etablissementId).then(setEquipe).catch(() => setEquipe([]));
   }, [etablissementId]);
-
-  // #corrigé (retour utilisateur, capture d'écran : une facture s'affichait
-  // en fond du hero) : l'ancien repli piochait la photo d'un service AU
-  // HASARD (services?.find), sans rapport avec l'identité de l'établissement
-  // — retiré. Le hero est désormais un vrai carrousel : les photos réelles
-  // fournies par le sysadmin (photoCarrousel1/2/3) si elles existent, sinon
-  // les MÊMES images génériques que le carrousel d'entrée de HostoConnect
-  // (EtablissementHeroCarousel, page d'accueil de l'app).
-  const imagesHeroReelles = [etablissement.photoCarrousel1, etablissement.photoCarrousel2, etablissement.photoCarrousel3].filter(Boolean);
-  const imagesHero = imagesHeroReelles.length ? imagesHeroReelles : IMAGES_GENERIQUES;
-
-  useEffect(() => {
-    if (imagesHero.length < 2) return;
-    const t = setInterval(() => setSlideHero((i) => (i + 1) % imagesHero.length), 6000);
-    return () => clearInterval(t);
-  }, [imagesHero.length]);
 
   const telephone = etablissement.contactTelephone;
   const moyenneAvis = avis?.length ? avis.reduce((s, a) => s + a.note, 0) / avis.length : null;
@@ -128,132 +105,36 @@ export default function EtablissementAccueilPage() {
         </div>
       )}
 
-      {/* Hero — pleine largeur, carrousel de photos, chiffres clés intégrés */}
-      <div style={{ ...PLEINE_LARGEUR, position: 'relative', background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))' }}>
-        {imagesHero.map((src, i) => (
-          <div
-            key={src}
-            style={{
-              position: 'absolute', inset: 0,
-              backgroundImage: `url(${src})`, backgroundSize: 'cover', backgroundPosition: 'center',
-              opacity: i === slideHero ? 1 : 0,
-              transition: 'opacity 1.2s ease',
-            }}
-          />
-        ))}
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(15,23,42,0.35) 0%, rgba(15,23,42,0.85) 100%)' }} />
+      {/* #corrigé (demande utilisateur, "je voudrais que le même carrousel
+          [que celui de l'accueil HostoConnect] s'affiche dans l'accueil de
+          l'établissement") : remplace l'ancien hero maison (fond +
+          nom/ville/chiffres directement dessus, sans carte) par EXACTEMENT
+          le même composant que HomePage.jsx — mêmes photos
+          (photoCarrousel1/2/3 ou génériques), même carte blanche "Prenez
+          rendez-vous en quelques clics", jamais deux implémentations
+          différentes du même hero établissement. Les chiffres clés
+          (uniques à cette page) suivent juste en dessous. */}
+      <EtablissementHeroCarousel etablissement={etablissement} />
 
-        {/* #nouveau (retour utilisateur, "je voulais un carrousel dans
-            l'accueil du site de l'établissement") : la rotation automatique
-            existait déjà (imagesHero/slideHero) mais sans aucun repère
-            visuel — rien ne la distinguait d'une simple photo qui change
-            seule. Ajoute des flèches et des points de navigation, comme un
-            vrai carrousel, cliquables manuellement. */}
-        {imagesHero.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() => setSlideHero((i) => (i - 1 + imagesHero.length) % imagesHero.length)}
-              aria-label="Photo précédente"
+      {!!chiffres.length && (
+        <div style={{ maxWidth: 1100, margin: '24px auto 0', padding: '0 24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+          {chiffres.map((c, i) => (
+            <div
+              key={i}
               style={{
-                position: 'absolute', top: '50%', left: 16, transform: 'translateY(-50%)', zIndex: 3,
-                width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                background: 'rgba(255,255,255,0.25)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
+                padding: '0 32px', textAlign: 'center',
+                borderLeft: i > 0 ? '1px solid var(--border, #E2E8F0)' : 'none',
+                marginBottom: 8,
               }}
             >
-              <ChevronLeft style={{ width: 18, height: 18 }} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setSlideHero((i) => (i + 1) % imagesHero.length)}
-              aria-label="Photo suivante"
-              style={{
-                position: 'absolute', top: '50%', right: 16, transform: 'translateY(-50%)', zIndex: 3,
-                width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                background: 'rgba(255,255,255,0.25)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)',
-              }}
-            >
-              <ChevronRight style={{ width: 18, height: 18 }} />
-            </button>
-            <div style={{ position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 3, display: 'flex', gap: 7 }}>
-              {imagesHero.map((src, i) => (
-                <button
-                  key={src}
-                  type="button"
-                  onClick={() => setSlideHero(i)}
-                  aria-label={`Aller à la photo ${i + 1}`}
-                  style={{
-                    width: i === slideHero ? 20 : 7, height: 7, borderRadius: 999, border: 'none', cursor: 'pointer', padding: 0,
-                    background: i === slideHero ? 'white' : 'rgba(255,255,255,0.5)', transition: 'width 0.3s ease',
-                  }}
-                />
-              ))}
+              <p style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent-etab, var(--blue))' }}>{c.valeur}</p>
+              <p style={{ fontSize: 12.5, color: 'var(--ink-3)', marginTop: 2 }}>{c.label}</p>
             </div>
-          </>
-        )}
-        <motion.div
-          initial={fadeUp.initial}
-          animate={fadeUp.animate}
-          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-          style={{ position: 'relative', maxWidth: 1100, margin: '0 auto', padding: '56px 24px 40px' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 10 }}>
-            <MapPin style={{ width: 14, height: 14, color: 'rgba(255,255,255,0.85)' }} />
-            <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{etablissement.ville}</span>
-          </div>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.6rem)', fontWeight: 700, color: 'white', lineHeight: 1.2, marginBottom: 14, maxWidth: 620 }}>
-            {etablissement.nom}
-          </h1>
-          {(apropos?.mission || apropos?.histoire) && (
-            <p style={{ fontSize: 15.5, color: 'rgba(255,255,255,0.88)', marginBottom: 26, maxWidth: 560, lineHeight: 1.5 }}>
-              {(apropos.mission || apropos.histoire).slice(0, 160)}{(apropos.mission || apropos.histoire).length > 160 ? '…' : ''}
-            </p>
-          )}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: chiffres.length ? 40 : 0 }}>
-            <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre rendez-vous
-            </Link>
-            {telephone && (
-              <a href={`tel:${telephone}`} className="btn-secondary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <Phone style={{ width: 15, height: 15 }} /> {telephone}
-              </a>
-            )}
-          </div>
-
-          {!!chiffres.length && (
-            <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-              {chiffres.map((c, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: '0 32px', textAlign: 'center',
-                    borderLeft: i > 0 ? '1px solid rgba(255,255,255,0.25)' : 'none',
-                    marginBottom: 8,
-                  }}
-                >
-                  <p style={{ fontSize: 28, fontWeight: 700, color: 'var(--accent-etab, white)' }}>{c.valeur}</p>
-                  <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.8)', marginTop: 2 }}>{c.label}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      </div>
-
-      {/* Photo de l'établissement — seulement si le sysadmin a fourni une 2e image */}
-      {etablissement.photoCarrousel2 && (
-        <div style={{ margin: '-28px 0 40px' }}>
-          <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', position: 'relative', zIndex: 2 }}>
-            <img
-              src={etablissement.photoCarrousel2}
-              alt={etablissement.nom}
-              style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 16, boxShadow: '0 16px 40px rgba(15,23,42,0.22)', display: 'block' }}
-            />
-          </div>
+          ))}
         </div>
       )}
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
+      <div style={{ maxWidth: 1100, margin: '40px auto 0', padding: '0 24px' }}>
         {/* À propos — court extrait, texte complet sur sa propre page */}
         {(apropos?.mission || apropos?.histoire) && (
           <div style={{ marginBottom: 44 }}>
