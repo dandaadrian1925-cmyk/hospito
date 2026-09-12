@@ -63,8 +63,13 @@ export default function TeleconsultationCallWidget({ demandeId }) {
       await client.publish([audioTrack, videoTrack]);
       setStatut('active');
     } catch (e) {
+      // #corrigé (retour utilisateur, "pourquoi le navigateur ne demande pas
+      // l'autorisation caméra/micro ?") : ce message générique s'affichait
+      // pour N'IMPORTE QUELLE erreur (jeton refusé par le serveur, réseau,
+      // Firestore introuvable...), pas seulement un refus de permission —
+      // l'erreur réelle finissait seulement dans la console, jamais montrée.
       console.error('Échec de connexion à la téléconsultation :', e);
-      toast.error("Impossible de rejoindre l'appel — vérifiez l'autorisation caméra/micro de votre navigateur.");
+      toast.error(e.message || "Impossible de rejoindre l'appel — vérifiez l'autorisation caméra/micro de votre navigateur.");
       setStatut('idle');
     }
   };
