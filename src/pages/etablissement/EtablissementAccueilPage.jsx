@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useOutletContext, Link } from 'react-router-dom';
 import {
   ArrowRight, MapPin, Phone, MessageCircle as WhatsAppIcon,
-  Clock, AlertTriangle, Quote,
+  Clock, AlertTriangle, Quote, Stethoscope,
 } from 'lucide-react';
 import { listerServicesActifs, listerActualitesPubliees } from '../../services/etablissementsPublicService';
 import { listerMedecinsDeLEtablissement } from '../../services/planningService';
@@ -19,6 +19,15 @@ const LABEL_CATEGORIE = { nouveaute: 'Nouveauté', evenement: 'Événement', pub
 // EtablissementLayout). `overflowX: hidden` posé sur ce même layout évite
 // tout défilement horizontal parasite lié à l'arrondi de 100vw.
 const PLEINE_LARGEUR = { position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', width: '100vw' };
+
+// #corrigé (retour utilisateur, capture d'écran "Dr Dr Test Médecin") : un
+// nom de compte peut déjà porter "Dr" (saisie du médecin lui-même) — préfixer
+// systématiquement produisait un doublon visible. N'ajoute "Dr" que s'il n'y
+// est pas déjà, insensible à la casse.
+function formatDr(nom) {
+  const n = (nom || '').trim();
+  return /^dr\.?\s/i.test(n) ? n : `Dr ${n}`;
+}
 
 function SectionTitle({ title, lienTexte, lienVers, clair }) {
   return (
@@ -263,18 +272,49 @@ export default function EtablissementAccueilPage() {
         {!!equipe?.length && (
           <div style={{ marginBottom: 44 }}>
             <SectionTitle title="Notre équipe médicale" lienTexte="Voir toute l'équipe" lienVers="equipe" />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
               {equipe.slice(0, 6).map((m) => (
-                <Link key={m.uid} to="equipe" style={{ textDecoration: 'none', textAlign: 'center', width: 100 }}>
+                <Link
+                  key={m.uid}
+                  to="equipe"
+                  className="equipe-card"
+                  style={{
+                    textDecoration: 'none', textAlign: 'center',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    background: 'white', border: '1px solid var(--border, #E2E8F0)', borderRadius: 16,
+                    padding: '26px 14px 20px',
+                  }}
+                >
                   {m.photoURL ? (
-                    <img src={m.photoURL} alt={m.nom} style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', margin: '0 auto 8px' }} />
+                    <img
+                      src={m.photoURL}
+                      alt={m.nom}
+                      style={{ width: 76, height: 76, borderRadius: '50%', objectFit: 'cover', marginBottom: 14, border: '3px solid var(--accent-soft)' }}
+                    />
                   ) : (
-                    <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--bg-2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700, color: 'var(--ink-3)', margin: '0 auto 8px' }}>
+                    <div
+                      style={{
+                        width: 76, height: 76, borderRadius: '50%', marginBottom: 14,
+                        background: 'var(--accent-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 20, fontWeight: 700, color: 'var(--accent-etab, var(--blue))',
+                        border: '3px solid var(--accent-soft)',
+                      }}
+                    >
                       {(m.nom || '?').trim().split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase()).join('')}
                     </div>
                   )}
-                  <p style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3 }}>Dr {m.nom}</p>
-                  <p style={{ fontSize: 11, color: 'var(--ink-4)' }}>{m.serviceNom}</p>
+                  <p style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.3, marginBottom: 6 }}>{formatDr(m.nom)}</p>
+                  {m.serviceNom && (
+                    <span
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 4,
+                        fontSize: 11, fontWeight: 600, color: 'var(--accent-etab, var(--blue))',
+                        background: 'var(--accent-soft)', padding: '3px 10px', borderRadius: 999,
+                      }}
+                    >
+                      <Stethoscope style={{ width: 10, height: 10 }} /> {m.serviceNom}
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>
@@ -342,6 +382,11 @@ export default function EtablissementAccueilPage() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .equipe-card { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+        .equipe-card:hover { transform: translateY(-3px); box-shadow: 0 10px 24px rgba(15,23,42,0.08); border-color: var(--accent-etab, var(--blue)); }
+      `}</style>
     </div>
   );
 }
