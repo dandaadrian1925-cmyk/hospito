@@ -56,6 +56,14 @@ export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
 });
 export const googleProvider = new GoogleAuthProvider();
+// #corrigé (demande utilisateur, "après déconnexion, se reconnecter avec
+// Google ne redemande même pas de choisir le compte") : sans ce paramètre,
+// Google saute le sélecteur de compte tant qu'une session Google active
+// existe dans ce navigateur (son propre état sur accounts.google.com, pas
+// un cookie posé par HostoConnect/Firebase) — 'select_account' force
+// l'affichage du sélecteur à CHAQUE connexion, même avec un seul compte
+// Google connecté.
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 export const getMessagingSafe = async () => {
   try {
     if (!(await isSupported())) return null;
