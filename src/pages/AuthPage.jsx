@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Globe, ArrowRight } from 'lucide-react';
-import { registerWithEmail, loginWithEmail, loginWithGoogle } from '../services/authService';
+import { registerWithEmail, loginWithEmail, loginWithGoogle, registerWithGoogle } from '../services/authService';
 import { getSettings, getVillesFormulaire } from '../services/settingsService';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -101,9 +101,21 @@ export default function AuthPage() {
     }
     setGoogleLoading(true);
     try {
-      await loginWithGoogle();
-      toast.success('Connecté avec Google !');
+      if (mode === 'register') {
+        await registerWithGoogle();
+        toast.success('Compte créé ! Bienvenue sur HostoConnect 🎉');
+      } else {
+        await loginWithGoogle();
+        toast.success('Connecté avec Google !');
+      }
     } catch (err) {
+      // #corrigé (demande utilisateur, "pour se connecter avec Google, il
+      // faut déjà avoir un compte") : loginWithGoogle rejette désormais tout
+      // compte Google sans fiche HostoConnect existante.
+      if (err.message === 'COMPTE_INEXISTANT') {
+        toast.error("Aucun compte HostoConnect n'est associé à ce compte Google. Inscrivez-vous d'abord.");
+        return;
+      }
       const googleMsgs = {
         'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cet email via une autre méthode de connexion.',
         'auth/popup-closed-by-user': 'Fenêtre Google fermée avant la fin de la connexion.',

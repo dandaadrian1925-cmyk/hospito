@@ -127,7 +127,37 @@ export const loginWithEmail = async (email, password) => {
 // aller-retour de page complète) : c'est d'ailleurs exactement l'implémentation
 // qui fonctionne sur MAKET (maket-client, même architecture, authDomain
 // tout aussi cross-origin), confirmant que ce n'était pas un problème de COOP.
+// #corrigé (demande utilisateur, "différencier le Continuer avec Google de
+// l'inscription et de la connexion — pour se connecter, il faut déjà avoir
+// un compte") : signInWithPopup accepte n'importe quel compte Google et en
+// crée un nouveau côté Firebase Auth s'il n'existe pas encore — jusqu'ici,
+// la page de CONNEXION créait donc silencieusement un compte HostoConnect
+// pour n'importe quel Google jamais vu, exactement comme la page
+// d'inscription. Split en deux fonctions : registerWithGoogle (comportement
+// inchangé, crée si nouveau) et loginWithGoogle (rejette si aucune fiche
+// `users/{uid}` n'existe déjà — jamais de création depuis "Se connecter").
 export const loginWithGoogle = async () => {
+  setConnexionEnCours(true);
+  try {
+    const cred = await signInWithPopup(auth, googleProvider);
+    const userRef = doc(db, 'users', cred.user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      // Compte Firebase Auth tout juste créé par Google, sans fiche
+      // HostoConnect associée : pas un vrai compte existant. On déconnecte
+      // sans rien écrire — si cette même personne clique ensuite sur
+      // "S'inscrire", registerWithGoogle complètera cette fiche normalement.
+      await signOut(auth);
+      throw new Error('COMPTE_INEXISTANT');
+    }
+    await demarrerSessionUnique(cred.user.uid);
+    return { user: cred.user };
+  } finally {
+    terminerConnexion();
+  }
+};
+
+export const registerWithGoogle = async () => {
   setConnexionEnCours(true);
   try {
     const cred = await signInWithPopup(auth, googleProvider);
