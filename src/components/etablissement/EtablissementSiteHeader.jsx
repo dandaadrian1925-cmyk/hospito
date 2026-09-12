@@ -35,8 +35,8 @@ function EspacePatientMenu() {
       <button
         type="button"
         onClick={() => setOuvert((v) => !v)}
-        className="btn-outline"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', border: 'none' }}
+        className="etab-btn-ghost-color"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}
       >
         <FolderHeart style={{ width: 15, height: 15 }} /> Espace Patient <ChevronDown style={{ width: 13, height: 13 }} />
       </button>
@@ -104,7 +104,7 @@ function ServicesMenu({ etablissementId }) {
         style={({ isActive }) => ({
           padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
           display: 'inline-flex', alignItems: 'center', gap: 4,
-          color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent',
+          color: 'white', background: isActive ? 'rgba(255,255,255,0.22)' : 'transparent',
         })}
       >
         Services <ChevronDown style={{ width: 13, height: 13 }} />
@@ -162,7 +162,15 @@ export default function EtablissementSiteHeader({ etablissement }) {
           (retour utilisateur : "les options doivent être à droite mais
           avant le bouton Prendre RDV"), et le hamburger toujours épinglé à
           l'extrême droite sur mobile même quand le reste est masqué. */}
-      <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: 'white', borderBottom: '1px solid var(--border, #E2E8F0)' }}>
+      {/* #nouveau (demande utilisateur, "l'entête doit être complètement
+          designé en fonction des 2 couleurs majeures choisies par le super
+          admin") : la barre de nav était un simple bandeau blanc générique,
+          n'exploitant les couleurs de marque (--blue/--primary-dark, cf.
+          EtablissementLayout) que pour l'état actif d'un lien. Dégradé de
+          marque en fond, texte blanc, boutons inversés (blanc sur couleur)
+          pour rester lisibles — même dégradé que le hero/la bannière CTA,
+          identité visuelle cohérente sur toute la page. */}
+      <div style={{ padding: '10px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))' }}>
         <Link to="." style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
           {/* #corrigé (retour utilisateur, "le logo que j'ai modifié n'a pas
               du tout été bien chargé dans l'entête") : un vrai logo
@@ -174,21 +182,22 @@ export default function EtablissementSiteHeader({ etablissement }) {
               (photoCarrousel1, une vraie photo pas un logo) garde le rendu
               `cover` d'origine, plus adapté à une photographie. */}
           {etablissement.logoURL ? (
-            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <img src={etablissement.logoURL} alt={etablissement.nom} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} />
             </div>
+          ) : etablissement.photoCarrousel1 ? (
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: `url(${etablissement.photoCarrousel1}) center/cover` }} />
           ) : (
-            <div
-              style={{
-                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                background: etablissement.photoCarrousel1 ? `url(${etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              {!etablissement.photoCarrousel1 && <span style={{ color: 'white', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>}
+            // #corrigé (retour utilisateur, "entête designée sur les
+            // couleurs de marque") : cette pastille repli (initiale, sans
+            // logo NI photo) reprenait le MÊME dégradé que le fond
+            // désormais coloré de la barre — devenue invisible dessus.
+            // Fond blanc + initiale dans la couleur de marque à la place.
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: 'var(--blue)', fontWeight: 700 }}>{(etablissement.nom || '?').charAt(0).toUpperCase()}</span>
             </div>
           )}
-          <span style={{ fontWeight: 700, color: 'var(--ink)', fontSize: 15 }}>{etablissement.nom}</span>
+          <span style={{ fontWeight: 700, color: 'white', fontSize: 15 }}>{etablissement.nom}</span>
         </Link>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -196,14 +205,14 @@ export default function EtablissementSiteHeader({ etablissement }) {
             <NavLink
               to="."
               end
-              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
+              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: 'white', background: isActive ? 'rgba(255,255,255,0.22)' : 'transparent' })}
             >
               Accueil
             </NavLink>
             <ServicesMenu etablissementId={etablissement.id} />
             <NavLink
               to="equipe"
-              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent' })}
+              style={({ isActive }) => ({ padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', color: 'white', background: isActive ? 'rgba(255,255,255,0.22)' : 'transparent' })}
             >
               Médecins
             </NavLink>
@@ -213,7 +222,7 @@ export default function EtablissementSiteHeader({ etablissement }) {
                 to={l.to}
                 style={({ isActive }) => ({
                   padding: '8px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: 600, textDecoration: 'none',
-                  color: isActive ? 'var(--blue)' : 'var(--ink-2)', background: isActive ? 'var(--bg-2)' : 'transparent',
+                  color: 'white', background: isActive ? 'rgba(255,255,255,0.22)' : 'transparent',
                 })}
               >
                 {l.label}
@@ -222,7 +231,13 @@ export default function EtablissementSiteHeader({ etablissement }) {
           </nav>
 
           <div className="etab-nav-cta" style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-            <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {/* #corrigé (retour utilisateur, "entête designée sur les
+                couleurs de marque") : .btn-primary (fond --blue, texte
+                blanc) se fondait presque entièrement dans une barre
+                désormais elle-même en dégradé --blue/--primary-dark —
+                inversé (fond blanc, texte --blue) pour rester le bouton le
+                plus visible de la barre, comme prévu. */}
+            <Link to="rdv" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'white', color: 'var(--blue)' }}>
               <CalendarPlus style={{ width: 15, height: 15 }} /> Prendre RDV
             </Link>
             <EspacePatientMenu />
@@ -236,7 +251,7 @@ export default function EtablissementSiteHeader({ etablissement }) {
           aria-label="Ouvrir le menu"
           style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 6, flexShrink: 0 }}
         >
-          <Menu style={{ width: 22, height: 22, color: 'var(--ink)' }} />
+          <Menu style={{ width: 22, height: 22, color: 'white' }} />
         </button>
       </div>
 
@@ -294,6 +309,16 @@ export default function EtablissementSiteHeader({ etablissement }) {
       )}
 
       <style>{`
+        /* #nouveau (demande utilisateur, "entête designée sur les couleurs
+           de marque") : équivalent de .btn-outline (même gabarit/padding)
+           mais en blanc — un bouton "ghost" bordé --blue serait illisible
+           sur la barre désormais en dégradé --blue/--primary-dark. */
+        .etab-btn-ghost-color {
+          background: transparent; color: white; border: 1.5px solid rgba(255,255,255,0.6);
+          border-radius: 999px; padding: 9.5px 20px; font-family: var(--font);
+          font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.15s ease;
+        }
+        .etab-btn-ghost-color:hover { background: rgba(255,255,255,0.15); }
         @media (max-width: 900px) {
           .etab-nav-desktop { display: none !important; }
           .etab-nav-cta { display: none !important; }
