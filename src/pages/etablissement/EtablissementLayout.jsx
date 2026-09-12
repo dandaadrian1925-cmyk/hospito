@@ -83,10 +83,22 @@ export default function EtablissementLayout() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white', overflowX: 'hidden', ...styleTheme }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: 'white', ...styleTheme }}>
+      {/* #corrigé (retour utilisateur, "l'entête doit rester fixe même
+          quand on scrolle" — encore signalé après le correctif bb45550) :
+          `overflow-x: hidden` vivait sur CE conteneur racine, dont
+          l'en-tête sticky est un DESCENDANT direct — poser overflow-x sur
+          un ancêtre force son overflow-y à `auto`, en fait un conteneur de
+          défilement à part entière, et casse `position: sticky` dans ce
+          cas précis (Safari en particulier). Déplacé sur le wrapper de
+          contenu ci-dessous (où vivent les sections pleine largeur qui en
+          ont réellement besoin) — l'en-tête, frère et non plus descendant
+          de cet overflow, reste sticky par rapport au vrai défilement de
+          la page.
+      */}
       <EtablissementSiteHeader etablissement={etablissement} />
 
-      <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px' }}>
+      <div style={{ flex: 1, maxWidth: 1100, width: '100%', margin: '0 auto', padding: '32px 24px 64px', overflowX: 'hidden' }}>
         <Outlet context={{ etablissement, tarifs, apropos, etablissementId, user, userProfile }} />
       </div>
 

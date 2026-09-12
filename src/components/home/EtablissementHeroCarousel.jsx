@@ -111,8 +111,21 @@ export default function EtablissementHeroCarousel({ etablissement, dejaSurLaPage
   const TagIcon = slide.tagIcon;
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '20px 24px 0' }}>
-      <div className="hero-frame" style={{ position: 'relative', overflow: 'hidden', borderRadius: 24, minHeight: 480 }}>
+    <div
+      style={dejaSurLaPage
+        // #corrigé (retour utilisateur, "je voudrais qu'en largeur le
+        // carrousel remplisse la largeur et prolonge le haut jusqu'à
+        // l'entête") : sur l'accueil établissement, échappe la largeur
+        // maximale (1100px) ET le padding horizontal du conteneur parent
+        // (EtablissementLayout) via la même technique 100vw que les autres
+        // bandeaux pleine largeur de cette page (PLEINE_LARGEUR,
+        // EtablissementAccueilPage) ; marginTop négatif pour absorber le
+        // padding-top (32px) de ce même conteneur et venir toucher
+        // l'en-tête, sans aucun espace résiduel.
+        ? { position: 'relative', left: '50%', right: '50%', marginLeft: '-50vw', marginRight: '-50vw', width: '100vw', marginTop: -32 }
+        : { maxWidth: 1280, margin: '0 auto', padding: '20px 24px 0' }}
+    >
+      <div className="hero-frame" style={{ position: 'relative', overflow: 'hidden', borderRadius: dejaSurLaPage ? 0 : 24, minHeight: 480 }}>
         {imagesRotation.map((src, i) => (
           <div
             key={src}
