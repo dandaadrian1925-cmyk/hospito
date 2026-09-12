@@ -1,6 +1,7 @@
 import { useOutletContext } from 'react-router-dom';
 import DossierMedicalView from '../../components/dossier/DossierMedicalView';
 import ConsentementSignature from '../../components/etablissement/ConsentementSignature';
+import DemandeInscriptionPatient from '../../components/etablissement/DemandeInscriptionPatient';
 import SectionCTA from '../../components/etablissement/SectionCTA';
 
 export default function EtablissementDossierPage() {
@@ -11,6 +12,7 @@ export default function EtablissementDossierPage() {
 
   return (
     <>
+      <DemandeInscriptionPatient etablissementId={etablissementId} patientUid={user.uid} userProfile={userProfile} />
       <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
       <DossierMedicalView cni={userProfile?.numeroIdentiteNational} />
     </>
