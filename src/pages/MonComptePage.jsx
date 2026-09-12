@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, Routes, Route } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound, FlaskConical, Pill } from 'lucide-react';
+import { User, Heart, Shield, Bell, Eye, ChevronRight, ChevronLeft, Edit2, Save, X, MapPin, Mail, AlertTriangle, LogOut, Flag, Trash2, Camera, MoreVertical, BadgeCheck, CalendarPlus, FolderHeart, CreditCard, KeyRound, FlaskConical, Pill, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/config';
@@ -12,6 +12,7 @@ import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../ser
 import { getTraitementsEnCours } from '../services/examensPatientService';
 import { getMesRendezVousAVenir } from '../services/demandesRendezVousService';
 import RendezVousPage from './moncompte/RendezVousPage';
+import ProchesPage from './moncompte/ProchesPage';
 import DossierPage from './moncompte/DossierPage';
 import DossierAccessGate from '../components/common/DossierAccessGate';
 import FacturesPage from './moncompte/FacturesPage';
@@ -259,6 +260,11 @@ const MENU_ITEMS = [{
   to: '/mon-compte/rendez-vous',
   label: 'Mes rendez-vous',
   icon: CalendarPlus
+}, {
+  to: '/mon-compte/proches',
+  label: 'Mes proches',
+  icon: Users,
+  sub: 'Bébé, personne âgée — gérés depuis votre compte'
 }, {
   to: '/mon-compte/dossier',
   label: 'Mon dossier médical',
@@ -1098,6 +1104,7 @@ export default function MonComptePage() {
         <Route index element={<AccountHome />} />
         <Route path="profil" element={<SectionPage><ModifierProfil /></SectionPage>} />
         <Route path="rendez-vous" element={<SectionPage><RendezVousPage /></SectionPage>} />
+        <Route path="proches" element={<SectionPage><ProchesPage /></SectionPage>} />
         <Route path="dossier" element={<SectionPage><DossierAccessGate><DossierPage /></DossierAccessGate></SectionPage>} />
         <Route path="examens" element={<SectionPage><ExamensPage /></SectionPage>} />
         <Route path="factures" element={<SectionPage><FacturesPage /></SectionPage>} />

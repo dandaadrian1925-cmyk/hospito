@@ -12,19 +12,13 @@ import { getSettingsEtablissement } from './settingsService';
 // seule façon de relier les deux sans dupliquer l'identité. Retourne null
 // dès que l'un des maillons manque (patient jamais venu physiquement dans
 // CET établissement, ou CNI non renseignée) — jamais une erreur bloquante.
-export async function trouverBilletValideDuPatient(patientUid, etablissementId, serviceId) {
-  const userSnap = await getDoc(doc(db, 'users', patientUid));
-  const cni = userSnap.exists() ? userSnap.data().numeroIdentiteNational : null;
-  if (!cni) return null;
-
-  const fichesSnap = await getDocs(query(
-    collection(db, 'patients'),
-    where('etablissementId', '==', etablissementId),
-    where('numeroIdentiteNational', '==', cni),
-  ));
-  if (fichesSnap.empty) return null;
-  const ficheId = fichesSnap.docs[0].id;
-
+// Factorisé (demande utilisateur, "un bébé ou une personne âgée sans compte
+// doit aussi pouvoir être pris en compte") : la recherche du billet valide
+// ne dépend que de l'id de fiche, jamais de comment il a été obtenu (CNI du
+// titulaire lui-même, ou geePar pour un proche) — voir
+// trouverBilletValidePourFiche ci-dessous, utilisée directement quand la
+// fiche du proche est déjà connue.
+async function trouverBilletValidePourFicheId(ficheId, etablissementId, serviceId) {
   const { dureeValiditeBilletJours } = await getSettingsEtablissement(etablissementId);
   const billetsSnap = await getDocs(query(
     collection(db, 'billets_session'),
@@ -47,4 +41,25 @@ export async function trouverBilletValideDuPatient(patientUid, etablissementId, 
   const b = candidats[0];
   const creeMs = b.createdAt.toDate().getTime();
   return { ...b, expireLe: new Date(creeMs + dureeValiditeBilletJours * 24 * 3600 * 1000) };
+}
+
+export async function trouverBilletValideDuPatient(patientUid, etablissementId, serviceId) {
+  const userSnap = await getDoc(doc(db, 'users', patientUid));
+  const cni = userSnap.exists() ? userSnap.data().numeroIdentiteNational : null;
+  if (!cni) return null;
+
+  const fichesSnap = await getDocs(query(
+    collection(db, 'patients'),
+    where('etablissementId', '==', etablissementId),
+    where('numeroIdentiteNational', '==', cni),
+  ));
+  if (fichesSnap.empty) return null;
+  return trouverBilletValidePourFicheId(fichesSnap.docs[0].id, etablissementId, serviceId);
+}
+
+// Pour un proche (fiche déjà connue, pas de CNI/compte à résoudre) — le
+// tuteur choisit ce proche dans le sélecteur "Pour qui ?" de TabRdv.
+export async function trouverBilletValidePourFiche(ficheId, etablissementId, serviceId) {
+  if (!ficheId) return null;
+  return trouverBilletValidePourFicheId(ficheId, etablissementId, serviceId);
 }

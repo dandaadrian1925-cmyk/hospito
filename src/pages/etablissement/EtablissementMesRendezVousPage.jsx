@@ -42,6 +42,7 @@ export default function EtablissementMesRendezVousPage() {
         <div className="space-y-2">
           {demandes.map((d) => (
             <div key={d.id} style={{ padding: '12px 16px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13.5 }}>
+              {d.patientFicheId && <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--blue)', marginBottom: 2 }}>Pour {d.patientNom}</p>}
               <strong>{d.motif}</strong>
               {d.serviceNom && <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>({d.serviceNom})</span>}
               {d.type === 'teleconsultation' && <span style={{ color: 'var(--blue)', marginLeft: 8, fontWeight: 700 }}>Téléconsultation</span>}

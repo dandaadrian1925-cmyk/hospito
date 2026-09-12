@@ -4,7 +4,8 @@ import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { creerDemandeRdv } from '../../services/demandesRendezVousService';
 import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
-import { trouverBilletValideDuPatient } from '../../services/billetsService';
+import { trouverBilletValideDuPatient, trouverBilletValidePourFiche } from '../../services/billetsService';
+import { listerMesProchesDansEtablissement } from '../../services/prochesService';
 
 export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
   const [services, setServices] = useState([]);
@@ -15,6 +16,18 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   const [envoi, setEnvoi] = useState(false);
   const [specialistes, setSpecialistes] = useState([]);
   const [medecinPrefere, setMedecinPrefere] = useState(null);
+  // #nouveau (demande utilisateur, "un bébé ou une personne âgée sans
+  // compte doit aussi pouvoir être pris en compte") : proches (bébé, parent
+  // âgé...) que ce compte gère POUR CET établissement — le sélecteur "Pour
+  // qui ?" n'apparaît que s'il y en a au moins un.
+  const [proches, setProches] = useState([]);
+  const [procheChoisiId, setProcheChoisiId] = useState('');
+
+  useEffect(() => {
+    listerMesProchesDansEtablissement(patientUid, etablissementId).then(setProches).catch(() => setProches([]));
+  }, [patientUid, etablissementId]);
+
+  const procheChoisi = proches.find((p) => p.id === procheChoisiId) || null;
   // #nouveau (demande utilisateur, "un popup doit dire si on a déjà un
   // billet de consultation encore valide avant d'envoyer une demande de
   // RDV, mais ça envoie quand même la demande") : informatif seulement — ne
@@ -31,11 +44,14 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   useEffect(() => {
     let annule = false;
     setBilletValide(undefined);
-    trouverBilletValideDuPatient(patientUid, etablissementId, serviceId || null)
+    const recherche = procheChoisiId
+      ? trouverBilletValidePourFiche(procheChoisiId, etablissementId, serviceId || null)
+      : trouverBilletValideDuPatient(patientUid, etablissementId, serviceId || null);
+    recherche
       .then((b) => { if (!annule) setBilletValide(b); })
       .catch(() => { if (!annule) setBilletValide(null); });
     return () => { annule = true; };
-  }, [patientUid, etablissementId, serviceId]);
+  }, [patientUid, etablissementId, serviceId, procheChoisiId]);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -73,7 +89,12 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     try {
       const service = services.find((s) => s.id === serviceId);
       await creerDemandeRdv({
-        etablissementId, patientUid, patientNom, serviceId: serviceId || null, serviceNom: service?.nom || null,
+        etablissementId, patientUid,
+        // Pour un proche : le nom qui apparaît à l'accueil est celui de la
+        // personne réellement vue, pas celui du tuteur qui envoie la demande.
+        patientNom: procheChoisi ? `${procheChoisi.prenom || ''} ${procheChoisi.nom || ''}`.trim() : patientNom,
+        patientFicheId: procheChoisiId || null,
+        serviceId: serviceId || null, serviceNom: service?.nom || null,
         motif, dateSouhaitee, type: teleconsultation ? 'teleconsultation' : 'presentiel',
         medecinPrefereId: medecinPrefere?.uid || null, medecinPrefereNom: medecinPrefere?.nom || null,
       });
@@ -83,6 +104,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
       setDateSouhaitee('');
       setTeleconsultation(false);
       setMedecinPrefere(null);
+      setProcheChoisiId('');
       setConfirmationOuverte(false);
     } catch (err) {
       console.error('creerDemandeRdv a échoué :', err);
@@ -110,6 +132,15 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   return (
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {proches.length > 0 && (
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Pour qui ?</label>
+            <select value={procheChoisiId} onChange={(e) => setProcheChoisiId(e.target.value)} className="input-field">
+              <option value="">Moi-même</option>
+              {proches.map((p) => <option key={p.id} value={p.id}>{p.prenom} {p.nom}</option>)}
+            </select>
+          </div>
+        )}
         {services.length > 0 && (
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2">Service concerné</label>

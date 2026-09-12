@@ -2,11 +2,19 @@ import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } f
 import { db } from '../firebase/config';
 import { getSettingsEtablissement } from './settingsService';
 
-export async function creerDemandeRdv({ etablissementId, patientUid, patientNom, serviceId, serviceNom, motif, dateSouhaitee, type, medecinPrefereId, medecinPrefereNom }) {
+export async function creerDemandeRdv({ etablissementId, patientUid, patientNom, patientFicheId, serviceId, serviceNom, motif, dateSouhaitee, type, medecinPrefereId, medecinPrefereNom }) {
   await addDoc(collection(db, 'demandes_rendez_vous'), {
     etablissementId,
     patientUid,
     patientNom,
+    // #nouveau (demande utilisateur, "un bébé ou une personne âgée sans
+    // compte doit aussi pouvoir être pris en compte") : présent quand la
+    // demande est faite par un TUTEUR pour un proche (patientNom porte
+    // alors le nom du proche, pas celui du tuteur) — patientUid reste
+    // toujours celui du tuteur (propriété/visibilité de la demande).
+    // Vérifié côté serveur (firestore.rules) : ne peut référencer qu'un
+    // proche réellement lié à ce tuteur (geePar).
+    patientFicheId: patientFicheId || null,
     serviceId: serviceId || null,
     serviceNom: serviceNom || null,
     motif: motif.trim(),

@@ -59,6 +59,11 @@ export default function RendezVousPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
           <div>
             <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{etab?.nom || 'Établissement'}</p>
+            {/* #nouveau (demande utilisateur, "un bébé ou une personne âgée
+                sans compte doit aussi pouvoir être pris en compte") : cette
+                liste reste UNE liste (celle du tuteur) — ce label distingue
+                simplement une demande faite pour un proche. */}
+            {d.patientFicheId && <p style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>Pour {d.patientNom}</p>}
             {d.serviceNom && <p style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>{d.serviceNom}</p>}
           </div>
           <span style={{ flexShrink: 0, background: style.bg, color: style.color, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>{style.label}</span>
