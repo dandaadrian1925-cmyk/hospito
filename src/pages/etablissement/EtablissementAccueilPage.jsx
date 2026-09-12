@@ -8,7 +8,7 @@ import { listerServicesActifs, listerActualitesPubliees } from '../../services/e
 import { listerMedecinsDeLEtablissement } from '../../services/planningService';
 import { getAvisEtablissement } from '../../services/avisEtablissementsService';
 import { getTransparenceAttente } from '../../services/transparenceService';
-import EtablissementHeroCarousel from '../../components/home/EtablissementHeroCarousel';
+import EtablissementHeroCarousel, { IMAGES_GENERIQUES } from '../../components/home/EtablissementHeroCarousel';
 
 const LABEL_CATEGORIE = { nouveaute: 'Nouveauté', evenement: 'Événement', publication: 'Publication', autre: 'Actualité' };
 
@@ -85,6 +85,15 @@ export default function EtablissementAccueilPage() {
   }, [etablissementId]);
 
   const telephone = etablissement.contactTelephone;
+  // #nouveau (demande utilisateur, "je voudrais que la section besoin de
+  // soins médicaux soit sur une des images du carrousel en fond") : reprend
+  // la DERNIÈRE photo réelle (photoCarrousel1/2/3) si fournie par le
+  // sysadmin, sinon la dernière image générique — même source que le
+  // carrousel, jamais une image inventée séparément. La dernière plutôt que
+  // la première pour ne pas dupliquer exactement le fond déjà visible en
+  // haut de page.
+  const imagesReellesCta = [etablissement.photoCarrousel1, etablissement.photoCarrousel2, etablissement.photoCarrousel3].filter(Boolean);
+  const imageCTA = imagesReellesCta[imagesReellesCta.length - 1] || IMAGES_GENERIQUES[IMAGES_GENERIQUES.length - 1];
   const moyenneAvis = avis?.length ? avis.reduce((s, a) => s + a.note, 0) / avis.length : null;
   const chiffres = apropos?.chiffresCles?.length
     ? apropos.chiffresCles
@@ -360,9 +369,14 @@ export default function EtablissementAccueilPage() {
       </div>
 
       {/* Bandeau d'appel à l'action — pleine largeur, mêmes vraies
-          coordonnées que la page Contact, jamais une carte/numéro fictif */}
-      <div style={{ ...PLEINE_LARGEUR, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))', padding: '48px 0' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
+          coordonnées que la page Contact, jamais une carte/numéro fictif.
+          Photo du carrousel en fond (teintée du dégradé de marque pour
+          garder la lisibilité du texte blanc), plutôt qu'un aplat de
+          couleur seul. */}
+      <div style={{ ...PLEINE_LARGEUR, position: 'relative', padding: '48px 0', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${imageCTA})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, var(--blue), var(--primary-dark, #174858))', opacity: 0.85 }} />
+        <div style={{ position: 'relative', maxWidth: 1100, margin: '0 auto', padding: '0 24px', textAlign: 'center' }}>
           <p style={{ fontSize: 22, fontWeight: 700, color: 'white', marginBottom: 8 }}>Besoin de soins médicaux ?</p>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', marginBottom: 22 }}>
             Notre équipe est à votre disposition pour vous accompagner dans votre parcours de santé.
