@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Building2, CalendarPlus, FolderHeart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Building2, CalendarPlus, FolderHeart, Stethoscope, Users, ArrowRight } from 'lucide-react';
 
 // Exporté (demande utilisateur, "remplace par un carrousel des mêmes images
 // que le carrousel d'entrée dans HostoConnect") : réutilisé tel quel comme
@@ -14,7 +14,15 @@ export const IMAGES_GENERIQUES = [
   'https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?w=900&q=65&fm=webp&auto=format&fit=crop',
 ];
 
-function buildSlides(etablissement) {
+// #corrigé (retour utilisateur, "enlève les liens qui permettent de
+// découvrir l'établissement dessus parce qu'étant dans l'accueil, ça ne
+// mène nulle part") : ce composant est partagé entre HomePage (où "Découvrir
+// l'établissement"/"Voir l'établissement" a du sens, on n'y est pas encore)
+// et EtablissementAccueilPage (où on EST déjà sur cette page — ces mêmes
+// liens deviennent circulaires, ils rechargent la page actuelle). Remplacés
+// par une navigation interne réellement utile (services, équipe) quand
+// `dejaSurLaPage` vaut true.
+function buildSlides(etablissement, dejaSurLaPage) {
   const base = `/etablissement/${etablissement.id}`;
   return [
     {
@@ -23,8 +31,9 @@ function buildSlides(etablissement) {
       tagIcon: Building2,
       title: etablissement.nom,
       subtitle: `${etablissement.ville ? `${etablissement.ville} — ` : ''}Prenez rendez-vous, consultez votre dossier et échangez avec l'équipe soignante.`,
-      cta: "Découvrir l'établissement",
-      ctaLink: base,
+      cta: dejaSurLaPage ? 'Voir nos services' : "Découvrir l'établissement",
+      ctaIcon: dejaSurLaPage ? Stethoscope : null,
+      ctaLink: dejaSurLaPage ? `${base}/services` : base,
       secondary: 'Prendre rendez-vous',
       secondaryLink: `${base}/rdv`,
     },
@@ -36,8 +45,9 @@ function buildSlides(etablissement) {
       subtitle: `Réservez une consultation à ${etablissement.nom} sans vous déplacer.`,
       cta: 'Prendre rendez-vous',
       ctaLink: `${base}/rdv`,
-      secondary: "Voir l'établissement",
-      secondaryLink: base,
+      secondary: dejaSurLaPage ? 'Notre équipe médicale' : "Voir l'établissement",
+      secondaryIcon: dejaSurLaPage ? Users : null,
+      secondaryLink: dejaSurLaPage ? `${base}/equipe` : base,
     },
     {
       id: 3,
@@ -53,8 +63,8 @@ function buildSlides(etablissement) {
   ];
 }
 
-export default function EtablissementHeroCarousel({ etablissement }) {
-  const slides = buildSlides(etablissement);
+export default function EtablissementHeroCarousel({ etablissement, dejaSurLaPage = false }) {
+  const slides = buildSlides(etablissement, dejaSurLaPage);
   const [current, setCurrent] = useState(0);
   const [dir, setDir] = useState(1);
   const [showCard, setShowCard] = useState(true);
@@ -144,17 +154,30 @@ export default function EtablissementHeroCarousel({ etablissement }) {
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
                 className="hero-card"
-                style={{ background: 'white', borderRadius: 20, padding: '36px 32px', maxWidth: 380, boxShadow: 'var(--shadow-lg)', cursor: 'default' }}
+                style={{ background: 'white', borderRadius: 20, padding: '32px 32px 30px', maxWidth: 380, boxShadow: '0 24px 60px -12px rgba(15,23,42,0.25), 0 0 0 1px rgba(15,23,42,0.04)', cursor: 'default' }}
               >
+                {/* #nouveau (perfectionnement demandé, "carrousel pas bien
+                    designé") : identité visuelle de l'établissement (logo
+                    réel, jamais un placeholder inventé) au-dessus du tag —
+                    la carte ne ressemblait à rien de spécifique à CET
+                    établissement avant. */}
+                {etablissement.logoURL && (
+                  <img
+                    src={etablissement.logoURL}
+                    alt={etablissement.nom}
+                    style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'contain', border: '1px solid var(--border, #E2E8F0)', padding: 4, marginBottom: 14, background: 'white' }}
+                  />
+                )}
                 <div
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
                     background: 'var(--accent-soft)',
+                    border: '1px solid color-mix(in srgb, var(--accent-etab, var(--blue)) 22%, transparent)',
                     padding: '5px 12px',
                     borderRadius: 20,
-                    marginBottom: 18,
+                    marginBottom: 16,
                   }}
                 >
                   <TagIcon style={{ width: 12, height: 12, color: 'var(--accent-etab, var(--blue))' }} />
@@ -176,15 +199,29 @@ export default function EtablissementHeroCarousel({ etablissement }) {
                   {slide.title}
                 </h2>
 
-                <p className="hero-subtitle" style={{ color: 'var(--ink-3)', fontSize: 14.5, lineHeight: 1.6, marginBottom: 26 }}>
+                <p className="hero-subtitle" style={{ color: 'var(--ink-3)', fontSize: 14.5, lineHeight: 1.6, marginBottom: 28 }}>
                   {slide.subtitle}
                 </p>
 
-                <div className="hero-ctas" style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
-                  <Link to={slide.ctaLink} className="btn-primary" style={{ padding: '12px 26px' }}>
+                <div className="hero-ctas" style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+                  <Link
+                    to={slide.ctaLink}
+                    className="btn-primary"
+                    style={{ padding: '12px 24px', display: 'inline-flex', alignItems: 'center', gap: 7 }}
+                  >
+                    {slide.ctaIcon && <slide.ctaIcon style={{ width: 15, height: 15 }} />}
                     {slide.cta}
                   </Link>
-                  <Link to={slide.secondaryLink} style={{ color: 'var(--blue)', fontWeight: 600, fontSize: 13.5, textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                  <Link
+                    to={slide.secondaryLink}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      color: 'var(--accent-etab, var(--blue))', fontWeight: 600, fontSize: 13.5,
+                      padding: '11px 18px', borderRadius: 999, border: '1.5px solid color-mix(in srgb, var(--accent-etab, var(--blue)) 35%, transparent)',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    {slide.secondaryIcon ? <slide.secondaryIcon style={{ width: 14, height: 14 }} /> : <ArrowRight style={{ width: 14, height: 14 }} />}
                     {slide.secondary}
                   </Link>
                 </div>

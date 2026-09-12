@@ -114,7 +114,7 @@ export default function EtablissementAccueilPage() {
           rendez-vous en quelques clics", jamais deux implémentations
           différentes du même hero établissement. Les chiffres clés
           (uniques à cette page) suivent juste en dessous. */}
-      <EtablissementHeroCarousel etablissement={etablissement} />
+      <EtablissementHeroCarousel etablissement={etablissement} dejaSurLaPage />
 
       {!!chiffres.length && (
         <div style={{ maxWidth: 1100, margin: '24px auto 0', padding: '0 24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
