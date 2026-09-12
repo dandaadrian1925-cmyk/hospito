@@ -178,13 +178,13 @@ export default function EtablissementSiteHeader({ etablissement }) {
               (photoCarrousel1, une vraie photo pas un logo) garde le rendu
               `cover` d'origine, plus adapté à une photographie. */}
           {etablissement.logoURL ? (
-            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            <div style={{ width: 'var(--logo-taille, 40px)', height: 'var(--logo-taille, 40px)', borderRadius: 10, flexShrink: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
               <img src={etablissement.logoURL} alt={etablissement.nom} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 3 }} />
             </div>
           ) : (
             <div
               style={{
-                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                width: 'var(--logo-taille, 40px)', height: 'var(--logo-taille, 40px)', borderRadius: 10, flexShrink: 0,
                 background: etablissement.photoCarrousel1 ? `url(${etablissement.photoCarrousel1}) center/cover` : 'linear-gradient(135deg, var(--nom-c1, var(--blue)), var(--nom-c2, var(--primary-dark, #174858)))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
@@ -199,10 +199,15 @@ export default function EtablissementSiteHeader({ etablissement }) {
               uniquement, avec ses 2 propres couleurs dédiées
               (--nom-c1/--nom-c2, cf. EtablissementLayout — posées à partir
               de apropos.couleurNom1/2 si le sysadmin les a choisies,
-              repli sur couleurPrimaire/Secondaire sinon). */}
+              repli sur couleurPrimaire/Secondaire sinon).
+              #nouveau (demande utilisateur, "une multitude de design
+              police taille etc, avec une taille de logo ajustable") :
+              police/taille également personnalisables (--nom-font/
+              --nom-taille), même éditeur avec aperçu en direct côté
+              hospito-super-admin. */}
           <span
             style={{
-              fontWeight: 700, fontSize: 15,
+              fontWeight: 700, fontSize: 'var(--nom-taille, 15px)', fontFamily: 'var(--nom-font, inherit)',
               background: 'linear-gradient(135deg, var(--nom-c1, var(--blue)), var(--nom-c2, var(--primary-dark, #174858)))',
               WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
             }}

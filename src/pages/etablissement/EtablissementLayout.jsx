@@ -67,19 +67,29 @@ export default function EtablissementLayout() {
   // couleurPrimaire/Secondaire si non renseignée (comportement précédent),
   // jamais un dégradé inventé si rien n'est choisi (le composant retombe
   // alors sur var(--blue)/var(--primary-dark) directement).
-  const { couleurPrimaire, couleurSecondaire, couleurAccent, couleurNom1, couleurNom2 } = apropos || {};
+  const { couleurPrimaire, couleurSecondaire, couleurAccent, couleurNom1, couleurNom2, nomPolice, nomTaille, logoTaille } = apropos || {};
   const styleThemeCouleurs = couleurPrimaire ? {
     '--blue': couleurPrimaire,
     '--blue-dark': assombrir(couleurPrimaire, 0.18),
     '--primary-dark': couleurSecondaire || assombrir(couleurPrimaire, 0.35),
     ...(couleurAccent ? { '--accent-etab': couleurAccent } : {}),
   } : {};
-  // Indépendante de couleurPrimaire : un établissement peut choisir une
-  // paire dédiée au nom sans forcément personnaliser le reste (boutons/
-  // liens gardent alors le bleu HostoConnect par défaut).
+  // #nouveau (demande utilisateur, "une multitude de design police taille
+  // etc, avec une taille de logo ajustable") : police/tailles choisies
+  // dans le même éditeur que les couleurs du nom (hospito-super-admin,
+  // InformationsGeneralesPage) — même registre POLICES_NOM des deux côtés
+  // (Inter/Fraunces/Syne, les 3 polices déjà chargées par ce projet,
+  // jamais une police tierce à charger en plus). Indépendante de
+  // couleurPrimaire : un établissement peut choisir une paire dédiée au
+  // nom sans forcément personnaliser le reste (boutons/liens gardent alors
+  // le bleu HostoConnect par défaut).
+  const POLICES_NOM = { inter: "'Inter', -apple-system, sans-serif", fraunces: "'Fraunces', Georgia, serif", syne: "'Syne', sans-serif" };
   const styleThemeNom = {
     ...(couleurNom1 ? { '--nom-c1': couleurNom1 } : {}),
     ...(couleurNom2 ? { '--nom-c2': couleurNom2 } : {}),
+    ...(nomPolice && POLICES_NOM[nomPolice] ? { '--nom-font': POLICES_NOM[nomPolice] } : {}),
+    ...(nomTaille ? { '--nom-taille': `${nomTaille}px` } : {}),
+    ...(logoTaille ? { '--logo-taille': `${logoTaille}px` } : {}),
   };
   const styleTheme = { ...styleThemeCouleurs, ...styleThemeNom };
 
