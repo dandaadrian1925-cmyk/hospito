@@ -30,15 +30,15 @@ async function trouverBilletValidePourFicheId(ficheId, etablissementId, serviceI
   const candidats = billetsSnap.docs
     .map((d) => ({ id: d.id, ...d.data() }))
     .filter((b) => !serviceId || b.serviceId === serviceId)
-    // #corrigé (audit, "incohérence de sémantique billet valide entre
-    // hospito-patient et hospito-accueil-medecin") : un billet déjà
-    // 'consulte' restait compté comme "valide" ici — le patient se voyait
-    // dire "vous pouvez vous présenter sans payer" alors que
-    // trouverBilletActifDuJour (hospito-accueil-medecin), qui décide
-    // réellement s'il faut RECRÉER un billet payant, exclut déjà ce statut.
-    // Même exclusion ici, pour ne jamais promettre au patient une gratuité
-    // que l'accueil ne lui accordera pas.
-    .filter((b) => b.statut !== 'consulte')
+    // #corrigé (re-audit + décision utilisateur, "un billet déjà consulté
+    // mais encore dans sa fenêtre de validité exempte-t-il le patient de
+    // repayer pour un nouveau RDV en ligne ? Oui") : aligné sur
+    // trouverBilletValidePourDate (hospito-accueil-medecin), la fonction qui
+    // décide RÉELLEMENT côté accueil si la confirmation du RDV nécessite un
+    // paiement — celle-ci n'exclut PAS 'consulte' ("déjà vu ne veut pas dire
+    // n'a jamais eu de billet"). Un correctif précédent avait exclu
+    // 'consulte' ici pour "aligner" les deux, dans le mauvais sens : c'est
+    // ce popup qui doit suivre trouverBilletValidePourDate, pas l'inverse.
     .filter((b) => {
       const creeMs = b.createdAt?.toDate?.()?.getTime();
       if (!creeMs) return false;
