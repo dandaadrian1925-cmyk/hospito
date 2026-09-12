@@ -36,7 +36,11 @@ export default function ProchesPage() {
       <Users style={{ width: 32, height: 32, color: '#CBD5E1', margin: '0 auto 12px' }} />
       <p style={{ fontWeight: 700, color: 'var(--ink)', marginBottom: 4 }}>Aucun proche géré pour le moment</p>
       <p style={{ fontSize: 13, color: '#94A3B8' }}>
-        Pour un bébé ou une personne âgée sans compte, demandez à l'accueil de l'établissement de lier sa fiche à votre compte (par votre email).
+        {/* #corrigé (audit, "renvoie vers un rôle qui ne peut pas faire
+            l'action") : seul un admin (hospito-admin, où vit le formulaire
+            patient) peut lier une fiche à un compte tuteur — pas l'accueil
+            (hospito-accueil-medecin, lecture seule sur les fiches patient). */}
+        Pour un bébé ou une personne âgée sans compte, demandez à l'établissement de lier sa fiche à votre compte (par votre email).
       </p>
     </div>;
   }

@@ -14,6 +14,10 @@ const STATUT_STYLES = {
   // automatiquement ici — jusque-là un RDV manqué restait "Confirmé" pour
   // toujours, sans distinction avec un RDV réellement honoré.
   absent: { bg: '#FEF2F2', color: '#DC2626', label: 'Non honoré' },
+  // #corrigé (audit, "statut 'termine' non géré") : posé par
+  // cloturerTeleconsultation (hospito-medecin) — retombait sur le fallback
+  // brut { label: d.statut } et affichait le mot "termine" tel quel.
+  termine: { bg: '#F0FDF4', color: '#059669', label: 'Terminé' },
 };
 
 const formatDate = (value) => {

@@ -5,7 +5,7 @@ import { getMesDemandesRdv } from '../../services/demandesRendezVousService';
 import TeleconsultationCallWidget from '../../components/teleconsultation/TeleconsultationCallWidget';
 import SectionCTA from '../../components/etablissement/SectionCTA';
 
-const LABEL_STATUT = { en_attente: 'En attente de confirmation', confirme: 'Confirmé', refuse: 'Refusé', absent: 'Non honoré' };
+const LABEL_STATUT = { en_attente: 'En attente de confirmation', confirme: 'Confirmé', refuse: 'Refusé', absent: 'Non honoré', termine: 'Terminé' };
 
 // #nouveau (demande utilisateur, "les demandes passées ne s'affichent pas
 // là-bas, enlève ça et affiche-les dans mes rendez-vous de l'espace
@@ -50,6 +50,10 @@ export default function EtablissementMesRendezVousPage() {
               {d.dateHeure?.toDate && (
                 <p style={{ color: 'var(--ink-3)', marginTop: 4 }}>{d.dateHeure.toDate().toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' })}</p>
               )}
+              {/* #corrigé (audit, "cette liste n'affiche jamais le médecin
+                  confirmé contrairement à l'autre") : d.medecinNom existe
+                  déjà (posé par confirmerDemande, hospito-accueil-medecin). */}
+              {d.medecinNom && <p style={{ color: 'var(--ink-3)', marginTop: 2 }}>Dr {d.medecinNom}</p>}
               {d.type === 'teleconsultation' && d.statut === 'confirme' && (
                 <div style={{ marginTop: 10 }}>
                   <TeleconsultationCallWidget demandeId={d.id} />

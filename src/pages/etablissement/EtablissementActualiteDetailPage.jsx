@@ -20,14 +20,14 @@ export default function EtablissementActualiteDetailPage() {
     return (
       <div>
         <p style={{ fontSize: 13, color: 'var(--ink-4)', marginBottom: 12 }}>Actualité introuvable.</p>
-        <Link to=".." style={{ fontSize: 13, color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}>← Retour aux actualités</Link>
+        <Link to="../actualites" style={{ fontSize: 13, color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}>← Retour aux actualités</Link>
       </div>
     );
   }
 
   return (
     <div>
-      <Link to=".." style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, textDecoration: 'none' }}>
+      <Link to="../actualites" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, textDecoration: 'none' }}>
         <ChevronLeft style={{ width: 14, height: 14 }} /> Actualités
       </Link>
       {actualite.photoURL && (

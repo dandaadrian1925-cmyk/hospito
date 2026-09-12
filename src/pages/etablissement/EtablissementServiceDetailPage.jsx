@@ -42,7 +42,7 @@ export default function EtablissementServiceDetailPage() {
     return (
       <div>
         <p style={{ fontSize: 13, color: 'var(--ink-4)', marginBottom: 12 }}>Service introuvable.</p>
-        <Link to=".." style={{ fontSize: 13, color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}>← Retour aux services</Link>
+        <Link to="../services" style={{ fontSize: 13, color: 'var(--blue)', fontWeight: 600, textDecoration: 'none' }}>← Retour aux services</Link>
       </div>
     );
   }
@@ -51,7 +51,7 @@ export default function EtablissementServiceDetailPage() {
 
   return (
     <div>
-      <Link to=".." style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, textDecoration: 'none' }}>
+      <Link to="../services" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, textDecoration: 'none' }}>
         <ChevronLeft style={{ width: 14, height: 14 }} /> Services
       </Link>
 
@@ -155,8 +155,14 @@ export default function EtablissementServiceDetailPage() {
         )}
       </div>
 
+      {/* #corrigé (audit, "React Router v6 compte les ROUTES matchées, pas
+          les segments d'URL" — getPathContributingMatches) : une route
+          compound comme "services/:serviceId" ne contribue qu'UN SEUL
+          niveau pour la navigation relative, malgré son "/" — le "../../"
+          précédent atterrissait hors de la branche établissement (404). Un
+          seul ".." suffit, exactement comme depuis "equipe"/"contact". */}
       {user && (
-        <button onClick={() => navigate(`../../rdv?service=${service.id}`)} className="btn-primary">
+        <button onClick={() => navigate(`../rdv?service=${service.id}`)} className="btn-primary">
           Prendre RDV pour ce service
         </button>
       )}
