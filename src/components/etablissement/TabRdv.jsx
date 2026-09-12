@@ -4,7 +4,7 @@ import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
 import { creerDemandeRdv } from '../../services/demandesRendezVousService';
 import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
-import { trouverBilletValideDuPatient, trouverBilletValidePourFiche, trouverMaFicheId, creerBilletADistance } from '../../services/billetsService';
+import { trouverBilletValideDuPatient, trouverBilletValidePourFiche } from '../../services/billetsService';
 import { listerMesProchesDansEtablissement } from '../../services/prochesService';
 
 export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
@@ -40,47 +40,18 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   // valide trouvé.
   const [billetValide, setBilletValide] = useState(undefined);
   const [confirmationOuverte, setConfirmationOuverte] = useState(false);
-  // #nouveau (décision utilisateur, "garder l'exigence de billet pour la
-  // téléconsultation, mais permettre d'en créer un à distance") : id de la
-  // fiche active (moi-même ou le proche choisi) — null si le patient n'a
-  // encore aucune fiche dans cet établissement (doit d'abord passer par
-  // "Devenir patient de cet établissement", onglet Dossier).
-  const [maFicheId, setMaFicheId] = useState(undefined);
-  const [creationBillet, setCreationBillet] = useState(false);
 
-  const rafraichirBilletValide = () => {
+  useEffect(() => {
+    let annule = false;
     setBilletValide(undefined);
     const recherche = procheChoisiId
       ? trouverBilletValidePourFiche(procheChoisiId, etablissementId, serviceId || null)
       : trouverBilletValideDuPatient(patientUid, etablissementId, serviceId || null);
-    recherche.then(setBilletValide).catch(() => setBilletValide(null));
-  };
-  useEffect(rafraichirBilletValide, [patientUid, etablissementId, serviceId, procheChoisiId]);
-
-  useEffect(() => {
-    if (procheChoisiId) { setMaFicheId(procheChoisiId); return; }
-    let annule = false;
-    trouverMaFicheId(patientUid, etablissementId).then((id) => { if (!annule) setMaFicheId(id); }).catch(() => { if (!annule) setMaFicheId(null); });
+    recherche
+      .then((b) => { if (!annule) setBilletValide(b); })
+      .catch(() => { if (!annule) setBilletValide(null); });
     return () => { annule = true; };
-  }, [patientUid, etablissementId, procheChoisiId]);
-
-  const payerBilletADistance = async () => {
-    const service = services.find((s) => s.id === serviceId);
-    setCreationBillet(true);
-    try {
-      const { factureAPayer } = await creerBilletADistance({
-        ficheId: maFicheId, patientUid,
-        patientNom: procheChoisi ? `${procheChoisi.prenom || ''} ${procheChoisi.nom || ''}`.trim() : patientNom,
-        etablissementId, serviceId, serviceNom: service?.nom || null,
-      });
-      toast.success(factureAPayer ? 'Billet créé — payez-le depuis Mon compte > Factures pour valider votre téléconsultation.' : 'Billet créé, aucun paiement requis pour ce service.');
-      rafraichirBilletValide();
-    } catch (e) {
-      toast.error(e.message || 'Erreur');
-    } finally {
-      setCreationBillet(false);
-    }
-  };
+  }, [patientUid, etablissementId, serviceId, procheChoisiId]);
 
   useEffect(() => {
     listerServicesActifs(etablissementId).then(setServices).catch(() => setServices([]));
@@ -241,13 +212,16 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
           <input type="checkbox" checked={teleconsultation} onChange={(e) => setTeleconsultation(e.target.checked)} />
           Téléconsultation (visio) plutôt qu'un rendez-vous sur place
         </label>
-        {/* #corrigé (décision utilisateur, "garder l'exigence de billet
-            pour la téléconsultation") : la téléconsultation exige
+        {/* #corrigé (décision utilisateur, "c'est uniquement l'accueil qui
+            crée le billet de consultation, et le patient voit ça dans ses
+            factures et paie à distance") : la téléconsultation exige
             désormais elle aussi un billet valide (confirmerDemande,
             hospito-accueil-medecin) — ce bloc s'affiche donc aussi pour
-            elle, avec une action pour en payer un à distance quand aucun
-            n'existe déjà (jamais possible avant, faute de fiche/passage
-            physique). */}
+            elle, mais reste purement informatif : jamais de création de
+            billet côté patient, seul l'accueil en crée un (voir
+            billetsSessionService.js::creerBillet, qui doit encore résoudre
+            patientUid sur la facture pour que ce paiement à distance
+            apparaisse dans Mon compte > Factures). */}
         {billetValide !== undefined && (
           billetValide ? (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: 'var(--ink-2)', background: 'var(--bg-2)', borderRadius: 10, padding: '10px 12px' }}>
@@ -256,25 +230,12 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
               {billetValide.serviceNom ? ` (${billetValide.serviceNom})` : ''} — vous pouvez vous présenter directement à l'accueil. Vous pouvez tout de même envoyer une nouvelle demande si besoin.
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5, color: '#9A6B00', background: '#FFF7E6', borderRadius: 10, padding: '10px 12px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-                <CalendarClock style={{ width: 15, height: 15, color: '#C2802F', flexShrink: 0, marginTop: 1 }} />
-                <span>
-                  Vous n'avez pas de billet de consultation valide dans cet établissement
-                  {teleconsultation ? " — indispensable pour qu'une téléconsultation puisse être confirmée." : " — un billet vous sera facturé à l'accueil avant la consultation."}
-                </span>
-              </div>
-              {teleconsultation && (
-                maFicheId === undefined ? null : maFicheId === null ? (
-                  <p style={{ margin: 0 }}>
-                    Vous n'avez encore aucune fiche dans cet établissement — rendez-vous dans l'onglet <strong>Dossier</strong> pour demander à être inscrit avant de pouvoir payer un billet à distance.
-                  </p>
-                ) : (
-                  <button type="button" onClick={payerBilletADistance} disabled={!serviceId || creationBillet} className="btn-primary" style={{ alignSelf: 'flex-start', fontSize: 12.5, padding: '7px 14px' }}>
-                    {creationBillet ? 'Création…' : !serviceId ? 'Choisissez un service ci-dessus' : 'Payer un billet de consultation à distance'}
-                  </button>
-                )
-              )}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12.5, color: '#9A6B00', background: '#FFF7E6', borderRadius: 10, padding: '10px 12px' }}>
+              <CalendarClock style={{ width: 15, height: 15, color: '#C2802F', flexShrink: 0, marginTop: 1 }} />
+              Vous n'avez pas de billet de consultation valide dans cet établissement
+              {teleconsultation
+                ? " — l'accueil vous en créera un après réception de cette demande ; vous le retrouverez dans Mon compte > Factures pour le payer à distance."
+                : " — un billet vous sera facturé à l'accueil avant la consultation."}
             </div>
           )
         )}

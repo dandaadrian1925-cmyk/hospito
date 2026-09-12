@@ -1,7 +1,6 @@
-import { collection, doc, getDoc, getDocs, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getSettingsEtablissement } from './settingsService';
-import { listerTarifsConsultation } from './etablissementsPublicService';
 
 // #nouveau (demande utilisateur, "un popup doit dire si on a déjà un billet
 // de consultation encore valide avant d'envoyer une demande de RDV") :
@@ -75,48 +74,6 @@ export async function trouverBilletValideDuPatient(patientUid, etablissementId, 
   const ficheId = await trouverMaFicheId(patientUid, etablissementId);
   if (!ficheId) return null;
   return trouverBilletValidePourFicheId(ficheId, etablissementId, serviceId);
-}
-
-// #nouveau (décision utilisateur, "garder l'exigence de billet pour la
-// téléconsultation, mais permettre d'en créer un à distance") : jusqu'ici,
-// seul l'accueil pouvait créer un billet (obligatoirement un passage
-// physique) — la téléconsultation, qui exige désormais un billet valide
-// tout comme le présentiel, ne pouvait donc jamais aboutir. Un patient qui
-// a déjà une fiche dans cet établissement (via une inscription validée ou
-// une visite passée) peut désormais payer lui-même son billet, sans jamais
-// se déplacer. Même schéma que billetsSessionService.js::creerBillet
-// (hospito-accueil-medecin) : billet 'a_payer' + facture 'en_attente' liés
-// dans le même writeBatch, 'arrive' direct si aucun tarif n'existe pour ce
-// service (gratuit).
-export async function creerBilletADistance({ ficheId, patientUid, patientNom, etablissementId, serviceId, serviceNom }) {
-  const tarifs = await listerTarifsConsultation(etablissementId);
-  const tarif = tarifs.find((t) => t.serviceId === serviceId) || null;
-
-  const batch = writeBatch(db);
-  const billetRef = doc(collection(db, 'billets_session'));
-  batch.set(billetRef, {
-    etablissementId, patientId: ficheId, patientNom, serviceId, serviceNom: serviceNom || null,
-    medecinId: null, medecinNom: null,
-    statut: tarif ? 'a_payer' : 'arrive',
-    factureId: null, parametres: null, parametresAt: null,
-    creePar: null, consultePar: null, consulteAt: null,
-    createdAt: serverTimestamp(),
-  });
-
-  if (tarif) {
-    const factureRef = doc(collection(db, 'factures'));
-    batch.set(factureRef, {
-      etablissementId, patientUid, patientNom,
-      serviceId, serviceNom: serviceNom || null, tarifId: tarif.id,
-      libelle: `Consultation à distance — ${serviceNom || ''}`.trim(), montant: tarif.montant,
-      statut: 'en_attente', billetSessionId: billetRef.id,
-      creePar: null, createdAt: serverTimestamp(),
-    });
-    batch.update(billetRef, { factureId: factureRef.id });
-  }
-
-  await batch.commit();
-  return { billetId: billetRef.id, factureAPayer: !!tarif };
 }
 
 // Pour un proche (fiche déjà connue, pas de CNI/compte à résoudre) — le
