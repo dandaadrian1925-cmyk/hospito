@@ -59,13 +59,29 @@ export default function EtablissementLayout() {
   // couleurAccent est réellement renseignée : les établissements n'ayant
   // choisi que 2 couleurs gardent leur rendu actuel (repli déjà géré au cas
   // par cas par chaque composant, ex. `var(--accent-etab, white)`).
-  const { couleurPrimaire, couleurSecondaire, couleurAccent } = apropos || {};
-  const styleTheme = couleurPrimaire ? {
+  // #nouveau (demande utilisateur, "le super admin décide lui-même des 2
+  // couleurs utilisées pour le design du nom de l'établissement, à part") :
+  // paire DÉDIÉE au nom dans l'en-tête (EtablissementSiteHeader), distincte
+  // des couleurs de marque générales — un établissement peut vouloir un nom
+  // dans des tons différents des boutons/liens. Repli sur
+  // couleurPrimaire/Secondaire si non renseignée (comportement précédent),
+  // jamais un dégradé inventé si rien n'est choisi (le composant retombe
+  // alors sur var(--blue)/var(--primary-dark) directement).
+  const { couleurPrimaire, couleurSecondaire, couleurAccent, couleurNom1, couleurNom2 } = apropos || {};
+  const styleThemeCouleurs = couleurPrimaire ? {
     '--blue': couleurPrimaire,
     '--blue-dark': assombrir(couleurPrimaire, 0.18),
     '--primary-dark': couleurSecondaire || assombrir(couleurPrimaire, 0.35),
     ...(couleurAccent ? { '--accent-etab': couleurAccent } : {}),
-  } : undefined;
+  } : {};
+  // Indépendante de couleurPrimaire : un établissement peut choisir une
+  // paire dédiée au nom sans forcément personnaliser le reste (boutons/
+  // liens gardent alors le bleu HostoConnect par défaut).
+  const styleThemeNom = {
+    ...(couleurNom1 ? { '--nom-c1': couleurNom1 } : {}),
+    ...(couleurNom2 ? { '--nom-c2': couleurNom2 } : {}),
+  };
+  const styleTheme = { ...styleThemeCouleurs, ...styleThemeNom };
 
   if (loading) {
     return <div style={{ padding: 60, textAlign: 'center', color: 'var(--ink-3)' }}>Chargement…</div>;
