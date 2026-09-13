@@ -1,4 +1,4 @@
-import { collection, doc, addDoc, getDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, getDoc, getDocs, updateDoc, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // #nouveau (demande utilisateur, "le patient puisse donner l'autorisation à
@@ -14,15 +14,37 @@ import { db } from '../firebase/config';
 // fusionnée de CET établissement — même garde `fusionneDans` que partout
 // ailleurs dans le projet (fusionnerPatients, hospito-admin).
 export const aDejaUneFicheIci = async (patientUid, etablissementId) => {
+  const fiche = await getMaFicheIci(patientUid, etablissementId);
+  return !!fiche;
+};
+
+// #nouveau (retour utilisateur, "remets cette page à l'état initiale pour
+// que je puisse à nouveau soumettre la demande de vérification") : version
+// qui renvoie la fiche elle-même (pas juste un booléen) — nécessaire pour
+// lire son cniStatut et proposer une resoumission quand elle vaut 'rejete'.
+export const getMaFicheIci = async (patientUid, etablissementId) => {
   const userSnap = await getDoc(doc(db, 'users', patientUid));
   const cni = userSnap.exists() ? userSnap.data().numeroIdentiteNational : null;
-  if (!cni) return false;
+  if (!cni) return null;
   const snap = await getDocs(query(
     collection(db, 'patients'),
     where('etablissementId', '==', etablissementId),
     where('numeroIdentiteNational', '==', cni),
   ));
-  return snap.docs.some((d) => !d.data().fusionneDans);
+  const fiche = snap.docs.find((d) => !d.data().fusionneDans);
+  return fiche ? { id: fiche.id, ...fiche.data() } : null;
+};
+
+// Resoumission après un rejet — même fiche, jamais une 2e créée. Autorisée
+// par firestore.rules UNIQUEMENT depuis cniStatut 'rejete', et seulement
+// sur les champs de vérification (hasOnly) : jamais l'identité déclarée.
+export const resoumettreVerificationCni = async (ficheId, { cniRectoPath, cniVersoPath, cniSelfiePath }) => {
+  await updateDoc(doc(db, 'patients', ficheId), {
+    cniRectoPath, cniVersoPath, cniSelfiePath,
+    cniStatut: 'en_attente',
+    cniSoumisAt: serverTimestamp(),
+    cniVerifiePar: null, cniVerifieAt: null, cniMotifRejet: null,
+  });
 };
 
 // Deux égalités pures, sans orderBy — comme consentementsService.js, aucun

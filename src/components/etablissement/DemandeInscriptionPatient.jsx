@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Upload, ShieldCheck } from 'lucide-react';
-import { aDejaUneFicheIci, getMaDemandeInscription, creerDemandeInscription } from '../../services/demandesInscriptionService';
+import { getMaFicheIci, getMaDemandeInscription, creerDemandeInscription, resoumettreVerificationCni } from '../../services/demandesInscriptionService';
 import { TEXTE_CONSENTEMENT_PARTAGE, signerConsentement } from '../../services/consentementsService';
 import { uploadFile } from '../../supabase/config';
 import SignaturePad from './SignaturePad';
@@ -33,6 +33,59 @@ const LABEL_STATUT = {
   refusee: { texte: 'Demande refusée — vous pouvez en soumettre une nouvelle.', bg: '#FEF2F2', border: '#FECACA', couleur: '#991B1B' },
 };
 
+// #nouveau (retour utilisateur, "remets cette page à l'état initiale pour
+// que je puisse à nouveau soumettre la demande de vérification") : une
+// fiche déjà créée (donc DemandeInscriptionPatient s'efface normalement,
+// aDejaUneFicheIci) ne doit PAS bloquer une resoumission si sa CNI a été
+// rejetée — même fiche mise à jour (jamais une 2e créée), cf.
+// resoumettreVerificationCni + firestore.rules.
+function ResoumissionCni({ fiche, patientUid, onDone }) {
+  const [recto, setRecto] = useState(null);
+  const [verso, setVerso] = useState(null);
+  const [selfie, setSelfie] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  const envoyer = async () => {
+    if (!recto || !verso || !selfie) {
+      toast.error('Les deux faces de votre CNI et une photo avec la CNI en main sont requises.');
+      return;
+    }
+    setEnvoi(true);
+    try {
+      const [rectoUp, versoUp, selfieUp] = await Promise.all([
+        uploadFile('cni', `${patientUid}/recto_${Date.now()}`, recto),
+        uploadFile('cni', `${patientUid}/verso_${Date.now()}`, verso),
+        uploadFile('cni', `${patientUid}/selfie_${Date.now()}`, selfie),
+      ]);
+      await resoumettreVerificationCni(fiche.id, { cniRectoPath: rectoUp.path, cniVersoPath: versoUp.path, cniSelfiePath: selfieUp.path });
+      toast.success('Nouveaux documents envoyés — en attente de vérification.');
+      onDone();
+    } catch (e) {
+      toast.error(e.message || 'Erreur');
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  return (
+    <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>Vérification d'identité refusée</p>
+      {fiche.cniMotifRejet && <p style={{ fontSize: 12.5, color: '#991B1B', marginTop: 4 }}>Motif : {fiche.cniMotifRejet}</p>}
+      <p style={{ fontSize: 12.5, color: '#64748B', margin: '10px 0 12px', lineHeight: 1.5 }}>
+        Envoyez de nouveaux documents pour une nouvelle vérification.
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+        <ChampPhoto label="Recto de la CNI" fichier={recto} onChange={setRecto} />
+        <ChampPhoto label="Verso de la CNI" fichier={verso} onChange={setVerso} />
+        <ChampPhoto label="Photo de vous tenant la CNI" fichier={selfie} onChange={setSelfie} />
+      </div>
+      <button onClick={envoyer} disabled={envoi} className="btn-primary">
+        {envoi ? 'Envoi…' : 'Renvoyer pour vérification'}
+      </button>
+    </div>
+  );
+}
+
 // #nouveau (demande utilisateur, "le patient puisse donner l'autorisation à
 // chaque établissement d'accéder à ses dossiers médicaux, et envoie une
 // demande pour être dans la liste des patients de cet établissement") :
@@ -57,9 +110,10 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
   const [signatureDataUrl, setSignatureDataUrl] = useState(null);
 
   const charger = useCallback(async () => {
-    const dejaFiche = await aDejaUneFicheIci(patientUid, etablissementId);
-    onHasFicheChange?.(dejaFiche);
-    if (dejaFiche) { setEtat('a_une_fiche'); return; }
+    const fiche = await getMaFicheIci(patientUid, etablissementId);
+    onHasFicheChange?.(!!fiche);
+    if (fiche && fiche.cniStatut === 'rejete') { setEtat({ type: 'fiche_rejetee', fiche }); return; }
+    if (fiche) { setEtat('a_une_fiche'); return; }
     const demande = await getMaDemandeInscription(patientUid, etablissementId);
     setEtat(demande && demande.statut !== 'refusee' ? demande : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,6 +121,10 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
   useEffect(() => { charger().catch(() => setEtat(null)); }, [charger]);
 
   if (etat === undefined || etat === 'a_une_fiche') return null;
+
+  if (etat?.type === 'fiche_rejetee') {
+    return <ResoumissionCni fiche={etat.fiche} patientUid={patientUid} onDone={charger} />;
+  }
 
   if (etat && etat.statut === 'en_attente') {
     const s = LABEL_STATUT.en_attente;
