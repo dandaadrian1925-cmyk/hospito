@@ -20,7 +20,7 @@ const LIENS_PATIENT = [
 export default function EtablissementSiteFooter({ etablissement }) {
   return (
     <footer style={{ background: 'var(--primary-dark, #174858)', color: 'rgba(255,255,255,0.85)', marginTop: 32, fontSize: 13 }}>
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', columnGap: 24, rowGap: 18 }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 20px 14px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', columnGap: 24, rowGap: 18 }}>
         <div>
           <p style={{ fontSize: 15, fontWeight: 700, color: 'white', marginBottom: 6 }}>{etablissement.nom}</p>
           <div className="space-y-1">

@@ -40,7 +40,7 @@ export default function FavorisEtablissementsPage() {
       </div>
 
       {etablissements === null ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
           {Array(4)
             .fill(0)
             .map((_, i) => (
@@ -60,7 +60,7 @@ export default function FavorisEtablissementsPage() {
           </p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
           {etablissements.map((etab, i) => (
             <EtablissementCard key={etab.id} etablissement={etab} index={i} initialFavori={true} />
           ))}

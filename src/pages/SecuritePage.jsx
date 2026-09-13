@@ -126,7 +126,7 @@ export default function SecuritePage() {
         </p>
         <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))',
         gap: 20
       }}>
           {pillars.map((p, i) => <motion.div key={i} initial={{
@@ -231,7 +231,7 @@ export default function SecuritePage() {
           </h2>
           <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))',
           gap: 20
         }}>
             {}

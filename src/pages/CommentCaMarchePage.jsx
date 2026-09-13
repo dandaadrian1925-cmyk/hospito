@@ -81,7 +81,7 @@ export default function CommentCaMarchePage() {
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '64px 24px' }}>
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 24 }}>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(240px, 100%), 1fr))', gap: 24 }}>
           {etapes.map((step, i) => (
             <motion.div
               key={i}

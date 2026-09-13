@@ -62,7 +62,7 @@ export default function EtablissementEquipePage() {
       ) : medecins.length === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>Aucun médecin renseigné pour le moment.</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(260px, 100%), 1fr))', gap: 16 }}>
           {medecins.map((m) => (
             <div key={m.id} style={{ border: '1px solid var(--border, #E2E8F0)', borderRadius: 14, padding: 18, background: 'white' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>

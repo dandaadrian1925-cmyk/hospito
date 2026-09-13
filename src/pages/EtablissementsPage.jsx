@@ -67,7 +67,7 @@ export default function EtablissementsPage() {
       </form>
 
       {loading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
           {Array(6)
             .fill(0)
             .map((_, i) => (
@@ -80,7 +80,7 @@ export default function EtablissementsPage() {
           <p style={{ fontSize: 13, marginTop: 4 }}>Essayez un autre nom ou une autre ville.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
           {filtres.map((etab, i) => (
             <EtablissementCard key={etab.id} etablissement={etab} index={i} />
           ))}

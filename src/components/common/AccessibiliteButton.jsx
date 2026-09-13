@@ -45,7 +45,7 @@ export default function AccessibiliteButton() {
       {ouvert && (
         <div
           style={{
-            position: 'absolute', bottom: 56, right: 0, width: 300,
+            position: 'absolute', bottom: 56, right: 0, width: 300, maxWidth: 'calc(100vw - 40px)',
             background: 'white', borderRadius: 14, boxShadow: 'var(--shadow-lg, 0 8px 30px rgba(0,0,0,0.15))',
             padding: 16, border: '1px solid var(--border, #E2E8F0)',
           }}

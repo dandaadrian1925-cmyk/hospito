@@ -23,7 +23,7 @@ export default function ServicesSection({ etablissementId, tarifs }) {
   if (services.length === 0) return <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>Aucun service renseigné pour le moment.</p>;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: 12 }}>
       {services.map((s) => {
         const tarif = tarifs?.find((t) => t.serviceId === s.id);
         return (

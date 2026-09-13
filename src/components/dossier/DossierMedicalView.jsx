@@ -339,7 +339,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: 8 }}>
           <InfoCard icon={BadgeCheck} label="N° CNI" value={cni} />
           <InfoCard icon={Droplet} label="Groupe sanguin" value={groupeSanguin} />
         </div>

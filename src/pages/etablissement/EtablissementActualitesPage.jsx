@@ -17,7 +17,7 @@ export default function EtablissementActualitesPage() {
   if (!actualites.length) return <p style={{ fontSize: 13, color: 'var(--ink-4)' }}>Aucune actualité publiée pour le moment.</p>;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 16 }}>
       {actualites.map((a) => (
         <Link
           key={a.id}

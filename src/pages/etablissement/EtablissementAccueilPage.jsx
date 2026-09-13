@@ -170,7 +170,7 @@ export default function EtablissementAccueilPage() {
         <div style={{ ...PLEINE_LARGEUR, background: 'var(--bg-2)', padding: '48px 0', marginBottom: 44 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
             <SectionTitle title="Nos services médicaux" lienTexte="Voir tous les services" lienVers="services" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 20 }}>
               {services.slice(0, 8).map((s) => {
                 const tarif = tarifs?.find((t) => t.serviceId === s.id);
                 return (
@@ -215,7 +215,7 @@ export default function EtablissementAccueilPage() {
         {!!actualites?.length && (
           <div style={{ marginBottom: 44 }}>
             <SectionTitle title="Actualités & Événements" lienTexte="Voir toutes les actualités" lienVers="actualites" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(220px, 100%), 1fr))', gap: 20 }}>
               {actualites.slice(0, 3).map((a) => (
                 <div key={a.id} style={{ borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border, #E2E8F0)', background: 'white' }}>
                   <div
@@ -251,7 +251,7 @@ export default function EtablissementAccueilPage() {
         <div style={{ ...PLEINE_LARGEUR, background: 'var(--bg-2)', padding: '48px 0', marginBottom: 44 }}>
           <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 24px' }}>
             <SectionTitle title="Témoignages de patients" lienTexte="Voir tous les avis" lienVers="avis" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(240px, 100%), 1fr))', gap: 20 }}>
               {avis.slice(0, 3).map((a) => (
                 <div key={a.id} style={{ background: 'white', borderRadius: 14, padding: '20px 22px', boxShadow: '0 2px 10px rgba(15,23,42,0.06)' }}>
                   <Quote style={{ width: 20, height: 20, color: 'var(--blue)', opacity: 0.5, marginBottom: 10 }} />
@@ -281,7 +281,7 @@ export default function EtablissementAccueilPage() {
         {!!equipe?.length && (
           <div style={{ marginBottom: 44 }}>
             <SectionTitle title="Notre équipe médicale" lienTexte="Voir toute l'équipe" lienVers="equipe" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(160px, 100%), 1fr))', gap: 16 }}>
               {equipe.slice(0, 6).map((m) => (
                 <Link
                   key={m.uid}
