@@ -63,9 +63,25 @@ function buildSlides(etablissement, dejaSurLaPage) {
   ];
 }
 
+// #corrigé (retour utilisateur, "le carrousel de l'accueil établissement
+// doit être le même que celui de l'accueil HostoConnect, les 3 mêmes
+// images — ce n'est pas le cas") : les 3 images ETAIENT déjà identiques
+// (même composant, mêmes photoCarrousel1/2/3 de l'établissement) — mais
+// chaque montage de ce composant (HomePage ET EtablissementAccueilPage
+// utilisent chacun leur propre instance) démarrait sa PROPRE rotation à 0,
+// avec son propre minuteur indépendant. Selon le moment où chaque page a
+// été chargée, les deux affichaient donc presque toujours une image
+// différente au même instant — pas un problème de données, un problème de
+// désynchronisation. L'index de slide se calcule désormais à partir de
+// l'horloge murale (Date.now()) plutôt que d'un compteur local : deux
+// montages de ce composant, sur deux pages différentes, affichent
+// maintenant TOUJOURS le même slide au même instant.
+const INTERVALLE_ROTATION_MS = 6500;
+const slideCourantSelonHorloge = (nbSlides) => Math.floor(Date.now() / INTERVALLE_ROTATION_MS) % nbSlides;
+
 export default function EtablissementHeroCarousel({ etablissement, dejaSurLaPage = false }) {
   const slides = buildSlides(etablissement, dejaSurLaPage);
-  const [current, setCurrent] = useState(0);
+  const [current, setCurrent] = useState(() => slideCourantSelonHorloge(slides.length));
   const [dir, setDir] = useState(1);
   const [showCard, setShowCard] = useState(true);
 
@@ -89,8 +105,12 @@ export default function EtablissementHeroCarousel({ etablissement, dejaSurLaPage
   useEffect(() => {
     const t = setInterval(() => {
       setDir(1);
-      setCurrent((c) => (c + 1) % slides.length);
-    }, 6500);
+      // Recalculé depuis l'horloge à chaque tick (pas juste +1) : deux
+      // montages de ce composant restent synchronisés même si leurs
+      // minuteurs respectifs ne se déclenchent pas exactement au même
+      // instant (dérive naturelle de setInterval).
+      setCurrent(slideCourantSelonHorloge(slides.length));
+    }, INTERVALLE_ROTATION_MS);
     return () => clearInterval(t);
   }, []);
 
