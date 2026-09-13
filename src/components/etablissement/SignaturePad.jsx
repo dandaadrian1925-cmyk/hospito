@@ -48,8 +48,8 @@ export default function SignaturePad({ onChange }) {
   return (
     <div>
       <canvas
-        ref={canvasRef} width={400} height={140}
-        style={{ width: '100%', maxWidth: 400, height: 140, border: '1.5px dashed #CBD5E1', borderRadius: 10, touchAction: 'none', cursor: 'crosshair', background: 'white' }}
+        ref={canvasRef} width={600} height={260}
+        style={{ width: '100%', maxWidth: 600, height: 260, border: '1.5px dashed #CBD5E1', borderRadius: 10, touchAction: 'none', cursor: 'crosshair', background: 'white' }}
         onMouseDown={start} onMouseMove={move} onMouseUp={end} onMouseLeave={end}
         onTouchStart={start} onTouchMove={move} onTouchEnd={end}
       />
