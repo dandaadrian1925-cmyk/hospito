@@ -1,6 +1,7 @@
 import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getSettingsEtablissement } from './settingsService';
+import { notifierPersonnel } from './notificationsService';
 
 export async function creerDemandeRdv({ etablissementId, patientUid, patientNom, patientFicheId, serviceId, serviceNom, motif, dateSouhaitee, type, medecinPrefereId, medecinPrefereNom }) {
   await addDoc(collection(db, 'demandes_rendez_vous'), {
@@ -30,6 +31,14 @@ export async function creerDemandeRdv({ etablissementId, patientUid, patientNom,
     type: type === 'teleconsultation' ? 'teleconsultation' : 'presentiel',
     statut: 'en_attente',
     createdAt: serverTimestamp(),
+  });
+  // #nouveau (demande utilisateur, "toutes les notifications soient
+  // fonctionnelles pour toutes les opérations") : jusqu'ici, une nouvelle
+  // demande n'était visible qu'en rouvrant hospito-accueil-medecin.
+  notifierPersonnel(etablissementId, ['accueil', 'admin'], {
+    type: 'rendezvous', titre: 'Nouvelle demande de rendez-vous',
+    message: `${patientNom} demande un rendez-vous${serviceNom ? ` (${serviceNom})` : ''}.`,
+    link: '/rendez-vous',
   });
 }
 

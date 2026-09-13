@@ -1,5 +1,6 @@
 import { collection, doc, addDoc, getDoc, getDocs, updateDoc, query, where, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { notifierPersonnel } from './notificationsService';
 
 // #nouveau (demande utilisateur, "le patient puisse donner l'autorisation à
 // chaque établissement d'accéder à ses dossiers médicaux, et envoie une
@@ -79,5 +80,14 @@ export const creerDemandeInscription = async ({
     cniRectoPath: cniRectoPath || null, cniVersoPath: cniVersoPath || null, cniSelfiePath: cniSelfiePath || null,
     statut: 'en_attente',
     createdAt: serverTimestamp(),
+  });
+  // #nouveau (demande utilisateur, "toutes les notifications soient
+  // fonctionnelles pour toutes les opérations") : seul le rôle 'admin' gère
+  // les patients (hospito-admin, ALLOWED_ROLES=['admin']) — jusqu'ici, une
+  // nouvelle demande n'était visible qu'en rouvrant "Patients & admissions".
+  notifierPersonnel(etablissementId, ['admin'], {
+    type: 'inscription', titre: 'Nouvelle demande d\'inscription',
+    message: `${prenom.trim()} ${nom.trim()} souhaite devenir patient de votre établissement.`,
+    link: '/patients',
   });
 };
