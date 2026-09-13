@@ -1,7 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Upload, ShieldCheck } from 'lucide-react';
 import { aDejaUneFicheIci, getMaDemandeInscription, creerDemandeInscription } from '../../services/demandesInscriptionService';
+import { uploadFile } from '../../supabase/config';
+
+// #nouveau (décision utilisateur, "c'est cette vérification-ci [recto/verso/
+// selfie] qui doit être envoyée avec la signature de consentement, en
+// disant clairement que les documents seront supprimés 24h après
+// approbation") : petit champ d'upload compact, réutilisé 3 fois (recto,
+// verso, selfie) — même bucket privé "cni" que l'ancienne page dédiée,
+// jamais public.
+function ChampPhoto({ label, fichier, onChange }) {
+  return (
+    <label style={{
+      display: 'flex', alignItems: 'center', gap: 8, border: fichier ? '1.5px solid #10B981' : '1.5px dashed #CBD5E1',
+      borderRadius: 10, padding: '10px 12px', cursor: 'pointer', background: fichier ? '#F0FDF4' : '#F8FAFC',
+    }}
+    >
+      <Upload size={15} style={{ color: fichier ? '#059669' : '#94A3B8', flexShrink: 0 }} />
+      <span style={{ fontSize: 12.5, color: fichier ? '#059669' : '#64748B', fontWeight: 600 }}>
+        {fichier ? `✅ ${label}` : label}
+      </span>
+      <input type="file" accept="image/*" onChange={(e) => onChange(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+    </label>
+  );
+}
 
 const LABEL_STATUT = {
   en_attente: { texte: 'Demande en attente de validation par l\'établissement.', bg: '#FFFBEB', border: '#FDE68A', couleur: '#92400E' },
@@ -21,6 +45,9 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
   const [etat, setEtat] = useState(undefined); // undefined = chargement, 'a_une_fiche' | demande | null (aucune)
   const [form, setForm] = useState({ dateNaissance: '', sexe: '', telephone: '' });
   const [envoi, setEnvoi] = useState(false);
+  const [recto, setRecto] = useState(null);
+  const [verso, setVerso] = useState(null);
+  const [selfie, setSelfie] = useState(null);
 
   const charger = useCallback(async () => {
     const dejaFiche = await aDejaUneFicheIci(patientUid, etablissementId);
@@ -44,20 +71,30 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
 
   const envoyer = async () => {
     if (!userProfile?.numeroIdentiteNational) {
-      toast.error("Renseignez d'abord votre numéro d'identité national dans Mon compte.");
+      toast.error("Renseignez d'abord votre numéro d'identité national plus bas sur cette page (section Dossier médical).");
       return;
     }
     if (!form.dateNaissance || !form.sexe) {
       toast.error('Date de naissance et sexe sont requis.');
       return;
     }
+    if (!recto || !verso || !selfie) {
+      toast.error('Les deux faces de votre CNI et une photo avec la CNI en main sont requises.');
+      return;
+    }
     setEnvoi(true);
     try {
+      const [rectoUp, versoUp, selfieUp] = await Promise.all([
+        uploadFile('cni', `${patientUid}/recto_${Date.now()}`, recto),
+        uploadFile('cni', `${patientUid}/verso_${Date.now()}`, verso),
+        uploadFile('cni', `${patientUid}/selfie_${Date.now()}`, selfie),
+      ]);
       await creerDemandeInscription({
         patientUid, etablissementId,
         nom: userProfile.nom, prenom: userProfile.prenom,
         dateNaissance: form.dateNaissance, sexe: form.sexe, telephone: form.telephone,
         numeroIdentiteNational: userProfile.numeroIdentiteNational,
+        cniRectoPath: rectoUp.path, cniVersoPath: versoUp.path, cniSelfiePath: selfieUp.path,
       });
       toast.success('Demande envoyée — vous serez inscrit dès validation par le personnel.');
       charger();
@@ -98,6 +135,22 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
             <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 4 }}>Téléphone (optionnel)</label>
             <input type="tel" value={form.telephone} onChange={(e) => setForm({ ...form, telephone: e.target.value })} className="input-field" style={{ fontSize: 13 }} />
           </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 6 }}>Vérification d'identité (CNI)</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <ChampPhoto label="Recto de la CNI" fichier={recto} onChange={setRecto} />
+              <ChampPhoto label="Verso de la CNI" fichier={verso} onChange={setVerso} />
+              <ChampPhoto label="Photo de vous tenant la CNI" fichier={selfie} onChange={setSelfie} />
+            </div>
+            <div style={{ display: 'flex', gap: 6, marginTop: 8, background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: 10, padding: '8px 10px' }}>
+              <ShieldCheck size={14} style={{ color: '#2FB4A0', flexShrink: 0, marginTop: 1 }} />
+              <p style={{ fontSize: 11.5, color: '#1E40AF', lineHeight: 1.5 }}>
+                Envoyés avec votre signature de consentement ci-dessus, examinés par le personnel de cet établissement, puis <strong>supprimés dans les 24h suivant l'approbation</strong>.
+              </p>
+            </div>
+          </div>
+
           <button onClick={envoyer} disabled={envoi} className="btn-primary">
             {envoi ? 'Envoi…' : 'Envoyer la demande'}
           </button>

@@ -38,13 +38,23 @@ export const getMaDemandeInscription = async (patientUid, etablissementId) => {
   return docs[0];
 };
 
-export const creerDemandeInscription = async ({ patientUid, etablissementId, nom, prenom, dateNaissance, sexe, telephone, numeroIdentiteNational }) => {
+// #nouveau (décision utilisateur, "c'est cette vérification-ci [recto/verso/
+// selfie] qui doit être envoyée avec la signature de consentement") : la
+// demande d'inscription porte désormais aussi les 3 photos — le personnel
+// qui approuve la demande (hospito-admin) les retrouve directement sur la
+// fiche créée, dans la même section "Vérification CNI" qui existait déjà
+// pour une photo prise en personne au guichet.
+export const creerDemandeInscription = async ({
+  patientUid, etablissementId, nom, prenom, dateNaissance, sexe, telephone, numeroIdentiteNational,
+  cniRectoPath, cniVersoPath, cniSelfiePath,
+}) => {
   await addDoc(collection(db, 'demandes_inscription_patient'), {
     patientUid, etablissementId,
     nom: nom.trim(), prenom: prenom.trim(),
     dateNaissance: dateNaissance || null, sexe: sexe || null,
     telephone: telephone?.trim() || null,
     numeroIdentiteNational: numeroIdentiteNational?.trim() || null,
+    cniRectoPath: cniRectoPath || null, cniVersoPath: cniVersoPath || null, cniSelfiePath: cniSelfiePath || null,
     statut: 'en_attente',
     createdAt: serverTimestamp(),
   });
