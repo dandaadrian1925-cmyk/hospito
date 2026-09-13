@@ -2,7 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Upload, ShieldCheck } from 'lucide-react';
 import { aDejaUneFicheIci, getMaDemandeInscription, creerDemandeInscription } from '../../services/demandesInscriptionService';
+import { TEXTE_CONSENTEMENT_PARTAGE, getMonConsentement, signerConsentement } from '../../services/consentementsService';
 import { uploadFile } from '../../supabase/config';
+import SignaturePad from './SignaturePad';
 
 // #nouveau (décision utilisateur, "c'est cette vérification-ci [recto/verso/
 // selfie] qui doit être envoyée avec la signature de consentement, en
@@ -35,24 +37,32 @@ const LABEL_STATUT = {
 // chaque établissement d'accéder à ses dossiers médicaux, et envoie une
 // demande pour être dans la liste des patients de cet établissement") :
 // jusqu'ici, seule une visite physique (fiche créée par l'accueil/admin)
-// donnait accès à un établissement. Complète (ne remplace pas) le
-// consentement de partage déjà signé juste au-dessus (ConsentementSignature)
-// — être dans la liste des patients ET avoir signé le consentement sont
-// les deux faces du même besoin : que cet établissement puisse constituer
-// un dossier pour ce patient.
-export default function DemandeInscriptionPatient({ etablissementId, patientUid, userProfile }) {
+// donnait accès à un établissement.
+// #fusionné (décision utilisateur, "les photos de CNI et la signature sont
+// envoyées en même temps obligatoirement pour vérification") : le
+// consentement de partage (autrefois un composant ConsentementSignature
+// séparé, affiché à côté sans lien avec cette demande) est désormais capturé
+// DANS ce même formulaire — un seul geste d'envoi produit à la fois la
+// demande d'inscription et la signature, jamais l'un sans l'autre. Le
+// composant ConsentementSignature autonome reste utilisé ailleurs (page
+// parente), mais uniquement pour un patient qui a DÉJÀ une fiche ici — dans
+// ce cas précis, aucune vérification CNI n'est en jeu.
+export default function DemandeInscriptionPatient({ etablissementId, patientUid, userProfile, onHasFicheChange }) {
   const [etat, setEtat] = useState(undefined); // undefined = chargement, 'a_une_fiche' | demande | null (aucune)
   const [form, setForm] = useState({ dateNaissance: '', sexe: '', telephone: '' });
   const [envoi, setEnvoi] = useState(false);
   const [recto, setRecto] = useState(null);
   const [verso, setVerso] = useState(null);
   const [selfie, setSelfie] = useState(null);
+  const [signatureDataUrl, setSignatureDataUrl] = useState(null);
 
   const charger = useCallback(async () => {
     const dejaFiche = await aDejaUneFicheIci(patientUid, etablissementId);
+    onHasFicheChange?.(dejaFiche);
     if (dejaFiche) { setEtat('a_une_fiche'); return; }
     const demande = await getMaDemandeInscription(patientUid, etablissementId);
     setEtat(demande && demande.statut !== 'refusee' ? demande : null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientUid, etablissementId]);
   useEffect(() => { charger().catch(() => setEtat(null)); }, [charger]);
 
@@ -81,8 +91,17 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
       toast.error('Les deux faces de votre CNI et une photo avec la CNI en main sont requises.');
       return;
     }
+    if (!signatureDataUrl) {
+      toast.error('Signez le consentement de partage dans le cadre ci-dessous.');
+      return;
+    }
     setEnvoi(true);
     try {
+      const patientNom = `${userProfile.prenom || ''} ${userProfile.nom || ''}`.trim();
+      const dejaSigne = await getMonConsentement(patientUid, etablissementId);
+      if (!dejaSigne) {
+        await signerConsentement({ patientUid, patientNom, etablissementId, signatureDataUrl });
+      }
       const [rectoUp, versoUp, selfieUp] = await Promise.all([
         uploadFile('cni', `${patientUid}/recto_${Date.now()}`, recto),
         uploadFile('cni', `${patientUid}/verso_${Date.now()}`, verso),
@@ -145,13 +164,19 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
             <div style={{ display: 'flex', gap: 6, marginTop: 8, background: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: 10, padding: '8px 10px' }}>
               <ShieldCheck size={14} style={{ color: '#2FB4A0', flexShrink: 0, marginTop: 1 }} />
               <p style={{ fontSize: 11.5, color: '#1E40AF', lineHeight: 1.5 }}>
-                Envoyés avec votre signature de consentement ci-dessus, examinés par le personnel de cet établissement, puis <strong>supprimés dans les 24h suivant l'approbation</strong>.
+                Envoyés avec votre signature de consentement ci-dessous, examinés par le personnel de cet établissement, puis <strong>supprimés dans les 24h suivant l'approbation</strong>.
               </p>
             </div>
           </div>
 
+          <div style={{ marginBottom: 12, paddingTop: 12, borderTop: '1px solid #F1F5F9' }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: '#64748B', display: 'block', marginBottom: 6 }}>Consentement de partage du dossier</label>
+            <p style={{ fontSize: 12, color: '#64748B', marginBottom: 8, lineHeight: 1.5 }}>{TEXTE_CONSENTEMENT_PARTAGE}</p>
+            <SignaturePad onChange={setSignatureDataUrl} />
+          </div>
+
           <button onClick={envoyer} disabled={envoi} className="btn-primary">
-            {envoi ? 'Envoi…' : 'Envoyer la demande'}
+            {envoi ? 'Envoi…' : 'Je signe et j\'envoie la demande'}
           </button>
         </>
       )}
