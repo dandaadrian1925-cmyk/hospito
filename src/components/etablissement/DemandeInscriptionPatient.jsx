@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Upload, ShieldCheck } from 'lucide-react';
 import { aDejaUneFicheIci, getMaDemandeInscription, creerDemandeInscription } from '../../services/demandesInscriptionService';
@@ -113,7 +112,7 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
       </p>
       {!userProfile?.numeroIdentiteNational ? (
         <p style={{ fontSize: 12.5, color: '#B45309' }}>
-          Complétez d'abord votre <Link to="/mon-compte" style={{ fontWeight: 700, textDecoration: 'underline' }}>numéro d'identité national</Link> pour pouvoir envoyer cette demande.
+          Complétez d'abord votre numéro d'identité national, plus bas sur cette page (section Dossier médical), pour pouvoir envoyer cette demande.
         </p>
       ) : (
         <>
