@@ -299,10 +299,6 @@ const MENU_ITEMS = [{
   to: '/notifications',
   label: 'Notifications',
   icon: Bell
-}, {
-  to: '/mon-compte/cni',
-  label: 'Vérification CNI',
-  icon: BadgeCheck
 }];
 function AccountHome() {
   const {
