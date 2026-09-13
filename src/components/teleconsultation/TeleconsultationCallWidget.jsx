@@ -25,33 +25,41 @@ export default function TeleconsultationCallWidget({ demandeId }) {
   const localVideoElRef = useRef(null);
   const remoteVideoElRef = useRef(null);
 
-  // #corrigé (retour utilisateur, "AgoraRTCError UID_CONFLICT") : chaque
-  // rôle a désormais un uid Agora fixe (patient/médecin, cf.
-  // hospito-agora-token) — un onglet fermé/rafraîchi SANS cliquer
-  // "Raccrocher" (quitter() jamais appelé) laisse ce uid occupé côté
-  // serveur Agora jusqu'à l'expiration de son propre délai de grâce,
-  // bloquant toute reconnexion avec ce même uid entre-temps. best-effort
-  // pour quitter proprement même en cas de fermeture d'onglet.
-  useEffect(() => {
-    const quitterAuDechargement = () => { clientRef.current?.leave().catch(() => {}); };
-    window.addEventListener('beforeunload', quitterAuDechargement);
-    return () => {
-      window.removeEventListener('beforeunload', quitterAuDechargement);
-      clientRef.current?.leave().catch(() => {});
-    };
-  }, []);
-
-  const quitter = async () => {
+  // #corrigé (retour utilisateur, "je peux déjà parler et on entend chez le
+  // médecin sans même que le médecin ne rejoigne l'appel") : CE nettoyage
+  // n'arrêtait que `client.leave()`, jamais les pistes micro/caméra locales
+  // (getUserMedia) — contrairement à quitter() (bouton "Raccrocher"), qui le
+  // fait correctement. Une page quittée par navigation, rafraîchissement ou
+  // fermeture d'onglet SANS cliquer "Raccrocher" pouvait donc laisser le
+  // micro/la caméra publiés en arrière-plan, audibles/visibles depuis
+  // n'importe quel autre appareil déjà connecté à ce même canal — un vrai
+  // risque de confidentialité, pas seulement le conflit d'identifiant déjà
+  // corrigé. `nettoyerConnexion` est désormais la SEULE voie de sortie
+  // (bouton, beforeunload, démontage du composant) : toujours les mêmes
+  // trois étapes, jamais un chemin qui saute l'arrêt des pistes locales.
+  const nettoyerConnexion = () => {
     try {
       localAudioRef.current?.stop();
       localAudioRef.current?.close();
       localVideoRef.current?.stop();
       localVideoRef.current?.close();
-      await clientRef.current?.leave();
+      clientRef.current?.leave();
     } catch { /* déjà déconnecté */ }
     clientRef.current = null;
     localAudioRef.current = null;
     localVideoRef.current = null;
+  };
+
+  useEffect(() => {
+    window.addEventListener('beforeunload', nettoyerConnexion);
+    return () => {
+      window.removeEventListener('beforeunload', nettoyerConnexion);
+      nettoyerConnexion();
+    };
+  }, []);
+
+  const quitter = async () => {
+    nettoyerConnexion();
     setStatut('idle');
     setMuted(false);
     setCameraOff(false);
