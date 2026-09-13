@@ -12,6 +12,7 @@ import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../ser
 import { getTraitementsEnCours } from '../services/examensPatientService';
 import { getMesRendezVousAVenir } from '../services/demandesRendezVousService';
 import RendezVousPage from './moncompte/RendezVousPage';
+import RendezVousDetailPage from './moncompte/RendezVousDetailPage';
 import ProchesPage from './moncompte/ProchesPage';
 import DossierPage from './moncompte/DossierPage';
 import DossierAccessGate from '../components/common/DossierAccessGate';
@@ -1045,6 +1046,7 @@ export default function MonComptePage() {
         <Route index element={<AccountHome />} />
         <Route path="profil" element={<SectionPage><ModifierProfil /></SectionPage>} />
         <Route path="rendez-vous" element={<SectionPage><RendezVousPage /></SectionPage>} />
+        <Route path="rendez-vous/:demandeId" element={<RendezVousDetailPage />} />
         <Route path="proches" element={<SectionPage><ProchesPage /></SectionPage>} />
         <Route path="dossier" element={<SectionPage><DossierAccessGate><DossierPage /></DossierAccessGate></SectionPage>} />
         <Route path="examens" element={<SectionPage><ExamensPage /></SectionPage>} />

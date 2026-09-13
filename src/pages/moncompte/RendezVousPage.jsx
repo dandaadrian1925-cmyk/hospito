@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { CalendarPlus, Clock, Video, MapPin, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CalendarPlus, Clock, Video, MapPin, Loader2, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getMesDemandesRdv } from '../../services/demandesRendezVousService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
-import TeleconsultationCallWidget from '../../components/teleconsultation/TeleconsultationCallWidget';
 
 const STATUT_STYLES = {
   en_attente: { bg: '#FFFBEB', color: '#D97706', label: 'En attente de confirmation' },
@@ -18,6 +18,9 @@ const STATUT_STYLES = {
   // cloturerTeleconsultation (hospito-medecin) — retombait sur le fallback
   // brut { label: d.statut } et affichait le mot "termine" tel quel.
   termine: { bg: '#F0FDF4', color: '#059669', label: 'Terminé' },
+  // #nouveau (demande utilisateur, "un patient peut annuler un rendez vous") :
+  // posé par annulerDemandeRdv, jamais par le personnel.
+  annule: { bg: '#F1F5F9', color: '#64748B', label: 'Annulé' },
 };
 
 const formatDate = (value) => {
@@ -26,8 +29,14 @@ const formatDate = (value) => {
   return date.toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
 };
 
+// #nouveau (demande utilisateur, "fais les rendez vous coté patient sous
+// forme de card rectangulaire avec mini ombre, tel que lorsqu'on clique ça
+// ouvre une nouvelle page avec les détails") : cette liste ne fait plus
+// qu'afficher un résumé cliquable — détails, annulation et appel de
+// téléconsultation vivent désormais sur RendezVousDetailPage.
 export default function RendezVousPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [demandes, setDemandes] = useState(null);
   const [etablissements, setEtablissements] = useState({});
 
@@ -59,7 +68,14 @@ export default function RendezVousPage() {
     {demandes.map((d) => {
       const style = STATUT_STYLES[d.statut] || { bg: '#F1F5F9', color: '#64748B', label: d.statut };
       const etab = etablissements[d.etablissementId];
-      return <div key={d.id} style={{ background: 'white', borderRadius: 16, border: '1.5px solid #F1F5F9', padding: 16 }}>
+      return <div
+        key={d.id}
+        onClick={() => navigate(`/mon-compte/rendez-vous/${d.id}`)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/mon-compte/rendez-vous/${d.id}`); }}
+        style={{ background: 'white', borderRadius: 16, border: '1.5px solid #F1F5F9', boxShadow: '0 2px 10px rgba(15,23,42,0.06)', padding: 16, cursor: 'pointer' }}
+      >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
           <div>
             <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)' }}>{etab?.nom || 'Établissement'}</p>
@@ -70,7 +86,10 @@ export default function RendezVousPage() {
             {d.patientFicheId && <p style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>Pour {d.patientNom}</p>}
             {d.serviceNom && <p style={{ fontSize: 12, color: '#64748B', marginTop: 1 }}>{d.serviceNom}</p>}
           </div>
-          <span style={{ flexShrink: 0, background: style.bg, color: style.color, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>{style.label}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            <span style={{ background: style.bg, color: style.color, fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 999 }}>{style.label}</span>
+            <ChevronRight style={{ width: 16, height: 16, color: '#CBD5E1' }} />
+          </div>
         </div>
         <p style={{ fontSize: 13, color: '#374151', marginBottom: 10 }}>{d.motif}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 12, color: '#64748B' }}>
@@ -78,9 +97,6 @@ export default function RendezVousPage() {
           {d.dateHeure && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Clock style={{ width: 13, height: 13 }} /> {formatDate(d.dateHeure)}</span>}
           {d.medecinNom && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin style={{ width: 13, height: 13 }} /> Dr {d.medecinNom}</span>}
         </div>
-        {d.statut === 'confirme' && d.type === 'teleconsultation' && <div style={{ marginTop: 12 }}>
-          <TeleconsultationCallWidget demandeId={d.id} />
-        </div>}
       </div>;
     })}
   </div>;

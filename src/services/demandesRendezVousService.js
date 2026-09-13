@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, getDoc, doc, updateDoc, query, where, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getSettingsEtablissement } from './settingsService';
 import { notifierPersonnel } from './notificationsService';
@@ -70,6 +70,41 @@ export async function getMesDemandesRdv(patientUid) {
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+// #nouveau (demande utilisateur, "carte cliquée → page de détails") : un
+// seul document, pour la page de détails d'un rendez-vous.
+export async function getDemandeRdv(demandeId) {
+  const snap = await getDoc(doc(db, 'demandes_rendez_vous', demandeId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+// #nouveau (demande utilisateur, "un patient peut annuler un rendez vous...
+// toutes les implications sont prises en compte") : annule la demande, puis —
+// si elle était déjà confirmée — détache le billet_session que
+// confirmerDemande (hospito-accueil-medecin) avait réquisitionné pour ce
+// rendez-vous, afin qu'il sorte immédiatement de la file d'attente du
+// personnel (celle-ci ne liste que les billets au statut 'pret'). Écrit
+// TOUJOURS la demande en premier : la règle Firestore qui autorise le second
+// écrit sur billets_session exige que la demande soit déjà à 'annule'.
+export async function annulerDemandeRdv(demande) {
+  await updateDoc(doc(db, 'demandes_rendez_vous', demande.id), { statut: 'annule' });
+  if (demande.statut === 'confirme') {
+    const snap = await getDocs(query(collection(db, 'billets_session'), where('demandeId', '==', demande.id), limit(1)));
+    if (!snap.empty) {
+      const billet = snap.docs[0];
+      const data = billet.data();
+      await updateDoc(billet.ref, {
+        demandeId: null, medecinId: null, medecinNom: null, dateHeure: null,
+        statut: data.statut === 'pret' ? 'arrive' : data.statut,
+      });
+    }
+  }
+  notifierPersonnel(demande.etablissementId, ['accueil', 'admin'], {
+    type: 'rendezvous', titre: 'Rendez-vous annulé',
+    message: `${demande.patientNom} a annulé son rendez-vous${demande.dateHeure?.toDate ? ` du ${demande.dateHeure.toDate().toLocaleString('fr-FR')}` : ''}.`,
+    link: '/rendez-vous',
+  });
 }
 
 // Rappels automatiques de rendez-vous (§4.4) — même limite d'infrastructure

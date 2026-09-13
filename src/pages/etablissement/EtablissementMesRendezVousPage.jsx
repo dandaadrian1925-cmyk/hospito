@@ -1,11 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
-import { CalendarClock } from 'lucide-react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
+import { CalendarClock, Video } from 'lucide-react';
 import { getMesDemandesRdv } from '../../services/demandesRendezVousService';
-import TeleconsultationCallWidget from '../../components/teleconsultation/TeleconsultationCallWidget';
 import SectionCTA from '../../components/etablissement/SectionCTA';
 
-const LABEL_STATUT = { en_attente: 'En attente de confirmation', confirme: 'Confirmé', refuse: 'Refusé', absent: 'Non honoré', termine: 'Terminé' };
+const LABEL_STATUT = { en_attente: 'En attente de confirmation', confirme: 'Confirmé', refuse: 'Refusé', absent: 'Non honoré', termine: 'Terminé', annule: 'Annulé' };
+
+// #nouveau (demande utilisateur, "le bouton de Rejoindre la téléconsultation
+// soit grisé avant le jour du rendez vous") : même règle que
+// RendezVousDetailPage (mon-compte) — cohérence entre les deux listes.
+const estLeJourDuRdv = (dateHeure) => {
+  if (!dateHeure?.toDate) return false;
+  const d = dateHeure.toDate();
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+};
 
 // #nouveau (demande utilisateur, "les demandes passées ne s'affichent pas
 // là-bas, enlève ça et affiche-les dans mes rendez-vous de l'espace
@@ -14,6 +23,7 @@ const LABEL_STATUT = { en_attente: 'En attente de confirmation', confirme: 'Conf
 // accessible depuis le menu Espace Patient de l'en-tête.
 export default function EtablissementMesRendezVousPage() {
   const { etablissementId, user } = useOutletContext();
+  const navigate = useNavigate();
   const [demandes, setDemandes] = useState(null);
 
   const recharger = useCallback(() => {
@@ -41,7 +51,19 @@ export default function EtablissementMesRendezVousPage() {
       ) : (
         <div className="space-y-2">
           {demandes.map((d) => (
-            <div key={d.id} style={{ padding: '12px 16px', background: 'var(--bg-2)', borderRadius: 10, fontSize: 13.5 }}>
+            // #nouveau (demande utilisateur, "card rectangulaire avec mini
+            // ombre... lorsqu'on clique ça ouvre une nouvelle page avec les
+            // détails") : renvoie vers la MÊME page de détails que "Mon
+            // compte > Mes rendez-vous" (annulation, téléconsultation plein
+            // écran) — jamais une seconde implémentation à maintenir.
+            <div
+              key={d.id}
+              onClick={() => navigate(`/mon-compte/rendez-vous/${d.id}`)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/mon-compte/rendez-vous/${d.id}`); }}
+              style={{ padding: '12px 16px', background: 'white', borderRadius: 10, fontSize: 13.5, boxShadow: '0 2px 10px rgba(15,23,42,0.06)', cursor: 'pointer' }}
+            >
               {d.patientFicheId && <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--blue)', marginBottom: 2 }}>Pour {d.patientNom}</p>}
               <strong>{d.motif}</strong>
               {d.serviceNom && <span style={{ color: 'var(--ink-3)', marginLeft: 8 }}>({d.serviceNom})</span>}
@@ -55,9 +77,10 @@ export default function EtablissementMesRendezVousPage() {
                   déjà (posé par confirmerDemande, hospito-accueil-medecin). */}
               {d.medecinNom && <p style={{ color: 'var(--ink-3)', marginTop: 2 }}>Dr {d.medecinNom}</p>}
               {d.type === 'teleconsultation' && d.statut === 'confirme' && (
-                <div style={{ marginTop: 10 }}>
-                  <TeleconsultationCallWidget demandeId={d.id} />
-                </div>
+                <p style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: estLeJourDuRdv(d.dateHeure) ? 'var(--blue)' : '#94A3B8' }}>
+                  <Video style={{ width: 13, height: 13 }} />
+                  {estLeJourDuRdv(d.dateHeure) ? 'Rejoindre la téléconsultation' : "Rejoindre la téléconsultation (le jour du rendez-vous)"}
+                </p>
               )}
             </div>
           ))}

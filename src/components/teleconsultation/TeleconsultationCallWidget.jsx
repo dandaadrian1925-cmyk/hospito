@@ -9,7 +9,13 @@ import { getAgoraTokenTeleconsultation } from '../../services/teleconsultationSe
 // planifié : les deux parties rejoignent le même canal indépendamment,
 // aucune logique de sonnerie/appelant nécessaire (contrairement à un appel
 // ad-hoc acheteur/vendeur↔livreur).
-export default function TeleconsultationCallWidget({ demandeId }) {
+// #nouveau (demande utilisateur, "un écran de téléconsultation assez grand
+// qu'il pourrait prendre tout l'écran si c'est sur mobile, comme un appel
+// video whatsapp") : `grand` fait remplir tout le conteneur (RendezVousDetailPage
+// l'utilise dans un calque plein écran) au lieu de la taille compacte par
+// défaut — même composant, jamais de duplication. `onFermer` referme ce
+// calque quand l'utilisateur raccroche (bouton "Raccrocher").
+export default function TeleconsultationCallWidget({ demandeId, grand = false, onFermer }) {
   const [statut, setStatut] = useState('idle'); // idle | connecting | active
   const [muted, setMuted] = useState(false);
   const [cameraOff, setCameraOff] = useState(false);
@@ -86,6 +92,7 @@ export default function TeleconsultationCallWidget({ demandeId }) {
     setMuted(false);
     setCameraOff(false);
     setAutrePartiePresente(false);
+    onFermer?.();
   };
 
   const rejoindre = async () => {
@@ -102,7 +109,12 @@ export default function TeleconsultationCallWidget({ demandeId }) {
       });
       client.on('user-left', () => setAutrePartiePresente(false));
       await client.join(appId, channelName, token, uid);
-      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
+      // #nouveau (demande utilisateur, "augmenter la qualité au prochain
+      // grade") : sans configuration explicite, le SDK Agora publie en 480p
+      // (480p_1, ~500 kbps) — 720p_1 (1280×720, ~1130 kbps) est le grade
+      // suivant, un net progrès sans exiger un débit irréaliste sur un réseau
+      // mobile camerounais moyen.
+      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks({}, { encoderConfig: '720p_1' });
       localAudioRef.current = audioTrack;
       localVideoRef.current = videoTrack;
       if (localVideoElRef.current) videoTrack.play(localVideoElRef.current);
@@ -141,6 +153,20 @@ export default function TeleconsultationCallWidget({ demandeId }) {
   };
 
   if (statut === 'idle') {
+    if (grand) {
+      return (
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', background: '#111' }}>
+          {onFermer && (
+            <button onClick={onFermer} aria-label="Fermer" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: '50%', background: '#333', border: 'none', color: 'white', cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              ✕
+            </button>
+          )}
+          <button onClick={rejoindre} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 16, padding: '14px 28px' }}>
+            <Video style={{ width: 18, height: 18 }} /> Rejoindre la téléconsultation
+          </button>
+        </div>
+      );
+    }
     return (
       <button onClick={rejoindre} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
         <Video style={{ width: 16, height: 16 }} /> Rejoindre la téléconsultation
@@ -149,10 +175,16 @@ export default function TeleconsultationCallWidget({ demandeId }) {
   }
 
   return (
-    <div style={{ borderRadius: 12, overflow: 'hidden', background: '#111', maxWidth: 480 }}>
-      <div style={{ position: 'relative', aspectRatio: '4/3', background: '#000' }}>
+    <div style={grand
+      ? { display: 'flex', flexDirection: 'column', width: '100%', height: '100%', background: '#111' }
+      : { borderRadius: 12, overflow: 'hidden', background: '#111', maxWidth: 480 }}>
+      <div style={grand
+        ? { position: 'relative', flex: 1, minHeight: 0, background: '#000' }
+        : { position: 'relative', aspectRatio: '4/3', background: '#000' }}>
         <div ref={remoteVideoElRef} style={{ width: '100%', height: '100%' }} />
-        <div ref={localVideoElRef} style={{ position: 'absolute', bottom: 8, right: 8, width: 96, height: 72, borderRadius: 8, overflow: 'hidden', border: '2px solid white' }} />
+        <div ref={localVideoElRef} style={grand
+          ? { position: 'absolute', bottom: 16, right: 16, width: 140, height: 105, borderRadius: 10, overflow: 'hidden', border: '2px solid white' }
+          : { position: 'absolute', bottom: 8, right: 8, width: 96, height: 72, borderRadius: 8, overflow: 'hidden', border: '2px solid white' }} />
         {statut === 'connecting' && (
           <p style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 13 }}>
             Connexion…
