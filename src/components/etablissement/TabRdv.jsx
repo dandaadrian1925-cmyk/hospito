@@ -125,7 +125,17 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     // (contrairement à l'avertissement billet ci-dessous, purement
     // informatif) — évite les doublons de test qui se sont multipliés côté
     // accueil, chacun affichant sa propre ligne dans la File d'attente.
-    if (serviceId && dateSouhaitee) {
+    // #corrigé (retour utilisateur, "sauf que lorsqu'il a déjà honoré un
+    // rendez-vous il peut encore en reprendre le même jour") : un rendez-vous
+    // confirmé garde pour toujours le statut 'confirme' sur la demande
+    // elle-même (rien ne le fait jamais passer à "honoré") — seul le billet
+    // qui lui est lié progresse jusqu'à 'consulte' une fois la consultation
+    // faite. `billetValide` (déjà calculé ci-dessus pour CE service) reflète
+    // cet état réel : s'il est déjà 'consulte', la visite du jour a bien eu
+    // lieu, et une nouvelle demande pour ce même service ce même jour
+    // (ex. second motif) redevient possible.
+    const dejaHonoreAujourdhui = billetValide?.statut === 'consulte';
+    if (serviceId && dateSouhaitee && !dejaHonoreAujourdhui) {
       const dejaDemande = await existeDejaDemandeMemeJourService(patientUid, serviceId, dateSouhaitee, procheChoisiId || null);
       if (dejaDemande) {
         const service = services.find((s) => s.id === serviceId);
