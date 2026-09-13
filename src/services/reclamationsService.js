@@ -1,6 +1,7 @@
 import { collection, doc, setDoc, getDocs, query, where, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { uploadFile } from '../supabase/config';
+import { notifierPersonnel } from './notificationsService';
 
 export async function ouvrirReclamation({ patientUid, etablissementId, sujet, description, preuvePhotos = [] }) {
   const reclamationRef = doc(collection(db, 'reclamations'));
@@ -21,6 +22,14 @@ export async function ouvrirReclamation({ patientUid, etablissementId, sujet, de
     statut: 'ouvert',
     decision: null,
     createdAt: serverTimestamp(),
+  });
+  // #nouveau (demande utilisateur, "toutes les notifications soient
+  // fonctionnelles pour toutes les opérations") : jusqu'ici, une nouvelle
+  // réclamation n'était visible qu'en rouvrant hospito-admin.
+  notifierPersonnel(etablissementId, ['admin'], {
+    type: 'reclamation', titre: 'Nouvelle réclamation',
+    message: `Nouvelle réclamation : ${sujet.trim()}`,
+    link: '/reclamations',
   });
   return reclamationRef.id;
 }
