@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Upload, ShieldCheck } from 'lucide-react';
 import { aDejaUneFicheIci, getMaDemandeInscription, creerDemandeInscription } from '../../services/demandesInscriptionService';
-import { TEXTE_CONSENTEMENT_PARTAGE, getMonConsentement, signerConsentement } from '../../services/consentementsService';
+import { TEXTE_CONSENTEMENT_PARTAGE, signerConsentement } from '../../services/consentementsService';
 import { uploadFile } from '../../supabase/config';
 import SignaturePad from './SignaturePad';
 
@@ -97,11 +97,16 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
     }
     setEnvoi(true);
     try {
+      // #corrigé (retour utilisateur, "quand l'admin refuse la demande et le
+      // patient ressigne on dirait que ce n'est pas la nouvelle signature qui
+      // arrive de nouveau chez l'admin") : sauter la signature quand un
+      // consentement existait déjà gardait la signature de la 1ère tentative
+      // — exactement le cas d'une demande refusée puis resoumise avec une
+      // NOUVELLE signature. `consentements` est explicitement append-only
+      // (cf. consentementsService.js) : chaque envoi doit signer à nouveau,
+      // sans jamais vérifier d'abord si un consentement existe déjà.
       const patientNom = `${userProfile.prenom || ''} ${userProfile.nom || ''}`.trim();
-      const dejaSigne = await getMonConsentement(patientUid, etablissementId);
-      if (!dejaSigne) {
-        await signerConsentement({ patientUid, patientNom, etablissementId, signatureDataUrl });
-      }
+      await signerConsentement({ patientUid, patientNom, etablissementId, signatureDataUrl });
       const [rectoUp, versoUp, selfieUp] = await Promise.all([
         uploadFile('cni', `${patientUid}/recto_${Date.now()}`, recto),
         uploadFile('cni', `${patientUid}/verso_${Date.now()}`, verso),
