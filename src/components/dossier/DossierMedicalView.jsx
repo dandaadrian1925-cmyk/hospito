@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { doc, updateDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 import { FolderHeart, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { db } from '../../firebase/config';
 import {
   getMonDossier, getMesPrescriptions, dossierLocalDisponible, estIdentiteVerifieeParUnEtablissement,
 } from '../../services/dossierPatientService';
@@ -36,7 +39,46 @@ function EtatVide({ titre, texte }) {
 
 const formatDate = (ts) => (ts?.toDate ? ts.toDate().toLocaleDateString('fr-FR') : '');
 
-export default function DossierMedicalView({ cni }) {
+// #nouveau (décision utilisateur, "retire la vérification dans Mon compte
+// et ajoute ça sur cette page-ci en spécifiant que c'est obligatoire") : le
+// numéro de CNI se saisit désormais directement ici, au moment où il
+// bloque réellement l'accès — plus besoin d'aller le chercher dans un
+// réglage de profil séparé pour comprendre pourquoi le dossier est fermé.
+function FormulaireCni({ uid }) {
+  const [valeur, setValeur] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const enregistrer = async (e) => {
+    e.preventDefault();
+    if (!valeur.trim()) { toast.error('Numéro de CNI requis'); return; }
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, 'users', uid), { numeroIdentiteNational: valeur.trim() });
+      toast.success('Numéro enregistré');
+    } catch (err) {
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={enregistrer} style={{ display: 'flex', gap: 8, marginTop: 14, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto' }}>
+      <input
+        value={valeur}
+        onChange={(e) => setValeur(e.target.value)}
+        placeholder="Numéro de CNI"
+        className="input-field"
+        style={{ flex: 1, fontSize: 13 }}
+      />
+      <button type="submit" disabled={saving} className="btn-primary" style={{ fontSize: 12, padding: '0 16px', flexShrink: 0 }}>
+        {saving ? '…' : 'Enregistrer'}
+      </button>
+    </form>
+  );
+}
+
+export default function DossierMedicalView({ cni, uid }) {
   const [entrees, setEntrees] = useState(null);
   const [prescriptions, setPrescriptions] = useState(null);
   const [etablissements, setEtablissements] = useState({});
@@ -86,10 +128,14 @@ export default function DossierMedicalView({ cni }) {
 
   if (!cni) {
     return (
-      <EtatVide
-        titre="Numéro CNI requis"
-        texte="Renseignez votre numéro CNI dans Mon Compte pour activer votre dossier médical partagé."
-      />
+      <div style={placeholderStyle}>
+        <FolderHeart style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
+        <p style={{ fontWeight: 600, color: 'var(--ink-2)' }}>Numéro CNI obligatoire</p>
+        <p style={{ fontSize: 13, marginTop: 4 }}>
+          Renseignez votre numéro de CNI ci-dessous — obligatoire pour accéder à votre dossier médical, une fois vérifié par un établissement.
+        </p>
+        <FormulaireCni uid={uid} />
+      </div>
     );
   }
 

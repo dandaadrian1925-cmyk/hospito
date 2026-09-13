@@ -948,25 +948,6 @@ function ModifierProfil() {
               fontSize: 14
             }} />}
               </div>
-              <div>
-                <label style={{
-              display: 'block',
-              fontSize: 11,
-              fontWeight: 700,
-              color: '#64748B',
-              marginBottom: 6,
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-                  N° CNI (identifiant utilisé pour votre dossier médical, partagé entre tous vos établissements)
-                </label>
-                <input value={form.numeroIdentiteNational} onChange={e => setForm(f => ({
-              ...f,
-              numeroIdentiteNational: e.target.value
-            }))} placeholder="Ex : 123456789" className="input-field" style={{
-              fontSize: 14
-            }} />
-              </div>
             </motion.div> : <motion.div key="view" initial={{
           opacity: 0
         }} animate={{
