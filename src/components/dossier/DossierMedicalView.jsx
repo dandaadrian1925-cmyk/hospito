@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { FolderHeart, Loader2, AlertTriangle } from 'lucide-react';
-import { getMonDossier, getMesPrescriptions, dossierLocalDisponible } from '../../services/dossierPatientService';
+import { FolderHeart, Loader2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import {
+  getMonDossier, getMesPrescriptions, dossierLocalDisponible, estIdentiteVerifieeParUnEtablissement,
+} from '../../services/dossierPatientService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
 // Dossier médical + prescriptions, UNIQUE et partagé entre tous les
@@ -39,9 +41,20 @@ export default function DossierMedicalView({ cni }) {
   const [prescriptions, setPrescriptions] = useState(null);
   const [etablissements, setEtablissements] = useState({});
   const [erreur, setErreur] = useState(null);
+  // #nouveau (décision utilisateur, "vérification à faire par chaque
+  // établissement avant d'accéder à son dossier médical en ligne") :
+  // undefined = vérification en cours, true/false = résultat.
+  const [identiteVerifiee, setIdentiteVerifiee] = useState(undefined);
 
   useEffect(() => {
-    if (!dossierLocalDisponible || !cni) {
+    if (!cni) { setIdentiteVerifiee(undefined); return; }
+    let annule = false;
+    estIdentiteVerifieeParUnEtablissement(cni).then((v) => { if (!annule) setIdentiteVerifiee(v); });
+    return () => { annule = true; };
+  }, [cni]);
+
+  useEffect(() => {
+    if (!dossierLocalDisponible || !cni || !identiteVerifiee) {
       setEntrees([]);
       setPrescriptions([]);
       return;
@@ -60,7 +73,7 @@ export default function DossierMedicalView({ cni }) {
         setEntrees([]);
         setPrescriptions([]);
       });
-  }, [cni]);
+  }, [cni, identiteVerifiee]);
 
   if (!dossierLocalDisponible) {
     return (
@@ -77,6 +90,26 @@ export default function DossierMedicalView({ cni }) {
         titre="Numéro CNI requis"
         texte="Renseignez votre numéro CNI dans Mon Compte pour activer votre dossier médical partagé."
       />
+    );
+  }
+
+  if (identiteVerifiee === undefined) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
+        <Loader2 style={{ width: 24, height: 24, color: '#94A3B8' }} className="animate-spin" />
+      </div>
+    );
+  }
+
+  if (!identiteVerifiee) {
+    return (
+      <div style={{ ...placeholderStyle, color: 'var(--ink-2)' }}>
+        <ShieldCheck style={{ width: 32, height: 32, margin: '0 auto 12px', color: 'var(--ink-4)' }} />
+        <p style={{ fontWeight: 600, color: 'var(--ink-2)' }}>Identité pas encore vérifiée</p>
+        <p style={{ fontSize: 13, marginTop: 4, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto' }}>
+          Présentez votre CNI en personne à l'accueil d'un établissement partenaire pour activer votre dossier médical partagé — la vérification faite là-bas s'applique ensuite partout.
+        </p>
+      </div>
     );
   }
 

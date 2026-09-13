@@ -597,49 +597,13 @@ function AccountHome() {
         </div>
       </div>
 
-      {}
-      {!userProfile?.cniVerifie && <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 12,
-      background: '#FFFBEB',
-      border: '1.5px solid #FDE68A',
-      borderRadius: 14,
-      padding: 14
-    }}>
-          <AlertTriangle style={{
-        width: 20,
-        height: 20,
-        color: '#D97706',
-        flexShrink: 0
-      }} />
-          <div style={{
-        flex: 1
-      }}>
-            <p style={{
-          fontWeight: 700,
-          fontSize: 13,
-          color: '#92400E'
-        }}>Identité non vérifiée</p>
-            <p style={{
-          fontSize: 12,
-          color: '#B45309',
-          marginTop: 2
-        }}>Vérifiez votre CNI pour retrouver facilement votre dossier dans tout établissement partenaire</p>
-          </div>
-          <Link to="/mon-compte/cni" style={{
-        flexShrink: 0,
-        background: '#D97706',
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 700,
-        padding: '7px 14px',
-        borderRadius: 10,
-        textDecoration: 'none'
-      }}>
-            Vérifier →
-          </Link>
-        </div>}
+      {/* #retiré (décision utilisateur, "retirer cette validation à la
+          plateforme et l'accorder à chaque établissement") : la
+          vérification CNI à distance (recto/verso/selfie, jamais examinée
+          côté Hospito) est abandonnée au profit de celle déjà faite EN
+          PERSONNE par le personnel d'un établissement (cf.
+          DossierMedicalView.jsx, qui vérifie désormais directement patients/
+          {id}.cniStatut) — ce bandeau n'a donc plus de destination utile. */}
 
       {rdvAVenir.length > 0 && <div style={{
       background: '#F0FDF4',

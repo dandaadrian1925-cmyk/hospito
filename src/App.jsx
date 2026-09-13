@@ -19,7 +19,6 @@ const FAQPage = lazy(() => import('./pages/FAQPage'));
 const SecuritePage = lazy(() => import('./pages/SecuritePage'));
 const ConfidentialitePage = lazy(() => import('./pages/ConfidentialitePage'));
 const CookiesPage = lazy(() => import('./pages/CookiesPage'));
-const VerifCNIPage = lazy(() => import('./pages/VerifCNIPage'));
 const WalletPage = lazy(() => import('./pages/WalletPage'));
 const DemandeEtablissementPage = lazy(() => import('./pages/DemandeEtablissementPage'));
 const EtablissementLayout = lazy(() => import('./pages/etablissement/EtablissementLayout'));
@@ -125,7 +124,6 @@ export default function App() {
 
             {}
             <Route path="/mon-compte/*" element={<Layout><MonComptePage /></Layout>} />
-            <Route path="/mon-compte/cni" element={<Layout><VerifCNIPage /></Layout>} />
 
             {}
             <Route path="/comment-ca-marche" element={<Layout><CommentCaMarchePage /></Layout>} />
