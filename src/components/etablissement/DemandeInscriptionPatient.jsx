@@ -34,16 +34,21 @@ const LABEL_STATUT = {
 };
 
 // #nouveau (retour utilisateur, "remets cette page à l'état initiale pour
-// que je puisse à nouveau soumettre la demande de vérification") : une
-// fiche déjà créée (donc DemandeInscriptionPatient s'efface normalement,
-// aDejaUneFicheIci) ne doit PAS bloquer une resoumission si sa CNI a été
-// rejetée — même fiche mise à jour (jamais une 2e créée), cf.
-// resoumettreVerificationCni + firestore.rules.
-function ResoumissionCni({ fiche, patientUid, onDone }) {
+// que je puisse à nouveau soumettre la demande de vérification" puis
+// "afficher le dossier médical... à partir de cet état de l'interface, ça
+// donne la possibilité de faire cette vérification") : une fiche déjà
+// créée (donc DemandeInscriptionPatient s'efface normalement,
+// aDejaUneFicheIci) ne doit bloquer une soumission de vérification NI
+// quand sa CNI a été rejetée, NI quand elle n'en a simplement jamais eu
+// (fiche créée en personne sans photo, ou avant cette fonctionnalité) —
+// même fiche mise à jour (jamais une 2e créée), cf.
+// resoumettreVerificationCni + firestore.rules (accepte les deux cas).
+function VerificationCniFiche({ fiche, patientUid, onDone }) {
   const [recto, setRecto] = useState(null);
   const [verso, setVerso] = useState(null);
   const [selfie, setSelfie] = useState(null);
   const [envoi, setEnvoi] = useState(false);
+  const rejetee = fiche.cniStatut === 'rejete';
 
   const envoyer = async () => {
     if (!recto || !verso || !selfie) {
@@ -58,7 +63,7 @@ function ResoumissionCni({ fiche, patientUid, onDone }) {
         uploadFile('cni', `${patientUid}/selfie_${Date.now()}`, selfie),
       ]);
       await resoumettreVerificationCni(fiche.id, { cniRectoPath: rectoUp.path, cniVersoPath: versoUp.path, cniSelfiePath: selfieUp.path });
-      toast.success('Nouveaux documents envoyés — en attente de vérification.');
+      toast.success('Documents envoyés — en attente de vérification.');
       onDone();
     } catch (e) {
       toast.error(e.message || 'Erreur');
@@ -68,11 +73,15 @@ function ResoumissionCni({ fiche, patientUid, onDone }) {
   };
 
   return (
-    <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 14, padding: 16, marginBottom: 16 }}>
-      <p style={{ fontSize: 13, fontWeight: 700, color: '#991B1B' }}>Vérification d'identité refusée</p>
-      {fiche.cniMotifRejet && <p style={{ fontSize: 12.5, color: '#991B1B', marginTop: 4 }}>Motif : {fiche.cniMotifRejet}</p>}
+    <div style={{ background: rejetee ? '#FEF2F2' : 'white', border: `1.5px solid ${rejetee ? '#FECACA' : '#F1F5F9'}`, borderRadius: 14, padding: 16, marginBottom: 16 }}>
+      <p style={{ fontSize: 13, fontWeight: 700, color: rejetee ? '#991B1B' : 'var(--ink)' }}>
+        {rejetee ? "Vérification d'identité refusée" : "Vérification d'identité requise"}
+      </p>
+      {rejetee && fiche.cniMotifRejet && <p style={{ fontSize: 12.5, color: '#991B1B', marginTop: 4 }}>Motif : {fiche.cniMotifRejet}</p>}
       <p style={{ fontSize: 12.5, color: '#64748B', margin: '10px 0 12px', lineHeight: 1.5 }}>
-        Envoyez de nouveaux documents pour une nouvelle vérification.
+        {rejetee
+          ? 'Envoyez de nouveaux documents pour une nouvelle vérification.'
+          : "Votre dossier médical partagé n'est pas encore accessible ici — envoyez ces documents pour que le personnel de cet établissement vérifie votre identité."}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
         <ChampPhoto label="Recto de la CNI" fichier={recto} onChange={setRecto} />
@@ -80,7 +89,7 @@ function ResoumissionCni({ fiche, patientUid, onDone }) {
         <ChampPhoto label="Photo de vous tenant la CNI" fichier={selfie} onChange={setSelfie} />
       </div>
       <button onClick={envoyer} disabled={envoi} className="btn-primary">
-        {envoi ? 'Envoi…' : 'Renvoyer pour vérification'}
+        {envoi ? 'Envoi…' : rejetee ? 'Renvoyer pour vérification' : 'Envoyer pour vérification'}
       </button>
     </div>
   );
@@ -112,7 +121,13 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
   const charger = useCallback(async () => {
     const fiche = await getMaFicheIci(patientUid, etablissementId);
     onHasFicheChange?.(!!fiche);
-    if (fiche && fiche.cniStatut === 'rejete') { setEtat({ type: 'fiche_rejetee', fiche }); return; }
+    // #corrigé (retour utilisateur, "à partir de cet état de l'interface,
+    // ça donne la possibilité de faire cette vérification") : couvre aussi
+    // une fiche dont cniStatut n'a jamais été posé du tout (pas seulement
+    // 'rejete') — jusqu'ici, cette fiche restait bloquée sans aucun moyen
+    // de déclencher une vérification, montrant seulement "Identité pas
+    // encore vérifiée" côté DossierMedicalView sans action possible.
+    if (fiche && fiche.cniStatut !== 'verifie' && fiche.cniStatut !== 'en_attente') { setEtat({ type: 'fiche_a_verifier', fiche }); return; }
     if (fiche) { setEtat('a_une_fiche'); return; }
     const demande = await getMaDemandeInscription(patientUid, etablissementId);
     setEtat(demande && demande.statut !== 'refusee' ? demande : null);
@@ -122,8 +137,8 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
 
   if (etat === undefined || etat === 'a_une_fiche') return null;
 
-  if (etat?.type === 'fiche_rejetee') {
-    return <ResoumissionCni fiche={etat.fiche} patientUid={patientUid} onDone={charger} />;
+  if (etat?.type === 'fiche_a_verifier') {
+    return <VerificationCniFiche fiche={etat.fiche} patientUid={patientUid} onDone={charger} />;
   }
 
   if (etat && etat.statut === 'en_attente') {
