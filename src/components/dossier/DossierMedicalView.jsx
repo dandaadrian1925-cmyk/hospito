@@ -3,11 +3,11 @@ import { doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import {
   FolderHeart, Loader2, AlertTriangle, ShieldCheck, Droplet, BadgeCheck, History,
-  CalendarDays, Stethoscope, Pill, Search, Waypoints, FileText, Building2,
+  CalendarDays, Stethoscope, Pill, Search, Waypoints, FileText, Building2, FlaskConical,
 } from 'lucide-react';
 import { db } from '../../firebase/config';
 import {
-  getMonDossier, getMesPrescriptions, dossierLocalDisponible, ecouterIdentiteVerifieeParUnEtablissement,
+  getMonDossier, getMesPrescriptions, getMesExamensPartages, dossierLocalDisponible, ecouterIdentiteVerifieeParUnEtablissement,
 } from '../../services/dossierPatientService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
@@ -19,14 +19,26 @@ import { getEtablissement } from '../../services/etablissementsPublicService';
 // ici : ce dossier est partagé entre TOUS les établissements (pas un seul),
 // donc chaque entrée affiche en plus son établissement d'origine, et il n'y
 // a ni téléphone/domicile/contact d'urgence/date de naissance (jamais
-// centralisés sur le compte patient, seulement sur une fiche
-// établissement) ni examens (le backend démo local ne les expose pas) —
-// seulement ce que get_dossier.php/get_prescriptions_patient.php renvoient
-// réellement.
+// centralisés sur le compte patient, seulement sur une fiche établissement).
+// #corrigé (audit labo/imagerie, "le consentement promet des examens dans le
+// dossier partagé, mais cette vue ne les affiche jamais") : les examens
+// vivent désormais aussi (en miroir best-effort) dans get_examens_patient.php.
 const STATUT_PRESCRIPTION = {
   active: { bg: '#EFF6FF', color: '#2451C4', label: 'Active' },
   terminee: { bg: '#F0FDF4', color: '#059669', label: 'Terminée' },
   annulee: { bg: '#F1F5F9', color: '#64748B', label: 'Annulée' },
+};
+
+const STATUT_EXAMEN = {
+  demande: { bg: '#FFFBEB', color: '#D97706', label: 'Demandé' },
+  en_cours: { bg: '#EFF6FF', color: '#2451C4', label: 'En cours' },
+  resultat_disponible: { bg: '#F0FDF4', color: '#059669', label: 'Résultat disponible' },
+  annule: { bg: '#F1F5F9', color: '#64748B', label: 'Annulé' },
+};
+
+const LABEL_TYPE_EXAMEN = {
+  laboratoire: 'Laboratoire', imagerie: 'Imagerie médicale',
+  exploration_fonctionnelle: 'Exploration fonctionnelle', anatomie_pathologique: 'Anatomie pathologique',
 };
 
 const placeholderStyle = { textAlign: 'center', padding: '40px 20px', color: 'var(--ink-3)' };
@@ -196,6 +208,7 @@ function FormulaireCni({ uid }) {
 export default function DossierMedicalView({ cni, uid, nom, prenom }) {
   const [entrees, setEntrees] = useState(null);
   const [prescriptions, setPrescriptions] = useState(null);
+  const [examens, setExamens] = useState(null);
   const [etablissements, setEtablissements] = useState({});
   const [erreur, setErreur] = useState(null);
   // #nouveau (décision utilisateur, "vérification à faire par chaque
@@ -222,14 +235,16 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
     if (!dossierLocalDisponible || !cni || !identiteVerifiee) {
       setEntrees([]);
       setPrescriptions([]);
+      setExamens([]);
       return;
     }
     setErreur(null);
-    Promise.all([getMonDossier(cni), getMesPrescriptions(cni)])
-      .then(async ([e, p]) => {
+    Promise.all([getMonDossier(cni), getMesPrescriptions(cni), getMesExamensPartages(cni)])
+      .then(async ([e, p, ex]) => {
         setEntrees(e);
         setPrescriptions(p);
-        const ids = [...new Set([...e, ...p].map((x) => x.etablissementId))];
+        setExamens(ex);
+        const ids = [...new Set([...e, ...p, ...ex].map((x) => x.etablissementId))];
         const entries = await Promise.all(ids.map(async (id) => [id, await getEtablissement(id)]));
         setEtablissements(Object.fromEntries(entries));
       })
@@ -237,6 +252,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
         setErreur(err.message || 'Erreur');
         setEntrees([]);
         setPrescriptions([]);
+        setExamens([]);
       });
   }, [cni, identiteVerifiee]);
 
@@ -247,21 +263,22 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
   const groupeSanguin = (entrees || []).filter((e) => e.type === 'groupe_sanguin').sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))[0]?.contenu || null;
 
   const jours = useMemo(() => {
-    if (entrees === null || prescriptions === null) return null;
+    if (entrees === null || prescriptions === null || examens === null) return null;
     const parJour = new Map();
     const cle = (date) => date.toISOString().slice(0, 10);
     const bucket = (date) => {
       const k = cle(date);
-      if (!parJour.has(k)) parJour.set(k, { date, comptesRendus: [], constantes: [], prescriptions: [] });
+      if (!parJour.has(k)) parJour.set(k, { date, comptesRendus: [], constantes: [], prescriptions: [], examens: [] });
       return parJour.get(k);
     };
     entrees.filter((e) => e.type === 'compte_rendu').forEach((e) => { const d = e.createdAt?.toDate?.(); if (d) bucket(d).comptesRendus.push(e); });
     entrees.filter((e) => e.type === 'constante').forEach((e) => { const d = e.createdAt?.toDate?.(); if (d) bucket(d).constantes.push(e); });
     prescriptions.forEach((p) => { const d = p.createdAt?.toDate?.(); if (d) bucket(d).prescriptions.push(p); });
+    examens.forEach((ex) => { const d = ex.createdAt?.toDate?.(); if (d) bucket(d).examens.push(ex); });
     return [...parJour.values()]
       .filter((j) => !dateDebut || (j.date >= dateDebut && j.date <= dateFin))
       .sort((a, b) => b.date - a.date);
-  }, [entrees, prescriptions, dateDebut, dateFin]);
+  }, [entrees, prescriptions, examens, dateDebut, dateFin]);
 
   if (!dossierLocalDisponible) {
     return (
@@ -405,7 +422,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
         {!jours.length ? (
           <EtatVide
             titre="Aucune visite"
-            texte={periode === 'tout' ? 'Les comptes-rendus, prescriptions et antécédents ajoutés par vos médecins apparaîtront ici, regroupés par jour.' : 'Aucune visite pour la période choisie.'}
+            texte={periode === 'tout' ? 'Les comptes-rendus, prescriptions, examens et antécédents ajoutés par vos médecins apparaîtront ici, regroupés par jour.' : 'Aucune visite pour la période choisie.'}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -477,6 +494,35 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {!!j.examens.length && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <EnteteSection icon={FlaskConical} label="Examens" />
+                    <div style={{ borderRadius: 10, border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+                      {j.examens.map((ex, idx) => {
+                        const style = STATUT_EXAMEN[ex.statut] || STATUT_EXAMEN.demande;
+                        return (
+                          <div key={ex.id} style={{ padding: 10, borderTop: idx ? '1px solid #F1F5F9' : 'none' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 6 }}>
+                              <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 999, background: style.bg, color: style.color }}>{style.label}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <EtablissementBadge nom={nomEtablissement(ex.etablissementId, ex.etablissementNom)} />
+                                <span style={{ fontSize: 11, color: '#94A3B8' }}>{formaterAuteur(ex.prescripteurNom)}</span>
+                              </div>
+                            </div>
+                            <p style={{ fontSize: 13, color: 'var(--ink)' }}>
+                              <span style={{ fontWeight: 600 }}>{ex.nature}</span>
+                              <span style={{ color: '#64748B' }}> — {LABEL_TYPE_EXAMEN[ex.type] || ex.type}</span>
+                            </p>
+                            {ex.statut === 'resultat_disponible' && ex.resultat && (
+                              <p style={{ fontSize: 12.5, color: 'var(--ink-2)', marginTop: 4, whiteSpace: 'pre-wrap' }}>{ex.resultat}</p>
+                            )}
                           </div>
                         );
                       })}

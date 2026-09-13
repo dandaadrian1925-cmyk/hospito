@@ -82,6 +82,24 @@ const mapPrescription = (row) => ({
   createdAt: toFirestoreLikeTimestamp(row.created_at),
 });
 
+// #nouveau (audit labo/imagerie, "le dossier partagé n'inclut jamais les
+// examens, alors que le texte de consentement le promet") : miroir best-effort
+// alimenté par examensService.js (hospito-medecin) à chaque demande/
+// changement de statut/résultat — jamais la source de vérité (qui reste
+// Firestore, scopée par établissement, pour le vrai suivi opérationnel du
+// labo/de l'imagerie), juste ce que le dossier PARTAGÉ doit montrer.
+const mapExamen = (row) => ({
+  id: String(row.id),
+  etablissementId: row.etablissement_id,
+  etablissementNom: row.etablissement_nom || null,
+  prescripteurNom: row.prescripteur_nom,
+  type: row.type,
+  nature: row.nature,
+  statut: row.statut,
+  resultat: row.resultat || null,
+  createdAt: toFirestoreLikeTimestamp(row.created_at),
+});
+
 export const MESSAGE_BACKEND_INDISPONIBLE = 'Backend local indisponible — vérifiez que XAMPP (Apache/MySQL) est actif sur cette machine.';
 
 const localFetch = async (path) => {
@@ -106,4 +124,10 @@ export const getMesPrescriptions = async (cni) => {
   if (!LOCAL_MODE || !cni) return [];
   const rows = await localFetch(`get_prescriptions_patient.php?patient_cni=${encodeURIComponent(cni)}`);
   return rows.map(mapPrescription);
+};
+
+export const getMesExamensPartages = async (cni) => {
+  if (!LOCAL_MODE || !cni) return [];
+  const rows = await localFetch(`get_examens_patient.php?patient_cni=${encodeURIComponent(cni)}`);
+  return rows.map(mapExamen);
 };
