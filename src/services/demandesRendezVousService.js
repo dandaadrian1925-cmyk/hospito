@@ -33,6 +33,22 @@ export async function creerDemandeRdv({ etablissementId, patientUid, patientNom,
   });
 }
 
+// #nouveau (demande utilisateur, "qu'on ne puisse pas prendre un
+// rendez-vous deux fois la même journée avec le même médecin") : ne
+// s'applique que si un médecin précis est choisi (medecinPrefereId) — sans
+// médecin, l'accueil assignera lui-même, rien à bloquer côté patient. Une
+// demande 'refuse' ne bloque jamais une nouvelle tentative ; 'en_attente'
+// et 'confirme' si. `patientFicheId` distingue les demandes faites pour un
+// PROCHE (cf. TabRdv "Pour qui ?") de celles pour le titulaire du compte.
+export async function existeDejaDemandeMemeJourMedecin(patientUid, medecinId, dateSouhaitee, patientFicheId = null) {
+  if (!medecinId || !dateSouhaitee) return false;
+  const demandes = await getMesDemandesRdv(patientUid);
+  return demandes.some((d) => d.medecinPrefereId === medecinId
+    && d.dateSouhaitee === dateSouhaitee
+    && (d.patientFicheId || null) === (patientFicheId || null)
+    && (d.statut === 'en_attente' || d.statut === 'confirme'));
+}
+
 export async function getMesDemandesRdv(patientUid) {
   const q = query(
     collection(db, 'demandes_rendez_vous'),

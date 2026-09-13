@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
-import { creerDemandeRdv } from '../../services/demandesRendezVousService';
+import { creerDemandeRdv, existeDejaDemandeMemeJourMedecin } from '../../services/demandesRendezVousService';
 import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
 import { trouverBilletValideDuPatient, trouverBilletValidePourFiche } from '../../services/billetsService';
 import { listerMesProchesDansEtablissement } from '../../services/prochesService';
@@ -114,11 +114,23 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!motif.trim()) {
       toast.error('Merci de préciser le motif');
       return;
+    }
+    // #nouveau (demande utilisateur, "qu'on ne puisse pas prendre un
+    // rendez-vous deux fois la même journée avec le même médecin") : bloquant
+    // (contrairement à l'avertissement billet ci-dessous, purement
+    // informatif) — évite les doublons de test qui se sont multipliés côté
+    // accueil, chacun affichant sa propre ligne dans la File d'attente.
+    if (medecinPrefere?.uid && dateSouhaitee) {
+      const dejaDemande = await existeDejaDemandeMemeJourMedecin(patientUid, medecinPrefere.uid, dateSouhaitee, procheChoisiId || null);
+      if (dejaDemande) {
+        toast.error(`Vous avez déjà une demande avec Dr ${medecinPrefere.nom} ce jour-là.`);
+        return;
+      }
     }
     // Informe le patient qu'un billet est déjà valide, sans jamais bloquer
     // l'envoi — c'est lui qui décide s'il en a quand même besoin d'un autre.
