@@ -52,7 +52,7 @@ export default function AccessibiliteButton() {
         >
           <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Accessibilité</p>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)', marginBottom: 6 }}>Taille du texte</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, marginBottom: 14 }}>
             {TAILLES.map((t) => (
               <button
                 key={t.value}

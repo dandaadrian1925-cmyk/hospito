@@ -44,7 +44,7 @@ function EspacePatientMenu() {
         <div
           style={{
             position: 'absolute', top: '100%', right: 0, background: 'white', border: '1px solid var(--border, #E2E8F0)',
-            borderRadius: 12, minWidth: 190, boxShadow: 'var(--shadow-lg, 0 12px 30px rgba(15,23,42,0.12))', padding: 8, zIndex: 60,
+            borderRadius: 12, minWidth: 190, maxWidth: 'calc(100vw - 32px)', boxShadow: 'var(--shadow-lg, 0 12px 30px rgba(15,23,42,0.12))', padding: 8, zIndex: 60,
           }}
         >
           {LIENS_ESPACE_PATIENT.map((l) => (

@@ -103,8 +103,11 @@ export default function WalletBalance({
         color: 'var(--ink)',
         fontFamily: 'var(--font)',
         minWidth: 90,
+        maxWidth: 150,
         textAlign: 'center',
-        whiteSpace: 'nowrap'
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis'
       }}>
           {visible ? fmt(wallet.solde) : '•••• XAF'}
         </button>
