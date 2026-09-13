@@ -1,4 +1,4 @@
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, limit, getDocs, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
 // Dossier médical + prescriptions du patient, UNIQUE et partagé entre tous
@@ -36,6 +36,24 @@ export const estIdentiteVerifieeParUnEtablissement = async (cni) => {
     limit(1),
   ));
   return !snap.empty;
+};
+
+// #corrigé (retour utilisateur, capture d'écran : "Identité pas encore
+// vérifiée" restait affiché après que l'admin ait approuvé la CNI) :
+// estIdentiteVerifieeParUnEtablissement ne lisait qu'UNE FOIS au chargement
+// de la page — un patient qui la garde ouverte (ou qui vient de la charger
+// juste avant que l'admin traite sa demande) ne voyait jamais le
+// changement sans rafraîchir manuellement. Écoute en direct, mêmes deux
+// égalités, aucun index composite requis.
+export const ecouterIdentiteVerifieeParUnEtablissement = (cni, callback) => {
+  if (!cni) { callback(false); return () => {}; }
+  const q = query(
+    collection(db, 'patients'),
+    where('numeroIdentiteNational', '==', cni),
+    where('cniStatut', '==', 'verifie'),
+    limit(1),
+  );
+  return onSnapshot(q, (snap) => callback(!snap.empty), () => callback(false));
 };
 
 const toFirestoreLikeTimestamp = (mysqlDateString) => {

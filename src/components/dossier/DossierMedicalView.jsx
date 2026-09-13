@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { db } from '../../firebase/config';
 import {
-  getMonDossier, getMesPrescriptions, dossierLocalDisponible, estIdentiteVerifieeParUnEtablissement,
+  getMonDossier, getMesPrescriptions, dossierLocalDisponible, ecouterIdentiteVerifieeParUnEtablissement,
 } from '../../services/dossierPatientService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
@@ -215,9 +215,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
 
   useEffect(() => {
     if (!cni) { setIdentiteVerifiee(undefined); return; }
-    let annule = false;
-    estIdentiteVerifieeParUnEtablissement(cni).then((v) => { if (!annule) setIdentiteVerifiee(v); });
-    return () => { annule = true; };
+    return ecouterIdentiteVerifieeParUnEtablissement(cni, setIdentiteVerifiee);
   }, [cni]);
 
   useEffect(() => {
