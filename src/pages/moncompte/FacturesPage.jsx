@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { getMesFactures, initierPaiementFacture, attendreConfirmationFacture, payerFactureAvecSolde } from '../../services/facturesService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 import { listenWallet } from '../../services/walletService';
+import { OPERATEURS, operateurCorrespond } from '../../utils/operateurs';
+import OperatorLogo from '../../components/common/OperatorLogo';
 
 const STATUT_STYLES = {
   en_attente: { bg: '#FFFBEB', color: '#D97706', label: 'En attente' },
@@ -19,6 +21,7 @@ const STATUT_STYLES = {
 // peut être payée.
 function FactureRow({ facture, etabNom, solde, onPayee }) {
   const [phone, setPhone] = useState('');
+  const [operateur, setOperateur] = useState('MTN_MOMO_CMR');
   const [enCours, setEnCours] = useState(false);
   const [enCoursSolde, setEnCoursSolde] = useState(false);
   const style = STATUT_STYLES[facture.statut] || { bg: '#F1F5F9', color: '#64748B', label: facture.statut };
@@ -27,6 +30,10 @@ function FactureRow({ facture, etabNom, solde, onPayee }) {
     e.preventDefault();
     if (!phone.trim()) {
       toast.error('Numéro Mobile Money requis');
+      return;
+    }
+    if (!operateurCorrespond(phone, operateur)) {
+      toast.error(`Ce numéro ne correspond pas à ${OPERATEURS.find((o) => o.id === operateur)?.label}.`);
       return;
     }
     setEnCours(true);
@@ -76,12 +83,36 @@ function FactureRow({ facture, etabNom, solde, onPayee }) {
     </div>
     <p style={{ fontWeight: 800, fontSize: 18, color: 'var(--ink)', marginTop: 8 }}>{Number(facture.montant).toLocaleString('fr-FR')} XAF</p>
     {facture.statut === 'en_attente' && <>
-      <form onSubmit={payer} style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Numéro Mobile Money" className="input-field" style={{ flex: 1, fontSize: 13 }} />
-        <button type="submit" disabled={enCours || enCoursSolde} className="btn-primary" style={{ fontSize: 12, padding: '0 16px' }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+        {OPERATEURS.map((op) => (
+          <button
+            key={op.id}
+            type="button"
+            onClick={() => setOperateur(op.id)}
+            disabled={enCours || enCoursSolde}
+            style={{
+              flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              padding: '6px 8px', borderRadius: 8, cursor: 'pointer',
+              border: `1.5px solid ${operateur === op.id ? 'var(--blue)' : '#F1F5F9'}`,
+              background: operateur === op.id ? '#EFF6FF' : 'white',
+            }}
+          >
+            <OperatorLogo id={op.id} size={18} />
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink)' }}>{op.label}</span>
+          </button>
+        ))}
+      </div>
+      <form onSubmit={payer} style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Numéro Mobile Money" type="tel" maxLength={9} className="input-field" style={{ flex: 1, fontSize: 13 }} />
+        <button type="submit" disabled={enCours || enCoursSolde || (!!phone && !operateurCorrespond(phone, operateur))} className="btn-primary" style={{ fontSize: 12, padding: '0 16px' }}>
           {enCours ? 'Traitement…' : 'Payer'}
         </button>
       </form>
+      {!!phone && !operateurCorrespond(phone, operateur) && (
+        <p style={{ fontSize: 11.5, color: '#DC2626', marginTop: 4 }}>
+          Ce numéro ne correspond pas à {OPERATEURS.find((o) => o.id === operateur)?.label}.
+        </p>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0' }}>
         <div style={{ flex: 1, height: 1, background: '#F1F5F9' }} />
         <span style={{ fontSize: 11, color: '#94A3B8' }}>ou</span>

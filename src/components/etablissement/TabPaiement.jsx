@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { getWallet, listenWallet, getTransactions, initierDepot, attendreConfirmationDepot } from '../../services/walletService';
 import { listerFacturesEnAttente } from '../../services/facturesService';
+import { OPERATEURS, operateurCorrespond } from '../../utils/operateurs';
+import OperatorLogo from '../common/OperatorLogo';
 import FactureAPayer from './FactureAPayer';
 
 export default function TabPaiement({ patientUid, etablissementId }) {
@@ -10,6 +12,7 @@ export default function TabPaiement({ patientUid, etablissementId }) {
   const [factures, setFactures] = useState(null);
   const [montant, setMontant] = useState('');
   const [phone, setPhone] = useState('');
+  const [operateur, setOperateur] = useState('MTN_MOMO_CMR');
   const [envoi, setEnvoi] = useState(false);
 
   const rechargerFactures = useCallback(() => {
@@ -28,6 +31,10 @@ export default function TabPaiement({ patientUid, etablissementId }) {
     const m = Number(montant);
     if (!m || m <= 0 || !phone.trim()) {
       toast.error('Montant et numéro requis');
+      return;
+    }
+    if (!operateurCorrespond(phone, operateur)) {
+      toast.error(`Ce numéro ne correspond pas à ${OPERATEURS.find((o) => o.id === operateur)?.label}.`);
       return;
     }
     setEnvoi(true);
@@ -88,13 +95,39 @@ export default function TabPaiement({ patientUid, etablissementId }) {
           placeholder="Montant (XAF)"
           className="input-field"
         />
+        <div style={{ display: 'flex', gap: 8 }}>
+          {OPERATEURS.map((op) => (
+            <button
+              key={op.id}
+              type="button"
+              onClick={() => setOperateur(op.id)}
+              disabled={envoi}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '6px 8px', borderRadius: 8, cursor: 'pointer',
+                border: `1.5px solid ${operateur === op.id ? 'var(--blue)' : 'var(--border-2)'}`,
+                background: operateur === op.id ? '#EFF6FF' : 'white',
+              }}
+            >
+              <OperatorLogo id={op.id} size={18} />
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink)' }}>{op.label}</span>
+            </button>
+          ))}
+        </div>
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           placeholder="Numéro Mobile Money"
+          type="tel"
+          maxLength={9}
           className="input-field"
         />
-        <button type="submit" disabled={envoi} className="btn-primary">
+        {!!phone && !operateurCorrespond(phone, operateur) && (
+          <p style={{ fontSize: 11.5, color: '#DC2626' }}>
+            Ce numéro ne correspond pas à {OPERATEURS.find((o) => o.id === operateur)?.label}.
+          </p>
+        )}
+        <button type="submit" disabled={envoi || (!!phone && !operateurCorrespond(phone, operateur))} className="btn-primary">
           {envoi ? 'Traitement…' : 'Déposer'}
         </button>
       </form>
