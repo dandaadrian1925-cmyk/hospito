@@ -78,6 +78,14 @@ export const registerWithEmail = async (email, password, nom, prenom, ville) => 
     await setDoc(doc(db, 'users', cred.user.uid), userDoc);
     await syncProfilPublic(cred.user.uid, userDoc);
     await demarrerSessionUnique(cred.user.uid);
+    // #corrigé (audit, "creerNotification importé mais jamais appelé") :
+    // import laissé sans utilisation — message de bienvenue, cohérent avec
+    // "toutes les notifications soient fonctionnelles pour toutes les
+    // opérations".
+    creerNotification({
+      userId: cred.user.uid, type: 'compte', titre: 'Bienvenue sur HostoConnect',
+      message: `Bienvenue ${prenom}, votre compte est prêt.`, link: '/etablissements',
+    });
     return { user: cred.user };
   } finally {
     terminerConnexion();
@@ -180,6 +188,10 @@ export const registerWithGoogle = async () => {
       };
       await setDoc(userRef, userDoc);
       await syncProfilPublic(cred.user.uid, userDoc);
+      creerNotification({
+        userId: cred.user.uid, type: 'compte', titre: 'Bienvenue sur HostoConnect',
+        message: `Bienvenue ${userDoc.prenom}, votre compte est prêt.`, link: '/etablissements',
+      });
     }
     await demarrerSessionUnique(cred.user.uid);
     return { user: cred.user };
