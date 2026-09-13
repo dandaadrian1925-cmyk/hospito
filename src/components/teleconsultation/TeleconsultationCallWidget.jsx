@@ -85,7 +85,17 @@ export default function TeleconsultationCallWidget({ demandeId }) {
       // Firestore introuvable...), pas seulement un refus de permission —
       // l'erreur réelle finissait seulement dans la console, jamais montrée.
       console.error('Échec de connexion à la téléconsultation :', e);
-      toast.error(e.message || "Impossible de rejoindre l'appel — vérifiez l'autorisation caméra/micro de votre navigateur.");
+      // #corrigé (retour utilisateur, "hier ça marchait, pourquoi plus
+      // maintenant ?") : UID_CONFLICT (identifiant Agora déjà occupé par une
+      // session précédente pas proprement fermée — onglet fermé sans
+      // "Raccrocher", rafraîchissement pendant l'appel...) affichait le
+      // message technique brut d'Agora, incompréhensible et sans action
+      // claire. Toujours transitoire : la session fantôme expire d'elle-même
+      // côté Agora après quelques dizaines de secondes.
+      const conflitUid = e?.code === 'UID_CONFLICT' || /UID_CONFLICT/i.test(e?.message || '');
+      toast.error(conflitUid
+        ? "Une connexion précédente à cet appel est encore active côté serveur — patientez une minute puis réessayez."
+        : (e.message || "Impossible de rejoindre l'appel — vérifiez l'autorisation caméra/micro de votre navigateur."));
       setStatut('idle');
     }
   };
