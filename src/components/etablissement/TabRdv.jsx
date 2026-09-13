@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { CalendarClock } from 'lucide-react';
 import { listerServicesActifs } from '../../services/etablissementsPublicService';
-import { creerDemandeRdv, existeDejaDemandeMemeJourMedecin } from '../../services/demandesRendezVousService';
+import { creerDemandeRdv, existeDejaDemandeMemeJourService } from '../../services/demandesRendezVousService';
 import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
 import { trouverBilletValideDuPatient, trouverBilletValidePourFiche } from '../../services/billetsService';
 import { listerMesProchesDansEtablissement } from '../../services/prochesService';
@@ -120,15 +120,16 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
       toast.error('Merci de préciser le motif');
       return;
     }
-    // #nouveau (demande utilisateur, "qu'on ne puisse pas prendre un
-    // rendez-vous deux fois la même journée avec le même médecin") : bloquant
+    // #corrigé (retour utilisateur, "un patient ne doit pas pouvoir prendre
+    // deux rendez-vous pour le MÊME SERVICE le même jour") : bloquant
     // (contrairement à l'avertissement billet ci-dessous, purement
     // informatif) — évite les doublons de test qui se sont multipliés côté
     // accueil, chacun affichant sa propre ligne dans la File d'attente.
-    if (medecinPrefere?.uid && dateSouhaitee) {
-      const dejaDemande = await existeDejaDemandeMemeJourMedecin(patientUid, medecinPrefere.uid, dateSouhaitee, procheChoisiId || null);
+    if (serviceId && dateSouhaitee) {
+      const dejaDemande = await existeDejaDemandeMemeJourService(patientUid, serviceId, dateSouhaitee, procheChoisiId || null);
       if (dejaDemande) {
-        toast.error(`Vous avez déjà une demande avec Dr ${medecinPrefere.nom} ce jour-là.`);
+        const service = services.find((s) => s.id === serviceId);
+        toast.error(`Vous avez déjà une demande pour ${service?.nom || 'ce service'} ce jour-là.`);
         return;
       }
     }
