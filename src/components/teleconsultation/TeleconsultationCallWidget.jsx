@@ -50,10 +50,22 @@ export default function TeleconsultationCallWidget({ demandeId }) {
     localVideoRef.current = null;
   };
 
+  // #nouveau (retour utilisateur, "moyen de vider le cache du site après
+  // chaque déconnexion ?") : pas un problème de cache à proprement parler —
+  // `pagehide` est l'événement standard (MDN/web.dev) pour ce cas précis, là
+  // où `beforeunload` ne se déclenche pas de façon fiable : le bouton
+  // "Précédent" du navigateur peut restaurer une page depuis le cache
+  // mémoire (bfcache) sans jamais redémarrer React ni redéclencher
+  // `beforeunload`, laissant une connexion active invisible en arrière-plan.
+  // `pagehide` couvre TOUS les cas où `beforeunload` se déclenche, plus
+  // celui-ci — gardé en plus (jamais à la place) par prudence, sans risque
+  // puisque nettoyerConnexion() est sans danger à appeler deux fois.
   useEffect(() => {
     window.addEventListener('beforeunload', nettoyerConnexion);
+    window.addEventListener('pagehide', nettoyerConnexion);
     return () => {
       window.removeEventListener('beforeunload', nettoyerConnexion);
+      window.removeEventListener('pagehide', nettoyerConnexion);
       nettoyerConnexion();
     };
   }, []);
