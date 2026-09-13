@@ -47,6 +47,7 @@ const toFirestoreLikeTimestamp = (mysqlDateString) => {
 const mapEntree = (row) => ({
   id: String(row.id),
   etablissementId: row.etablissement_id,
+  etablissementNom: row.etablissement_nom || null,
   type: row.type,
   contenu: row.contenu,
   auteurNom: row.auteur_nom,
@@ -56,6 +57,7 @@ const mapEntree = (row) => ({
 const mapPrescription = (row) => ({
   id: String(row.id),
   etablissementId: row.etablissement_id,
+  etablissementNom: row.etablissement_nom || null,
   medecinNom: row.medecin_nom,
   medicaments: row.medicaments,
   statut: row.statut,

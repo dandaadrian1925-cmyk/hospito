@@ -14,7 +14,7 @@ export default function EtablissementDossierPage() {
     <>
       <DemandeInscriptionPatient etablissementId={etablissementId} patientUid={user.uid} userProfile={userProfile} />
       <ConsentementSignature etablissementId={etablissementId} patientUid={user.uid} patientNom={patientNom} />
-      <DossierMedicalView cni={userProfile?.numeroIdentiteNational} uid={user.uid} />
+      <DossierMedicalView cni={userProfile?.numeroIdentiteNational} uid={user.uid} nom={userProfile?.nom} prenom={userProfile?.prenom} />
     </>
   );
 }
