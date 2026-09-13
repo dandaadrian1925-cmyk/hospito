@@ -48,6 +48,16 @@ export default function TeleconsultationCallWidget({ demandeId }) {
     clientRef.current = null;
     localAudioRef.current = null;
     localVideoRef.current = null;
+    // #nouveau (demande utilisateur, "à chaque déconnexion, le cache soit
+    // vidé") : sessionStorage (propre à cet onglet, jamais l'authentification
+    // ni les préférences) et le Cache Storage API (service worker, s'il y en
+    // a un) — jamais localStorage, qui porte des données persistantes sans
+    // rapport avec l'appel (ex. préférences d'accessibilité) que vider
+    // effacerait pour rien à chaque raccroché.
+    try { sessionStorage.clear(); } catch { /* stockage indisponible */ }
+    if (typeof caches !== 'undefined') {
+      caches.keys().then((noms) => Promise.all(noms.map((n) => caches.delete(n)))).catch(() => {});
+    }
   };
 
   // #nouveau (retour utilisateur, "moyen de vider le cache du site après
