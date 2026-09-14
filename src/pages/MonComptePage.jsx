@@ -718,6 +718,14 @@ function ModifierProfil() {
             .forEach((f) => notifierPersonnel(f.etablissementId, ['accueil', 'admin'], {
               type: 'patient', titre: 'Nom du patient mis à jour dans son compte',
               message: `${f.prenom || ''} ${f.nom || ''} a changé son nom en "${form.prenom} ${form.nom}" dans son compte HostoConnect — vérifiez et mettez à jour sa fiche si nécessaire.`,
+              // #nouveau (retour utilisateur, "la notification arrive quand
+              // même [mais rien n'est modifié]") : sans lien, un admin
+              // recevait l'alerte sans aucun moyen direct d'agir dessus —
+              // devait retrouver la fiche lui-même. hospito-accueil-medecin
+              // n'a pas de page /patients équivalente (cf. Sidebar.jsx) : ce
+              // lien reste sans effet pour un compte accueil, jamais pire
+              // qu'avant (aucun lien du tout).
+              link: `/patients/${f.id}`,
             }));
         }).catch((e) => console.warn('Notification du personnel (changement de nom) échouée :', e.message));
       }
