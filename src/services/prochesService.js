@@ -22,3 +22,18 @@ export async function listerMesProchesDansEtablissement(uid, etablissementId) {
   ));
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+
+// #nouveau (retour utilisateur, "modifier mon compte ne fait rien ? le nom
+// ne change pas chez les autres comptes médecin, accueil...") : la fiche
+// administrative patients/{id} de chaque établissement est détenue par SON
+// personnel, indépendamment du compte hospito-patient — changer son nom dans
+// "Mon compte" ne peut PAS (et ne doit pas) la réécrire directement, sous
+// peine de laisser un patient modifier unilatéralement une identité
+// administrative déjà vérifiée. Cette jointure par CNI (même principe que le
+// dossier partagé/les billets) sert uniquement à PRÉVENIR le personnel
+// concerné pour qu'il vérifie et mette à jour lui-même, si besoin.
+export async function listerMesFichesParCni(cni) {
+  if (!cni) return [];
+  const snap = await getDocs(query(collection(db, 'patients'), where('numeroIdentiteNational', '==', cni)));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}

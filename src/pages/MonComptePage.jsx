@@ -11,6 +11,8 @@ import { syncProfilPublic } from '../services/profilPublicService';
 import { getSettings, getVillesFormulaire, getQuartiersFormulaire } from '../services/settingsService';
 import { getTraitementsEnCours } from '../services/examensPatientService';
 import { getMesRendezVousAVenir } from '../services/demandesRendezVousService';
+import { listerMesFichesParCni } from '../services/prochesService';
+import { notifierPersonnel } from '../services/notificationsService';
 import RendezVousPage from './moncompte/RendezVousPage';
 import RendezVousDetailPage from './moncompte/RendezVousDetailPage';
 import ProchesPage from './moncompte/ProchesPage';
@@ -700,6 +702,25 @@ function ModifierProfil() {
       // users/{uid}.updatedAt, `lastActiveAt` sert déjà cet usage.
       await updateDoc(doc(db, 'users', user.uid), maj);
       await syncProfilPublic(user.uid, maj);
+      // #nouveau (retour utilisateur, "modifier mon compte ne fait rien ? le
+      // nom ne change pas chez les autres comptes médecin, accueil...") :
+      // ce compte (users/{uid}) et la fiche administrative de chaque
+      // établissement (patients/{id}) sont deux documents indépendants —
+      // changer son nom ici ne peut jamais réécrire une fiche déjà vérifiée
+      // par du personnel. On prévient chaque établissement concerné pour
+      // qu'IL décide de mettre à jour ou non, plutôt que de le faire
+      // unilatéralement à la place du patient.
+      const nomAChange = userProfile?.prenom !== form.prenom || userProfile?.nom !== form.nom;
+      if (nomAChange && form.numeroIdentiteNational) {
+        listerMesFichesParCni(form.numeroIdentiteNational).then((fiches) => {
+          fiches
+            .filter((f) => f.nom !== form.nom || f.prenom !== form.prenom)
+            .forEach((f) => notifierPersonnel(f.etablissementId, ['accueil', 'admin'], {
+              type: 'patient', titre: 'Nom du patient mis à jour dans son compte',
+              message: `${f.prenom || ''} ${f.nom || ''} a changé son nom en "${form.prenom} ${form.nom}" dans son compte HostoConnect — vérifiez et mettez à jour sa fiche si nécessaire.`,
+            }));
+        }).catch((e) => console.warn('Notification du personnel (changement de nom) échouée :', e.message));
+      }
       setUserProfile(p => ({
         ...p,
         ...maj
