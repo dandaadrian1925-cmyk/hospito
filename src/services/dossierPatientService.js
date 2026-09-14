@@ -27,30 +27,26 @@ export const dossierLocalDisponible = LOCAL_MODE;
 // identité, cohérent avec "un seul dossier partagé entre tous les
 // établissements" : une fois vérifié quelque part, plus besoin de l'être
 // partout.
-export const estIdentiteVerifieeParUnEtablissement = async (cni) => {
-  if (!cni) return false;
-  const snap = await getDocs(query(
-    collection(db, 'patients'),
-    where('numeroIdentiteNational', '==', cni),
-    where('cniStatut', '==', 'verifie'),
-    limit(1),
-  ));
-  return !snap.empty;
-};
-
-// #corrigé (retour utilisateur, capture d'écran : "Identité pas encore
-// vérifiée" restait affiché après que l'admin ait approuvé la CNI) :
-// estIdentiteVerifieeParUnEtablissement ne lisait qu'UNE FOIS au chargement
-// de la page — un patient qui la garde ouverte (ou qui vient de la charger
-// juste avant que l'admin traite sa demande) ne voyait jamais le
-// changement sans rafraîchir manuellement. Écoute en direct, mêmes deux
-// égalités, aucun index composite requis.
-export const ecouterIdentiteVerifieeParUnEtablissement = (cni, callback) => {
-  if (!cni) { callback(false); return () => {}; }
+//
+// #corrigé (retour utilisateur, "un dossier n'est lié qu'à une seule
+// adresse mail ?") : cette vérification ne comparait QUE le numéro de CNI,
+// jamais QUEL compte a été vérifié — le verrou anti-doublon qui empêchait
+// deux comptes différents de déclarer le même CNI ayant été retiré plus tôt
+// (décision utilisateur, vérification par établissement plutôt que par
+// plateforme), un numéro de CNI (pas vraiment un secret) suffisait à
+// N'IMPORTE QUEL compte tapant ce numéro pour hériter de la vérification
+// faite pour le VRAI titulaire. `patientUid` (posé sur la fiche par
+// rechercherCompteAppParCni, hospito-admin, à chaque création/modification)
+// lie désormais la vérification au compte réellement associé à cette
+// fiche — un second compte déclarant le même CNI ne trouve simplement aucune
+// fiche qui LUI soit liée, et reste donc non vérifié.
+export const ecouterIdentiteVerifieeParUnEtablissement = (cni, uid, callback) => {
+  if (!cni || !uid) { callback(false); return () => {}; }
   const q = query(
     collection(db, 'patients'),
     where('numeroIdentiteNational', '==', cni),
     where('cniStatut', '==', 'verifie'),
+    where('patientUid', '==', uid),
     limit(1),
   );
   return onSnapshot(q, (snap) => callback(!snap.empty), () => callback(false));

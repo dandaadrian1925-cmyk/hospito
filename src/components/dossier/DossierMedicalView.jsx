@@ -228,8 +228,8 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
 
   useEffect(() => {
     if (!cni) { setIdentiteVerifiee(undefined); return; }
-    return ecouterIdentiteVerifieeParUnEtablissement(cni, setIdentiteVerifiee);
-  }, [cni]);
+    return ecouterIdentiteVerifieeParUnEtablissement(cni, uid, setIdentiteVerifiee);
+  }, [cni, uid]);
 
   useEffect(() => {
     if (!dossierLocalDisponible || !cni || !identiteVerifiee) {
