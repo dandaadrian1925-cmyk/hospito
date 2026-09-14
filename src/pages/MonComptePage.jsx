@@ -715,16 +715,18 @@ function ModifierProfil() {
         listerMesFichesParCni(form.numeroIdentiteNational).then((fiches) => {
           fiches
             .filter((f) => f.nom !== form.nom || f.prenom !== form.prenom)
-            .forEach((f) => notifierPersonnel(f.etablissementId, ['accueil', 'admin'], {
+            // #corrigé (retour utilisateur, "je clique sur la notification
+            // depuis mais rien") : hospito-admin n'authentifie QUE le rôle
+            // "admin" (ALLOWED_ROLES) — un compte accueil ne peut de toute
+            // façon jamais ouvrir /patients/{id} (aucune route équivalente
+            // dans hospito-accueil-medecin, cf. son App.jsx), donc cliquer
+            // redirigeait silencieusement vers son propre tableau de bord.
+            // Seul l'admin peut réellement corriger une fiche patient
+            // (PatientDetailPage.jsx n'existe que dans hospito-admin) — ne
+            // notifie plus que lui.
+            .forEach((f) => notifierPersonnel(f.etablissementId, ['admin'], {
               type: 'patient', titre: 'Nom du patient mis à jour dans son compte',
               message: `${f.prenom || ''} ${f.nom || ''} a changé son nom en "${form.prenom} ${form.nom}" dans son compte HostoConnect — vérifiez et mettez à jour sa fiche si nécessaire.`,
-              // #nouveau (retour utilisateur, "la notification arrive quand
-              // même [mais rien n'est modifié]") : sans lien, un admin
-              // recevait l'alerte sans aucun moyen direct d'agir dessus —
-              // devait retrouver la fiche lui-même. hospito-accueil-medecin
-              // n'a pas de page /patients équivalente (cf. Sidebar.jsx) : ce
-              // lien reste sans effet pour un compte accueil, jamais pire
-              // qu'avant (aucun lien du tout).
               link: `/patients/${f.id}`,
             }));
         }).catch((e) => console.warn('Notification du personnel (changement de nom) échouée :', e.message));
