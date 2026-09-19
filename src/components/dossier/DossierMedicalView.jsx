@@ -65,7 +65,14 @@ const PERIODES_HISTORIQUE = {
   },
 };
 const LABEL_PERIODE_HISTORIQUE = { tout: 'Tout', semaine: 'Cette semaine', mois: 'Ce mois', annee: 'Cette année', personnalise: 'Personnalisé' };
-const versInput = (d) => d.toISOString().slice(0, 10);
+// #corrigé (retour utilisateur, "j'ajoute une photo du carnet le 7 mais ça
+// s'enregistre le 06") : `.toISOString()` convertit d'abord en UTC — au
+// Cameroun (UTC+1), entre minuit et 1h du matin locale, l'heure UTC
+// correspondante est ENCORE LA VEILLE, donc la date par défaut préremplie
+// dans le champ (date du jour) affichait discrètement hier au lieu
+// d'aujourd'hui, sans que rien ne l'indique visuellement. Reconstruit à
+// partir des composants LOCAUX (année/mois/jour), jamais via UTC.
+const versInput = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
 const estMemeJour = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 const libelleJour = (date) => {
@@ -376,7 +383,7 @@ function LightboxCarnet({ page, onFermer }) {
         <img src={page.photoBase64} alt={page.dateCarnet} style={{ width: '100%', borderRadius: 12, display: 'block' }} />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
           <div>
-            <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{new Date(page.dateCarnet).toLocaleDateString('fr-FR')}</p>
+            <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{new Date(`${page.dateCarnet}T00:00:00`).toLocaleDateString('fr-FR')}</p>
             {page.note && <p style={{ color: '#CBD5E1', fontSize: 12, marginTop: 2 }}>{page.note}</p>}
           </div>
           <button
