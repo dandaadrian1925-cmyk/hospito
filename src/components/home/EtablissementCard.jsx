@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { isFavori, toggleFavori } from '../../services/favorisEtablissementsService';
 
 export default function EtablissementCard({ etablissement, index = 0, initialFavori = null }) {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const initiale = (etablissement.nom || '?').trim().charAt(0).toUpperCase();
   const [favori, setFavori] = useState(!!initialFavori);
   const [favoriLoading, setFavoriLoading] = useState(false);
@@ -28,6 +28,16 @@ export default function EtablissementCard({ etablissement, index = 0, initialFav
     e.stopPropagation();
     if (!user) {
       toast.error('Connectez-vous pour ajouter aux favoris');
+      return;
+    }
+    // #nouveau (souscription annuelle patient obligatoire) : un simple bouton
+    // cœur ne peut pas afficher tout l'écran de paiement (AbonnementGate) —
+    // même condition de déverrouillage, juste un message plutôt qu'un
+    // formulaire, pour ne pas casser la mise en page de la carte.
+    const expireAt = userProfile?.abonnementExpireAt?.toDate ? userProfile.abonnementExpireAt.toDate() : null;
+    const abonnementActif = userProfile?.abonnementActif === true && expireAt && expireAt.getTime() > Date.now();
+    if (!abonnementActif) {
+      toast.error('Un abonnement HostoConnect actif est requis pour ajouter un favori.');
       return;
     }
     if (favoriLoading) return;

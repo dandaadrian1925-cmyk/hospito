@@ -6,6 +6,7 @@ import { creerDemandeRdv, existeDejaDemandeMemeJourService } from '../../service
 import { listerSpecialistesAvecCreneaux } from '../../services/planningService';
 import { trouverBilletValideDuPatient, trouverBilletValidePourFiche } from '../../services/billetsService';
 import { listerMesProchesDansEtablissement } from '../../services/prochesService';
+import AbonnementGate from '../common/AbonnementGate';
 
 export default function TabRdv({ etablissementId, patientUid, patientNom, initialServiceId, initialMedecin }) {
   const [services, setServices] = useState([]);
@@ -153,6 +154,7 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
   };
 
   return (
+    <AbonnementGate>
     <div>
       <form onSubmit={handleSubmit} className="space-y-4">
         {proches.length > 0 && (
@@ -288,5 +290,6 @@ export default function TabRdv({ etablissementId, patientUid, patientNom, initia
         </div>
       )}
     </div>
+    </AbonnementGate>
   );
 }

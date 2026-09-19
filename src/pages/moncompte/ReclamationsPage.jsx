@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { getReclamationsPatient, ouvrirReclamation } from '../../services/reclamationsService';
 import { listerEtablissementsActifs } from '../../services/etablissementsPublicService';
+import AbonnementGate from '../../components/common/AbonnementGate';
 
 const STATUT_STYLES = {
   ouvert: { bg: '#FFFBEB', color: '#D97706', label: 'Ouverte' },
@@ -42,16 +43,18 @@ function NouvelleReclamation({ etablissements, onCreated, onClose }) {
         <h3 style={{ fontSize: 16, fontWeight: 700 }}>Nouvelle réclamation</h3>
         <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X style={{ width: 18, height: 18, color: '#94A3B8' }} /></button>
       </div>
-      <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <select value={etablissementId} onChange={(e) => setEtablissementId(e.target.value)} className="input-field" style={{ fontSize: 14 }}>
-          {etablissements.map((e) => <option key={e.id} value={e.id}>{e.nom}</option>)}
-        </select>
-        <input value={sujet} onChange={(e) => setSujet(e.target.value)} placeholder="Sujet (ex : temps d'attente excessif)" className="input-field" style={{ fontSize: 14 }} />
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez la situation" rows={4} className="input-field" style={{ fontSize: 14, resize: 'none' }} />
-        <button type="submit" disabled={envoi} className="btn-primary" style={{ justifyContent: 'center' }}>
-          {envoi ? 'Envoi…' : 'Envoyer la réclamation'}
-        </button>
-      </form>
+      <AbonnementGate>
+        <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <select value={etablissementId} onChange={(e) => setEtablissementId(e.target.value)} className="input-field" style={{ fontSize: 14 }}>
+            {etablissements.map((e) => <option key={e.id} value={e.id}>{e.nom}</option>)}
+          </select>
+          <input value={sujet} onChange={(e) => setSujet(e.target.value)} placeholder="Sujet (ex : temps d'attente excessif)" className="input-field" style={{ fontSize: 14 }} />
+          <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Décrivez la situation" rows={4} className="input-field" style={{ fontSize: 14, resize: 'none' }} />
+          <button type="submit" disabled={envoi} className="btn-primary" style={{ justifyContent: 'center' }}>
+            {envoi ? 'Envoi…' : 'Envoyer la réclamation'}
+          </button>
+        </form>
+      </AbonnementGate>
     </div>
   </div>;
 }

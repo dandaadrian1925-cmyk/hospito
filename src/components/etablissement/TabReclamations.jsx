@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { ouvrirReclamation, getReclamationsPatient } from '../../services/reclamationsService';
+import AbonnementGate from '../common/AbonnementGate';
 
 export default function TabReclamations({ etablissementId, patientUid }) {
   const [sujet, setSujet] = useState('');
@@ -43,23 +44,25 @@ export default function TabReclamations({ etablissementId, patientUid }) {
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Sujet *</label>
-          <input value={sujet} onChange={(e) => setSujet(e.target.value)} placeholder="Ex: temps d'attente excessif" className="input-field" />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Description *</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field" rows={4} />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Photos (optionnel)</label>
-          <input type="file" accept="image/*,video/mp4,video/quicktime,video/webm" multiple onChange={(e) => setPhotos(Array.from(e.target.files || []))} />
-        </div>
-        <button type="submit" disabled={envoi} className="btn-primary">
-          {envoi ? 'Envoi…' : 'Envoyer la réclamation'}
-        </button>
-      </form>
+      <AbonnementGate>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Sujet *</label>
+            <input value={sujet} onChange={(e) => setSujet(e.target.value)} placeholder="Ex: temps d'attente excessif" className="input-field" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Description *</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field" rows={4} />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Photos (optionnel)</label>
+            <input type="file" accept="image/*,video/mp4,video/quicktime,video/webm" multiple onChange={(e) => setPhotos(Array.from(e.target.files || []))} />
+          </div>
+          <button type="submit" disabled={envoi} className="btn-primary">
+            {envoi ? 'Envoi…' : 'Envoyer la réclamation'}
+          </button>
+        </form>
+      </AbonnementGate>
 
       {reclamations.length > 0 && (
         <div style={{ marginTop: 28 }}>

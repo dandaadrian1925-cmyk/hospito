@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { ouvrirSignalementSecurite, getSignalementsSecuritePatient } from '../../services/signalementsSecuriteService';
+import AbonnementGate from '../common/AbonnementGate';
 
 const LABEL_TYPE_INCIDENT = { harcelement: 'Harcèlement', vol: 'Vol', agression: 'Agression', autre: 'Autre' };
 
@@ -47,25 +48,27 @@ export default function TabSecurite({ etablissementId, patientUid }) {
       <p style={{ fontSize: 13, color: 'var(--ink-3)', marginBottom: 16, lineHeight: 1.5 }}>
         Pour signaler un problème de sécurité personnelle (harcèlement, vol, agression…), distinct d'une réclamation sur la qualité de service. Traité uniquement par la direction de l'établissement.
       </p>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Type d'incident *</label>
-          <select value={typeIncident} onChange={(e) => setTypeIncident(e.target.value)} className="input-field">
-            {Object.entries(LABEL_TYPE_INCIDENT).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Lieu (optionnel)</label>
-          <input value={lieu} onChange={(e) => setLieu(e.target.value)} placeholder="Ex: parking, salle d'attente…" className="input-field" />
-        </div>
-        <div>
-          <label className="block text-sm font-bold text-gray-700 mb-2">Description *</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field" rows={4} />
-        </div>
-        <button type="submit" disabled={envoi} className="btn-primary">
-          {envoi ? 'Envoi…' : 'Envoyer le signalement'}
-        </button>
-      </form>
+      <AbonnementGate>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Type d'incident *</label>
+            <select value={typeIncident} onChange={(e) => setTypeIncident(e.target.value)} className="input-field">
+              {Object.entries(LABEL_TYPE_INCIDENT).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Lieu (optionnel)</label>
+            <input value={lieu} onChange={(e) => setLieu(e.target.value)} placeholder="Ex: parking, salle d'attente…" className="input-field" />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Description *</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field" rows={4} />
+          </div>
+          <button type="submit" disabled={envoi} className="btn-primary">
+            {envoi ? 'Envoi…' : 'Envoyer le signalement'}
+          </button>
+        </form>
+      </AbonnementGate>
 
       {signalements.length > 0 && (
         <div style={{ marginTop: 28 }}>

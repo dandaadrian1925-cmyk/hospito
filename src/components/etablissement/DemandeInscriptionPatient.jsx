@@ -5,6 +5,7 @@ import { getMaFicheIci, getMaDemandeInscription, creerDemandeInscription, resoum
 import { TEXTE_CONSENTEMENT_PARTAGE, signerConsentement } from '../../services/consentementsService';
 import { uploadFile } from '../../supabase/config';
 import SignaturePad from './SignaturePad';
+import AbonnementGate from '../common/AbonnementGate';
 
 // #nouveau (décision utilisateur, "c'est cette vérification-ci [recto/verso/
 // selfie] qui doit être envoyée avec la signature de consentement, en
@@ -202,6 +203,7 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
   };
 
   return (
+    <AbonnementGate>
     <div style={{ background: 'white', border: '1.5px solid #F1F5F9', borderRadius: 14, padding: 16, marginBottom: 16 }}>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--ink)', marginBottom: 6 }}>Devenir patient de cet établissement</p>
       <p style={{ fontSize: 12.5, color: '#64748B', marginBottom: 12, lineHeight: 1.5 }}>
@@ -259,5 +261,6 @@ export default function DemandeInscriptionPatient({ etablissementId, patientUid,
         </>
       )}
     </div>
+    </AbonnementGate>
   );
 }
