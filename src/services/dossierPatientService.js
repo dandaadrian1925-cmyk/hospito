@@ -110,6 +110,47 @@ const localFetch = async (path) => {
   return data;
 };
 
+const localPost = async (path, body) => {
+  let res;
+  try {
+    res = await fetch(`${LOCAL_API_URL}/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(MESSAGE_BACKEND_INDISPONIBLE);
+  }
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Erreur du serveur local');
+  return data;
+};
+
+// Carnet médical scanné par le patient — voir hospito-dossier-local/sql/schema.sql
+// (table carnet_medical). Le patient choisit la date inscrite sur la page, pas
+// la date d'upload ; la photo est envoyée en base64 (même simplification que
+// le reste de ce backend de démo, sans upload de fichier).
+const mapPageCarnet = (row) => ({
+  id: String(row.id),
+  dateCarnet: row.date_carnet,
+  photoBase64: row.photo_base64,
+  note: row.note || null,
+  createdAt: toFirestoreLikeTimestamp(row.created_at),
+});
+
+export const getMonCarnet = async (cni) => {
+  if (!LOCAL_MODE || !cni) return [];
+  const rows = await localFetch(`get_carnet_patient.php?patient_cni=${encodeURIComponent(cni)}`);
+  return rows.map(mapPageCarnet);
+};
+
+export const ajouterPageCarnet = async (cni, patientNom, dateCarnet, photoBase64, note) => {
+  if (!LOCAL_MODE) throw new Error(MESSAGE_BACKEND_INDISPONIBLE);
+  await localPost('ajouter_page_carnet.php', {
+    patient_cni: cni, patient_nom: patientNom, date_carnet: dateCarnet, photo_base64: photoBase64, note,
+  });
+};
+
 export const getMonDossier = async (cni) => {
   if (!LOCAL_MODE || !cni) return [];
   const rows = await localFetch(`get_dossier.php?patient_cni=${encodeURIComponent(cni)}`);

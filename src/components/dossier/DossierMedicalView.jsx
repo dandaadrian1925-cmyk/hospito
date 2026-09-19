@@ -3,11 +3,12 @@ import { doc, updateDoc } from 'firebase/firestore';
 import toast from 'react-hot-toast';
 import {
   FolderHeart, Loader2, AlertTriangle, ShieldCheck, Droplet, BadgeCheck, History,
-  CalendarDays, Stethoscope, Pill, Search, Waypoints, FileText, Building2, FlaskConical,
+  CalendarDays, Stethoscope, Pill, Search, Waypoints, FileText, Building2, FlaskConical, Camera, Plus,
 } from 'lucide-react';
 import { db } from '../../firebase/config';
 import {
-  getMonDossier, getMesPrescriptions, getMesExamensPartages, dossierLocalDisponible, ecouterIdentiteVerifieeParUnEtablissement,
+  getMonDossier, getMesPrescriptions, getMesExamensPartages, getMonCarnet, ajouterPageCarnet,
+  dossierLocalDisponible, ecouterIdentiteVerifieeParUnEtablissement,
 } from '../../services/dossierPatientService';
 import { getEtablissement } from '../../services/etablissementsPublicService';
 
@@ -205,10 +206,104 @@ function FormulaireCni({ uid }) {
   );
 }
 
+const fichierVersBase64 = (fichier) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(fichier);
+});
+
+// Carnet médical scanné par le patient — le patient date lui-même chaque
+// page (date inscrite sur la page, pas la date d'upload), indépendant du
+// regroupement "par jour de visite" ci-dessus qui ne concerne que les
+// entrées écrites par un médecin.
+function SectionCarnet({ cni, patientNom, pages, onAjout }) {
+  const [ouvert, setOuvert] = useState(false);
+  const [date, setDate] = useState(versInput(new Date()));
+  const [note, setNote] = useState('');
+  const [fichier, setFichier] = useState(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  const envoyer = async (e) => {
+    e.preventDefault();
+    if (!fichier) { toast.error('Choisissez une photo de la page'); return; }
+    setEnvoi(true);
+    try {
+      const photoBase64 = await fichierVersBase64(fichier);
+      await ajouterPageCarnet(cni, patientNom, date, photoBase64, note.trim());
+      toast.success('Page ajoutée au carnet');
+      setFichier(null);
+      setNote('');
+      setOuvert(false);
+      onAjout();
+    } catch (err) {
+      toast.error(err.message || 'Erreur');
+    } finally {
+      setEnvoi(false);
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+        <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Camera size={16} style={{ color: '#0D9488' }} /> Carnet médical scanné
+        </p>
+        <button
+          type="button" onClick={() => setOuvert((v) => !v)}
+          style={{
+            fontSize: 11.5, fontWeight: 600, padding: '5px 11px', borderRadius: 999, cursor: 'pointer',
+            border: 'none', background: '#0D9488', color: 'white', display: 'flex', alignItems: 'center', gap: 4,
+          }}
+        >
+          <Plus size={13} /> Ajouter une page
+        </button>
+      </div>
+
+      {ouvert && (
+        <form onSubmit={envoyer} style={{ ...cardStyle, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
+            Date inscrite sur la page
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" style={{ display: 'block', marginTop: 4 }} />
+          </label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
+            Photo de la page
+            <input type="file" accept="image/*" capture="environment" onChange={(e) => setFichier(e.target.files?.[0] || null)} style={{ display: 'block', marginTop: 4 }} />
+          </label>
+          <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
+            Note (optionnel)
+            <input value={note} onChange={(e) => setNote(e.target.value)} className="input-field" style={{ display: 'block', marginTop: 4 }} />
+          </label>
+          <button type="submit" disabled={envoi} className="btn-primary" style={{ alignSelf: 'flex-start' }}>
+            {envoi ? 'Envoi…' : 'Enregistrer'}
+          </button>
+        </form>
+      )}
+
+      {!pages.length ? (
+        <EtatVide titre="Aucune page scannée" texte="Photographiez les pages de votre carnet papier pour les retrouver ici, datées." />
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
+          {pages.map((p) => (
+            <div key={p.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1.5px solid #F1F5F9' }}>
+              <img src={p.photoBase64} alt={p.dateCarnet} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
+              <div style={{ padding: 8 }}>
+                <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink)' }}>{new Date(p.dateCarnet).toLocaleDateString('fr-FR')}</p>
+                {p.note && <p style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{p.note}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function DossierMedicalView({ cni, uid, nom, prenom }) {
   const [entrees, setEntrees] = useState(null);
   const [prescriptions, setPrescriptions] = useState(null);
   const [examens, setExamens] = useState(null);
+  const [carnet, setCarnet] = useState(null);
   const [etablissements, setEtablissements] = useState({});
   const [erreur, setErreur] = useState(null);
   // #nouveau (décision utilisateur, "vérification à faire par chaque
@@ -231,14 +326,21 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
     return ecouterIdentiteVerifieeParUnEtablissement(cni, uid, setIdentiteVerifiee);
   }, [cni, uid]);
 
+  const chargerCarnet = () => {
+    if (!dossierLocalDisponible || !cni) { setCarnet([]); return; }
+    getMonCarnet(cni).then(setCarnet).catch(() => setCarnet([]));
+  };
+
   useEffect(() => {
     if (!dossierLocalDisponible || !cni || !identiteVerifiee) {
       setEntrees([]);
       setPrescriptions([]);
       setExamens([]);
+      setCarnet([]);
       return;
     }
     setErreur(null);
+    chargerCarnet();
     Promise.all([getMonDossier(cni), getMesPrescriptions(cni), getMesExamensPartages(cni)])
       .then(async ([e, p, ex]) => {
         setEntrees(e);
@@ -254,6 +356,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
         setPrescriptions([]);
         setExamens([]);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cni, identiteVerifiee]);
 
   const nomEtablissement = (id, denorm) => etablissements[id]?.nom || denorm || 'Établissement';
@@ -386,6 +489,13 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
           </div>
         )}
       </div>
+
+      {/* Carnet médical scanné par le patient — indépendant du regroupement par jour ci-dessous */}
+      {carnet !== null && (
+        <div style={cardStyle}>
+          <SectionCarnet cni={cni} patientNom={nomComplet} pages={carnet} onAjout={chargerCarnet} />
+        </div>
+      )}
 
       {/* Historique — une section par jour de visite, tous établissements confondus */}
       <div>
