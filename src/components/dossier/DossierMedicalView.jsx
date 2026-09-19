@@ -220,24 +220,57 @@ const fichierVersBase64 = (fichier) => new Promise((resolve, reject) => {
 // de galerie séparée — chaque page rejoint la carte du jour correspondant
 // dans l'historique unique, comme une entrée de plus ; ce composant ne
 // porte plus que le formulaire d'ajout.
+// #corrigé (retour utilisateur : "n'affiche pas l'aperçu", "on ne peut
+// charger qu'une seule page à la fois") : sélection multiple + aperçu de
+// chaque photo choisie avant l'envoi, avec possibilité d'en retirer une.
+// Chaque fichier est envoyé séparément (une ligne carnet_medical par photo,
+// jamais un remplacement) — voir aussi config.php (en-têtes no-cache) pour
+// la 3e plainte, "on dirait que ça écrase" (c'était un cache de requête
+// GET côté navigateur, pas une vraie perte de données).
 function FormulaireAjoutCarnet({ cni, patientNom, onAjout }) {
   const [ouvert, setOuvert] = useState(false);
   const [date, setDate] = useState(versInput(new Date()));
   const [note, setNote] = useState('');
-  const [fichier, setFichier] = useState(null);
+  const [fichiers, setFichiers] = useState([]); // [{ file, apercu }]
   const [envoi, setEnvoi] = useState(false);
+
+  const choisirFichiers = (e) => {
+    const nouveaux = Array.from(e.target.files || []).map((file) => ({ file, apercu: URL.createObjectURL(file) }));
+    setFichiers((prev) => [...prev, ...nouveaux]);
+    e.target.value = '';
+  };
+
+  const retirerFichier = (i) => {
+    setFichiers((prev) => {
+      URL.revokeObjectURL(prev[i].apercu);
+      return prev.filter((_, idx) => idx !== i);
+    });
+  };
+
+  const reinitialiser = () => {
+    fichiers.forEach((f) => URL.revokeObjectURL(f.apercu));
+    setFichiers([]);
+    setNote('');
+    setOuvert(false);
+  };
 
   const envoyer = async (e) => {
     e.preventDefault();
-    if (!fichier) { toast.error('Choisissez une photo de la page'); return; }
+    if (!fichiers.length) { toast.error('Choisissez au moins une photo de page'); return; }
     setEnvoi(true);
     try {
-      const photoBase64 = await fichierVersBase64(fichier);
-      await ajouterPageCarnet(cni, patientNom, date, photoBase64, note.trim());
-      toast.success('Page ajoutée au carnet');
-      setFichier(null);
-      setNote('');
-      setOuvert(false);
+      // Séquentiel (pas Promise.all) : chaque page est une écriture
+      // indépendante côté serveur, jamais besoin de les paralléliser pour
+      // un carnet (quelques photos par envoi), et ça évite de saturer le
+      // petit serveur Apache/PHP local pour rien.
+      for (const { file } of fichiers) {
+        // eslint-disable-next-line no-await-in-loop
+        const photoBase64 = await fichierVersBase64(file);
+        // eslint-disable-next-line no-await-in-loop
+        await ajouterPageCarnet(cni, patientNom, date, photoBase64, note.trim());
+      }
+      toast.success(fichiers.length > 1 ? `${fichiers.length} pages ajoutées au carnet` : 'Page ajoutée au carnet');
+      reinitialiser();
       onAjout();
     } catch (err) {
       toast.error(err.message || 'Erreur');
@@ -269,19 +302,41 @@ function FormulaireAjoutCarnet({ cni, patientNom, onAjout }) {
       {ouvert && (
         <form onSubmit={envoyer} style={{ ...cardStyle, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
-            Date inscrite sur la page
+            Date inscrite sur la page (appliquée à toutes les photos ajoutées ici)
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" style={{ display: 'block', marginTop: 4 }} />
           </label>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
-            Photo de la page
-            <input type="file" accept="image/*" capture="environment" onChange={(e) => setFichier(e.target.files?.[0] || null)} style={{ display: 'block', marginTop: 4 }} />
+            Photo(s) de la page — plusieurs à la fois possible
+            <input type="file" accept="image/*" capture="environment" multiple onChange={choisirFichiers} style={{ display: 'block', marginTop: 4 }} />
           </label>
+
+          {!!fichiers.length && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {fichiers.map((f, i) => (
+                <div key={f.apercu} style={{ position: 'relative', width: 72 }}>
+                  <img src={f.apercu} alt="" style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 10, border: '1.5px solid #F1F5F9', display: 'block' }} />
+                  <button
+                    type="button"
+                    onClick={() => retirerFichier(i)}
+                    aria-label="Retirer cette photo"
+                    style={{
+                      position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: '50%',
+                      border: 'none', background: '#DC2626', color: 'white', fontSize: 12, lineHeight: 1, cursor: 'pointer',
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
-            Note (optionnel)
+            Note (optionnel, appliquée à toutes les photos ajoutées ici)
             <input value={note} onChange={(e) => setNote(e.target.value)} className="input-field" style={{ display: 'block', marginTop: 4 }} />
           </label>
           <button type="submit" disabled={envoi} className="btn-primary" style={{ alignSelf: 'flex-start' }}>
-            {envoi ? 'Envoi…' : 'Enregistrer'}
+            {envoi ? 'Envoi…' : fichiers.length > 1 ? `Enregistrer ${fichiers.length} pages` : 'Enregistrer'}
           </button>
         </form>
       )}

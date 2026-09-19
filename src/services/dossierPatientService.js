@@ -101,7 +101,7 @@ export const MESSAGE_BACKEND_INDISPONIBLE = 'Backend local indisponible — vér
 const localFetch = async (path) => {
   let res;
   try {
-    res = await fetch(`${LOCAL_API_URL}/${path}`);
+    res = await fetch(`${LOCAL_API_URL}/${path}`, { cache: 'no-store' });
   } catch {
     throw new Error(MESSAGE_BACKEND_INDISPONIBLE);
   }
