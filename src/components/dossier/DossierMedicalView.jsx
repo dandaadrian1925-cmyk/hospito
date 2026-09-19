@@ -214,10 +214,13 @@ const fichierVersBase64 = (fichier) => new Promise((resolve, reject) => {
 });
 
 // Carnet médical scanné par le patient — le patient date lui-même chaque
-// page (date inscrite sur la page, pas la date d'upload), indépendant du
-// regroupement "par jour de visite" ci-dessus qui ne concerne que les
-// entrées écrites par un médecin.
-function SectionCarnet({ cni, patientNom, pages, onAjout }) {
+// page (date inscrite sur la page, pas la date d'upload). #corrigé (retour
+// utilisateur, "tout le dossier est classé par ordre des dates donc si une
+// date contient une image il y'a un moyen de l'ouvrir directement") : plus
+// de galerie séparée — chaque page rejoint la carte du jour correspondant
+// dans l'historique unique, comme une entrée de plus ; ce composant ne
+// porte plus que le formulaire d'ajout.
+function FormulaireAjoutCarnet({ cni, patientNom, onAjout }) {
   const [ouvert, setOuvert] = useState(false);
   const [date, setDate] = useState(versInput(new Date()));
   const [note, setNote] = useState('');
@@ -245,7 +248,7 @@ function SectionCarnet({ cni, patientNom, pages, onAjout }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7 }}>
           <Camera size={16} style={{ color: '#0D9488' }} /> Carnet médical scanné
         </p>
@@ -259,9 +262,12 @@ function SectionCarnet({ cni, patientNom, pages, onAjout }) {
           <Plus size={13} /> Ajouter une page
         </button>
       </div>
+      <p style={{ fontSize: 12, color: '#94A3B8', marginTop: 4 }}>
+        Chaque page apparaît ci-dessous, à la date que vous choisissez, mêlée au reste de l'historique.
+      </p>
 
       {ouvert && (
-        <form onSubmit={envoyer} style={{ ...cardStyle, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <form onSubmit={envoyer} style={{ ...cardStyle, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-2)' }}>
             Date inscrite sur la page
             <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input-field" style={{ display: 'block', marginTop: 4 }} />
@@ -279,22 +285,53 @@ function SectionCarnet({ cni, patientNom, pages, onAjout }) {
           </button>
         </form>
       )}
+    </div>
+  );
+}
 
-      {!pages.length ? (
-        <EtatVide titre="Aucune page scannée" texte="Photographiez les pages de votre carnet papier pour les retrouver ici, datées." />
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: 10 }}>
-          {pages.map((p) => (
-            <div key={p.id} style={{ borderRadius: 12, overflow: 'hidden', border: '1.5px solid #F1F5F9' }}>
-              <img src={p.photoBase64} alt={p.dateCarnet} style={{ width: '100%', height: 120, objectFit: 'cover', display: 'block' }} />
-              <div style={{ padding: 8 }}>
-                <p style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--ink)' }}>{new Date(p.dateCarnet).toLocaleDateString('fr-FR')}</p>
-                {p.note && <p style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>{p.note}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
+// Miniature cliquable insérée dans la carte du jour — ouvre l'image en
+// plein écran via `onOuvrir`.
+function VignetteCarnet({ page, onOuvrir }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onOuvrir(page)}
+      style={{ border: 'none', padding: 0, cursor: 'pointer', borderRadius: 10, overflow: 'hidden', width: 90, background: 'none', textAlign: 'left' }}
+    >
+      <img src={page.photoBase64} alt={page.dateCarnet} style={{ width: 90, height: 90, objectFit: 'cover', display: 'block', borderRadius: 10, border: '1.5px solid #F1F5F9' }} />
+      {page.note && (
+        <p style={{ fontSize: 10, color: '#64748B', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.note}</p>
       )}
+    </button>
+  );
+}
+
+// Plein écran — clic sur le fond ou la croix pour fermer.
+function LightboxCarnet({ page, onFermer }) {
+  if (!page) return null;
+  return (
+    <div
+      onClick={onFermer}
+      style={{
+        position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.9)', zIndex: 1000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, cursor: 'zoom-out',
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520, width: '100%', cursor: 'default' }}>
+        <img src={page.photoBase64} alt={page.dateCarnet} style={{ width: '100%', borderRadius: 12, display: 'block' }} />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+          <div>
+            <p style={{ color: 'white', fontWeight: 700, fontSize: 13 }}>{new Date(page.dateCarnet).toLocaleDateString('fr-FR')}</p>
+            {page.note && <p style={{ color: '#CBD5E1', fontSize: 12, marginTop: 2 }}>{page.note}</p>}
+          </div>
+          <button
+            type="button" onClick={onFermer}
+            style={{ background: 'rgba(255,255,255,0.15)', border: 'none', color: 'white', borderRadius: 999, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -313,6 +350,7 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
   const [periode, setPeriode] = useState('tout');
   const [personnaliseDebut, setPersonnaliseDebut] = useState(versInput(new Date()));
   const [personnaliseFin, setPersonnaliseFin] = useState(versInput(new Date()));
+  const [imageOuverte, setImageOuverte] = useState(null);
 
   const [dateDebut, dateFin] = useMemo(() => {
     if (periode === 'tout') return [null, null];
@@ -366,22 +404,27 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
   const groupeSanguin = (entrees || []).filter((e) => e.type === 'groupe_sanguin').sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))[0]?.contenu || null;
 
   const jours = useMemo(() => {
-    if (entrees === null || prescriptions === null || examens === null) return null;
+    if (entrees === null || prescriptions === null || examens === null || carnet === null) return null;
     const parJour = new Map();
     const cle = (date) => date.toISOString().slice(0, 10);
     const bucket = (date) => {
       const k = cle(date);
-      if (!parJour.has(k)) parJour.set(k, { date, comptesRendus: [], constantes: [], prescriptions: [], examens: [] });
+      if (!parJour.has(k)) parJour.set(k, { date, comptesRendus: [], constantes: [], prescriptions: [], examens: [], carnetPages: [] });
       return parJour.get(k);
     };
     entrees.filter((e) => e.type === 'compte_rendu').forEach((e) => { const d = e.createdAt?.toDate?.(); if (d) bucket(d).comptesRendus.push(e); });
     entrees.filter((e) => e.type === 'constante').forEach((e) => { const d = e.createdAt?.toDate?.(); if (d) bucket(d).constantes.push(e); });
     prescriptions.forEach((p) => { const d = p.createdAt?.toDate?.(); if (d) bucket(d).prescriptions.push(p); });
     examens.forEach((ex) => { const d = ex.createdAt?.toDate?.(); if (d) bucket(d).examens.push(ex); });
+    // Le carnet est daté par le PATIENT lui-même (date_carnet), pas
+    // createdAt — même logique de regroupement, pour qu'une page scannée
+    // rejoigne la carte du jour qu'elle concerne réellement, pas le jour où
+    // elle a été photographiée.
+    carnet.forEach((p) => { const d = new Date(`${p.dateCarnet}T00:00:00`); if (!Number.isNaN(d.getTime())) bucket(d).carnetPages.push(p); });
     return [...parJour.values()]
       .filter((j) => !dateDebut || (j.date >= dateDebut && j.date <= dateFin))
       .sort((a, b) => b.date - a.date);
-  }, [entrees, prescriptions, examens, dateDebut, dateFin]);
+  }, [entrees, prescriptions, examens, carnet, dateDebut, dateFin]);
 
   if (!dossierLocalDisponible) {
     return (
@@ -490,10 +533,11 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
         )}
       </div>
 
-      {/* Carnet médical scanné par le patient — indépendant du regroupement par jour ci-dessous */}
+      {/* Formulaire d'ajout — les pages elles-mêmes apparaissent dans les
+          cartes de jour ci-dessous, mêlées au reste de l'historique. */}
       {carnet !== null && (
         <div style={cardStyle}>
-          <SectionCarnet cni={cni} patientNom={nomComplet} pages={carnet} onAjout={chargerCarnet} />
+          <FormulaireAjoutCarnet cni={cni} patientNom={nomComplet} onAjout={chargerCarnet} />
         </div>
       )}
 
@@ -541,6 +585,17 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
                 <p style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--ink)', display: 'flex', alignItems: 'center', gap: 7, textTransform: 'capitalize' }}>
                   <CalendarDays size={15} style={{ color: '#0D9488' }} /> {libelleJour(j.date)}
                 </p>
+
+                {!!j.carnetPages.length && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <EnteteSection icon={Camera} label="Carnet scanné" />
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      {j.carnetPages.map((p) => (
+                        <VignetteCarnet key={p.id} page={p} onOuvrir={setImageOuverte} />
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {j.comptesRendus.map((e) => (
                   <div key={e.id} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -644,6 +699,8 @@ export default function DossierMedicalView({ cni, uid, nom, prenom }) {
           </div>
         )}
       </div>
+
+      <LightboxCarnet page={imageOuverte} onFermer={() => setImageOuverte(null)} />
     </div>
   );
 }
