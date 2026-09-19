@@ -43,6 +43,7 @@ const FavorisEtablissementsPage = lazy(() => import('./pages/FavorisEtablissemen
 const CommentCaMarchePage = lazy(() => import('./pages/CommentCaMarchePage'));
 const MesDroitsPage = lazy(() => import('./pages/MesDroitsPage'));
 const UrgencePage = lazy(() => import('./pages/UrgencePage'));
+const TeleconsultationUrgencePage = lazy(() => import('./pages/TeleconsultationUrgencePage'));
 function Layout({
   children,
   noFooter = false
@@ -156,6 +157,7 @@ export default function App() {
             <Route path="/mes-favoris" element={<Layout><FavorisEtablissementsPage /></Layout>} />
             <Route path="/mes-droits" element={<Layout><MesDroitsPage /></Layout>} />
             <Route path="/urgence" element={<Layout noFooter><UrgencePage /></Layout>} />
+            <Route path="/urgence/teleconsultation" element={<Layout noFooter><TeleconsultationUrgencePage /></Layout>} />
 
             {}
             <Route path="*" element={<Layout>

@@ -15,7 +15,10 @@ import { getAgoraTokenTeleconsultation } from '../../services/teleconsultationSe
 // l'utilise dans un calque plein écran) au lieu de la taille compacte par
 // défaut — même composant, jamais de duplication. `onFermer` referme ce
 // calque quand l'utilisateur raccroche (bouton "Raccrocher").
-export default function TeleconsultationCallWidget({ demandeId, grand = false, onFermer }) {
+// #nouveau (marketplace téléconsultation d'urgence) : `fetchToken` optionnel,
+// injecté par TeleconsultationUrgencePage — même widget, jamais dupliqué,
+// juste une source de jeton différente (getAgoraTokenTeleconsultationUrgence).
+export default function TeleconsultationCallWidget({ demandeId, grand = false, onFermer, fetchToken }) {
   const [statut, setStatut] = useState('idle'); // idle | connecting | active
   const [muted, setMuted] = useState(false);
   const [cameraOff, setCameraOff] = useState(false);
@@ -98,7 +101,7 @@ export default function TeleconsultationCallWidget({ demandeId, grand = false, o
   const rejoindre = async () => {
     setStatut('connecting');
     try {
-      const { appId, channelName, token, uid } = await getAgoraTokenTeleconsultation(demandeId);
+      const { appId, channelName, token, uid } = await (fetchToken ? fetchToken() : getAgoraTokenTeleconsultation(demandeId));
       const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
       clientRef.current = client;
       client.on('user-published', async (user, mediaType) => {

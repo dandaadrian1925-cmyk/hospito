@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, Droplet, Pill, HeartPulse, Edit2, Save, WifiOff } from 'lucide-react';
+import { AlertTriangle, Droplet, Pill, HeartPulse, Edit2, Save, WifiOff, Video, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { getFicheUrgence, mettreAJourFicheUrgence } from '../services/urgenceService';
@@ -63,6 +64,23 @@ export default function UrgencePage() {
           <WifiOff style={{ width: 14, height: 14, flexShrink: 0 }} /> Hors connexion — dernière fiche enregistrée sur cet appareil.
         </div>
       )}
+
+      <Link
+        to="/urgence/teleconsultation"
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none',
+          background: '#0F172A', borderRadius: 16, padding: '14px 16px', marginBottom: 20,
+        }}
+      >
+        <div style={{ width: 40, height: 40, background: 'rgba(255,255,255,0.12)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Video style={{ width: 19, height: 19, color: 'white' }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ fontSize: 13.5, fontWeight: 800, color: 'white' }}>Consulter un médecin de garde maintenant</p>
+          <p style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.7)' }}>Téléconsultation d'urgence, paiement à la séance</p>
+        </div>
+        <ChevronRight style={{ width: 18, height: 18, color: 'rgba(255,255,255,0.6)', flexShrink: 0 }} />
+      </Link>
 
       <div style={{ textAlign: 'center', marginBottom: 20 }}>
         <div style={{ width: 56, height: 56, background: '#FEF2F2', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
