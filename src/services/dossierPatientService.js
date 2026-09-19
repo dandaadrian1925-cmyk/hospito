@@ -10,7 +10,32 @@ import { db } from '../firebase/config';
 // VITE_DOSSIER_API_MODE=local (machine de soutenance) — sinon no-op, l'appelant
 // doit garder son état "Disponible prochainement" en dehors de ce mode.
 const LOCAL_MODE = import.meta.env.VITE_DOSSIER_API_MODE === 'local';
-const LOCAL_API_URL = import.meta.env.VITE_DOSSIER_API_URL || 'http://localhost/hospito-dossier-local';
+
+// #corrigé (retour utilisateur, "je n'arrive pas à accéder à mon dossier
+// médical sur téléphone pourtant je suis connecté au même réseau que mon
+// PC") : `http://localhost/...` (la valeur par défaut, figée au moment du
+// build Vercel) ne fonctionne QUE depuis le PC qui fait tourner XAMPP lui-
+// même — "localhost" désigne toujours l'appareil qui exécute le
+// navigateur, jamais un autre appareil du même réseau, même Wi-Fi. Un
+// téléphone doit viser l'ADRESSE IP LOCALE de ce PC (ex. 192.168.0.100),
+// qui change potentiellement d'un lieu de soutenance à l'autre — donc
+// configurable À L'EXÉCUTION (localStorage, réglable une seule fois via
+// ?dossierApiHost=192.168.0.100 dans l'URL) plutôt que figée au build, pour
+// ne jamais avoir à redéployer juste pour changer d'IP le jour J.
+const STORAGE_KEY_HOST = 'hostoconnect_dossier_api_host';
+
+const paramHost = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('dossierApiHost')
+  : null;
+if (paramHost && typeof window !== 'undefined') {
+  window.localStorage.setItem(STORAGE_KEY_HOST, paramHost);
+}
+
+const hoteConfigure = (typeof window !== 'undefined' && window.localStorage.getItem(STORAGE_KEY_HOST)) || paramHost;
+
+const LOCAL_API_URL = hoteConfigure
+  ? `http://${hoteConfigure}/hospito-dossier-local`
+  : (import.meta.env.VITE_DOSSIER_API_URL || 'http://localhost/hospito-dossier-local');
 
 export const dossierLocalDisponible = LOCAL_MODE;
 
@@ -96,7 +121,7 @@ const mapExamen = (row) => ({
   createdAt: toFirestoreLikeTimestamp(row.created_at),
 });
 
-export const MESSAGE_BACKEND_INDISPONIBLE = 'Backend local indisponible — vérifiez que XAMPP (Apache/MySQL) est actif sur cette machine.';
+export const MESSAGE_BACKEND_INDISPONIBLE = 'Backend local indisponible — vérifiez que XAMPP (Apache/MySQL) est actif et que cet appareil est bien connecté au même réseau que le PC hôte.';
 
 const localFetch = async (path) => {
   let res;
